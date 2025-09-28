@@ -1,0 +1,50 @@
+/**
+ * GraphQL Queries Index
+ * 
+ * This file serves as a centralized export point for all GraphQL queries
+ * used throughout the MetaWare application. It provides a single import
+ * location for components that need access to multiple query sets.
+ * 
+ * Organization:
+ * - Each query type is organized in its own file for maintainability
+ * - All queries, types, and interfaces are re-exported here
+ * - Follows domain-driven design principles
+ * 
+ * @author MetaWare Development Team
+ * @version 1.0.0
+ */
+
+// Namespace-related queries and types
+export {
+  GET_NAMESPACES,
+  type Namespace,
+  type GetNamespacesResponse,
+  type GetNamespacesVariables,
+} from './namespace';
+
+// Subject Area-related queries and types
+export {
+  GET_SUBJECTAREAS,
+  type SubjectArea,
+  type SubjectAreaNamespace,
+  type GetSubjectAreasResponse,
+  type GetSubjectAreasVariables,
+} from './subjectarea';
+
+// Entity-related queries and types
+export {
+  GET_ENTITIES,
+  type Entity,
+  type EntityNamespace,
+  type EntitySubjectArea,
+  type GetEntitiesResponse,
+  type GetEntitiesVariables,
+} from './entity';
+
+// Meta (field-level) queries and types
+export {
+  GET_META_FOR_ENTITY,
+  type MetaField,
+  type GetMetaForEntityResponse,
+  type GetMetaForEntityVariables,
+} from './meta';
