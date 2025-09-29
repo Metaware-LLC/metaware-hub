@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 interface Namespace {
   id: string;
@@ -50,17 +51,20 @@ export const GroupedNamespaceSelect = ({
 
   // Get display value
   const selectedNamespace = namespaces.find(ns => ns.id === value);
-  const displayValue = selectedNamespace
-    ? showTypePrefix
-      ? `${selectedNamespace.type}->${selectedNamespace.name}`
-      : selectedNamespace.name
-    : undefined;
 
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger className={className}>
         <SelectValue placeholder={placeholder}>
-          {displayValue}
+          {selectedNamespace && showTypePrefix && (
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs">
+                {selectedNamespace.type}
+              </Badge>
+              <span>{selectedNamespace.name}</span>
+            </div>
+          )}
+          {selectedNamespace && !showTypePrefix && selectedNamespace.name}
         </SelectValue>
       </SelectTrigger>
       <SelectContent className="bg-popover z-50">
@@ -75,7 +79,16 @@ export const GroupedNamespaceSelect = ({
                 value={namespace.id} 
                 className="pl-6"
               >
-                {showTypePrefix ? `${namespace.type}->${namespace.name}` : namespace.name}
+                {showTypePrefix ? (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      {namespace.type}
+                    </Badge>
+                    <span>{namespace.name}</span>
+                  </div>
+                ) : (
+                  namespace.name
+                )}
               </SelectItem>
             ))}
           </div>

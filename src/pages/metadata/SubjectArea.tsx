@@ -23,6 +23,7 @@ import { GET_SUBJECTAREAS, GET_NAMESPACES, type GetSubjectAreasResponse, type Ge
 import { subjectAreaAPI } from "@/services/api";
 import { useToast } from "@/components/ui/use-toast";
 import { GroupedNamespaceSelect } from "@/components/table/GroupedNamespaceSelect";
+import { Badge } from "@/components/ui/badge";
 
 /**
  * Column configuration for the subject area table
@@ -112,7 +113,14 @@ export default function SubjectArea() {
               />
             );
           }
-          return <span>{row.namespace_display}</span>;
+          return (
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs">
+                {row.namespace_type}
+              </Badge>
+              <span>{row.namespace_name}</span>
+            </div>
+          );
         }
       };
     }

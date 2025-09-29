@@ -23,6 +23,7 @@ import { GET_ENTITIES, GET_NAMESPACES, GET_SUBJECTAREAS, type GetEntitiesRespons
 import { entityAPI } from "@/services/api";
 import { useToast } from "@/components/ui/use-toast";
 import { GroupedNamespaceSelect } from "@/components/table/GroupedNamespaceSelect";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -84,6 +85,7 @@ export default function Entity() {
       subjectarea_name: entity.subjectarea.name,
       namespace_display: `${entity.subjectarea.namespace.type}->${entity.subjectarea.namespace.name}`,
       namespace_name: entity.subjectarea.namespace.name,
+      namespace_type: entity.subjectarea.namespace.type,
       is_delta: entity.is_delta ? 'Yes' : 'No',
       primary_grain: entity.primary_grain || '',
       sa_id: entity.sa_id,
@@ -126,6 +128,7 @@ export default function Entity() {
                       ns_id: nsId,
                       namespace_display: `${selectedNs.type}->${selectedNs.name}`,
                       namespace_name: selectedNs.name,
+                      namespace_type: selectedNs.type,
                       // Clear subject area when namespace changes
                       subjectarea_display: '',
                       subjectarea_name: '',
@@ -139,7 +142,14 @@ export default function Entity() {
               />
             );
           }
-          return <span>{row.namespace_display}</span>;
+          return (
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs">
+                {row.namespace_type}
+              </Badge>
+              <span>{row.namespace_name}</span>
+            </div>
+          );
         }
       };
     }
