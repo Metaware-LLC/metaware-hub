@@ -39,7 +39,7 @@ export const namespaceAPI = {
 
   delete: async (ids: string[]) => {
     return apiRequest('/mwn/delete', {
-      method: 'DELETE',
+      method: 'POST',
       body: JSON.stringify({
         object_type: 'namespace',
         ids,
@@ -61,7 +61,7 @@ export const subjectAreaAPI = {
 
   delete: async (ids: string[]) => {
     return apiRequest('/mwn/delete', {
-      method: 'DELETE',
+      method: 'POST',
       body: JSON.stringify({
         object_type: 'subjectarea',
         ids,
@@ -93,7 +93,7 @@ export const entityAPI = {
 
   delete: async (ids: string[]) => {
     return apiRequest('/mwn/delete', {
-      method: 'DELETE',
+      method: 'POST',
       body: JSON.stringify({
         object_type: 'entity',
         ids,
@@ -108,7 +108,7 @@ export const entityAPI = {
 export const metaAPI = {
   delete: async (ids: string[]) => {
     return apiRequest('/mwn/delete', {
-      method: 'DELETE',
+      method: 'POST',
       body: JSON.stringify({
         object_type: 'meta',
         ids,
