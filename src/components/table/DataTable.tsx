@@ -111,40 +111,29 @@ export const DataTable = ({
   }, [editedData, data]);
 
   const handleEditMode = () => {
-    if (selectedRows.length > 0) {
-      // Toggle editing for selected rows
-      const hasSelectedInEdit = selectedRows.some(id => editingRows.includes(id));
-      if (hasSelectedInEdit) {
-        // Exiting edit mode for selected rows - revert their changes and remove draft rows
-        setEditingRows(prev => prev.filter(id => !selectedRows.includes(id)));
-        setEditedData(prev => {
-          // Remove draft rows that are in the selection
-          const withoutDrafts = prev.filter(row => !(selectedRows.includes(row.id) && row._status === 'draft'));
-          // Revert selected rows to original data
-          return withoutDrafts.map(row => {
-            if (selectedRows.includes(row.id) && row._status !== 'draft') {
-              const original = data.find(d => d.id === row.id);
-              return original ? { ...original } : row;
-            }
-            return row;
-          });
+    if (editingRows.length > 0) {
+      // Exit edit mode - revert all changes and remove draft rows
+      setEditingRows([]);
+      setEditedData(prev => {
+        // Remove all draft rows
+        const withoutDrafts = prev.filter(row => row._status !== 'draft');
+        // Revert all edited rows to original data
+        return withoutDrafts.map(row => {
+          if (row._status === 'edited') {
+            const original = data.find(d => d.id === row.id);
+            return original ? { ...original } : row;
+          }
+          return row;
         });
-        // Deselect the reverted rows
-        setSelectedRows([]);
-      } else {
-        setEditingRows(prev => [...prev, ...selectedRows.filter(id => !prev.includes(id))]);
-        if (editedData.length === 0) setEditedData([...data]);
-      }
+      });
+    } else if (selectedRows.length > 0) {
+      // Enter edit mode for selected rows
+      setEditingRows(prev => [...prev, ...selectedRows.filter(id => !prev.includes(id))]);
+      if (editedData.length === 0) setEditedData([...data]);
     } else {
-      // Toggle editing for all rows
-      if (editingRows.length > 0) {
-        // Exiting edit mode - revert changes
-        setEditingRows([]);
-        setEditedData([]);
-      } else {
-        setEditingRows(filteredData.map(row => row.id));
-        if (editedData.length === 0) setEditedData([...data]);
-      }
+      // Enter edit mode for all rows
+      setEditingRows(filteredData.map(row => row.id));
+      if (editedData.length === 0) setEditedData([...data]);
     }
   };
 
