@@ -11,6 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Edit,
   Trash2,
   Plus,
@@ -25,7 +32,10 @@ import { cn } from "@/lib/utils";
 export interface Column {
   key: string;
   title: string;
-  type?: 'text' | 'number' | 'date';
+  type?: 'text' | 'number' | 'date' | 'select';
+  options?: string[] | { value: string; label: string }[];
+  renderCell?: (row: TableData, isEditing: boolean, onChange: (value: string) => void) => React.ReactNode;
+  required?: boolean;
 }
 
 export interface TableData {
@@ -43,6 +53,8 @@ interface DataTableProps {
   onSave?: (data: TableData[]) => void;
   className?: string;
   entityType?: string; // e.g., "Namespace", "Subject Area", "Entity"
+  externalEditedData?: TableData[];
+  onEditedDataChange?: (data: TableData[]) => void;
 }
 
 export const DataTable = ({
@@ -54,14 +66,20 @@ export const DataTable = ({
   onSave,
   className,
   entityType = "Row",
+  externalEditedData,
+  onEditedDataChange,
 }: DataTableProps) => {
   const [editingRows, setEditingRows] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
-  const [editedData, setEditedData] = useState<TableData[]>([]);
+  const [internalEditedData, setInternalEditedData] = useState<TableData[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [newlyAddedIds, setNewlyAddedIds] = useState<string[]>([]);
+
+  // Use external edited data if provided, otherwise use internal state
+  const editedData = externalEditedData !== undefined ? externalEditedData : internalEditedData;
+  const setEditedData = onEditedDataChange || setInternalEditedData;
 
   const filteredData = useMemo(() => {
     const dataToFilter = editedData.length > 0 ? editedData : data;
@@ -115,7 +133,24 @@ export const DataTable = ({
     }
   };
 
+  const validateRequiredFields = (data: TableData[]): boolean => {
+    const requiredColumns = columns.filter(col => col.required);
+    return data.every(row => {
+      return requiredColumns.every(col => {
+        const value = row[col.key];
+        return value !== undefined && value !== null && String(value).trim() !== '';
+      });
+    });
+  };
+
   const handleSave = async () => {
+    // Validate required fields
+    if (!validateRequiredFields(editedData)) {
+      const requiredFieldNames = columns.filter(col => col.required).map(col => col.title).join(', ');
+      alert(`Please fill in all required fields: ${requiredFieldNames}`);
+      return;
+    }
+
     setIsSaving(true);
     try {
       await onSave?.(editedData);
@@ -312,17 +347,42 @@ export const DataTable = ({
                 {columns.map((column) => (
                   <TableCell key={column.key}>
                     {(editingRows.includes(row.id) || row._status === 'draft' || row._status === 'edited') ? (
-                      <Input
-                        value={row[column.key] || ''}
-                        onChange={(e) => handleCellEdit(row.id, column.key, e.target.value)}
-                        className="h-8"
-                      />
+                      column.renderCell ? (
+                        column.renderCell(row, true, (value) => handleCellEdit(row.id, column.key, value))
+                      ) : column.type === 'select' && column.options ? (
+                        <Select
+                          value={row[column.key] || ''}
+                          onValueChange={(value) => handleCellEdit(row.id, column.key, value)}
+                        >
+                          <SelectTrigger className="h-8">
+                            <SelectValue placeholder={`Select ${column.title}...`} />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover z-50">
+                            {column.options.map((option) => {
+                              const value = typeof option === 'string' ? option : option.value;
+                              const label = typeof option === 'string' ? option : option.label;
+                              return (
+                                <SelectItem key={value} value={value}>
+                                  {label}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          value={row[column.key] || ''}
+                          onChange={(e) => handleCellEdit(row.id, column.key, e.target.value)}
+                          className={cn("h-8", column.required && !row[column.key] && "border-destructive")}
+                          placeholder={column.required ? `${column.title} (required)` : column.title}
+                        />
+                      )
                     ) : (
                       <span className={searchTerm && String(row[column.key]).toLowerCase().includes(searchTerm.toLowerCase())
                         ? "bg-yellow-200 dark:bg-yellow-900 px-1 rounded"
                         : ""
                       }>
-                        {row[column.key]}
+                        {column.renderCell ? column.renderCell(row, false, () => {}) : row[column.key]}
                       </span>
                     )}
                   </TableCell>

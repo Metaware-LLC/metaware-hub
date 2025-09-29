@@ -27,9 +27,15 @@ import { useToast } from "@/components/ui/use-toast";
  * Defines the structure and display properties for each column
  */
 const namespaceColumns: Column[] = [
-  { key: 'name', title: 'Name', type: 'text' },
+  { key: 'name', title: 'Name', type: 'text', required: true },
   { key: 'status', title: 'Status', type: 'text' },
-  { key: 'type', title: 'Type', type: 'text' },
+  { 
+    key: 'type', 
+    title: 'Type', 
+    type: 'select',
+    options: ['staging', 'glossary', 'model', 'reference'],
+    required: true 
+  },
   { key: 'tags', title: 'Tags', type: 'text' },
 ];
 
