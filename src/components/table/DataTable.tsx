@@ -55,14 +55,14 @@ export const DataTable = ({
   className,
   entityType = "Row",
 }: DataTableProps) => {
-  const [editMode, setEditMode] = useState(false);
+  const [editingRows, setEditingRows] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [editedData, setEditedData] = useState<TableData[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const filteredData = useMemo(() => {
-    const dataToFilter = editMode ? editedData : data;
+    const dataToFilter = editedData.length > 0 ? editedData : data;
     if (!searchTerm) return dataToFilter;
     
     return dataToFilter.filter((row) =>
@@ -72,7 +72,7 @@ export const DataTable = ({
           .includes(searchTerm.toLowerCase())
       )
     );
-  }, [data, editedData, searchTerm, editMode, columns]);
+  }, [data, editedData, searchTerm, columns]);
 
   const hasChanges = useMemo(() => {
     return editedData.length > 0 && (
@@ -82,17 +82,29 @@ export const DataTable = ({
   }, [editedData, data]);
 
   const handleEditMode = () => {
-    if (editMode) {
-      setEditedData([]);
+    if (selectedRows.length > 0) {
+      // Toggle editing for selected rows
+      const hasSelectedInEdit = selectedRows.some(id => editingRows.includes(id));
+      if (hasSelectedInEdit) {
+        setEditingRows(prev => prev.filter(id => !selectedRows.includes(id)));
+      } else {
+        setEditingRows(prev => [...prev, ...selectedRows.filter(id => !prev.includes(id))]);
+        if (editedData.length === 0) setEditedData([...data]);
+      }
     } else {
-      setEditedData([...data]);
+      // Toggle editing for all rows
+      if (editingRows.length > 0) {
+        setEditingRows([]);
+      } else {
+        setEditingRows(filteredData.map(row => row.id));
+        if (editedData.length === 0) setEditedData([...data]);
+      }
     }
-    setEditMode(!editMode);
   };
 
   const handleSave = () => {
     onSave?.(editedData);
-    setEditMode(false);
+    setEditingRows([]);
     setEditedData([]);
   };
 
@@ -103,12 +115,13 @@ export const DataTable = ({
       ...columns.reduce((acc, col) => ({ ...acc, [col.key]: '' }), {}),
     };
     
-    // Always add to local state, don't call API immediately
-    if (!editMode) {
-      setEditedData([...data]);
-      setEditMode(true);
+    // Add to local state and mark as editing
+    if (editedData.length === 0) {
+      setEditedData([...data, newRow]);
+    } else {
+      setEditedData(prev => [...prev, newRow]);
     }
-    setEditedData(prev => [...prev, newRow]);
+    setEditingRows(prev => [...prev, newRow.id]);
   };
 
   const handleCellEdit = (id: string, key: string, value: string) => {
@@ -149,15 +162,15 @@ export const DataTable = ({
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <Button
-            variant={editMode ? "default" : "outline"}
+            variant={editingRows.length > 0 ? "default" : "outline"}
             size="sm"
             onClick={handleEditMode}
           >
             <Edit className="h-4 w-4 mr-2" />
-            {editMode ? "Exit Edit" : "Edit"}
+            {editingRows.length > 0 ? "Exit Edit" : "Edit"}
           </Button>
           
-          {(editMode || hasChanges) && (
+          {hasChanges && (
             <Button 
               variant="default" 
               size="sm" 
@@ -253,7 +266,7 @@ export const DataTable = ({
                 </TableCell>
                 {columns.map((column) => (
                   <TableCell key={column.key}>
-                    {editMode ? (
+                    {(editingRows.includes(row.id) || row._status === 'draft' || row._status === 'edited') ? (
                       <Input
                         value={row[column.key] || ''}
                         onChange={(e) => handleCellEdit(row.id, column.key, e.target.value)}
