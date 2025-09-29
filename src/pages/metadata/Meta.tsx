@@ -80,6 +80,18 @@ export default function Meta() {
   );
 
   /**
+   * Group namespaces by type for organized dropdown display
+   */
+  const groupedNamespaces = namespacesData?.meta_namespace.reduce((groups, namespace) => {
+    const type = namespace.type || 'Other';
+    if (!groups[type]) {
+      groups[type] = [];
+    }
+    groups[type].push(namespace);
+    return groups;
+  }, {} as Record<string, typeof namespacesData.meta_namespace>) || {};
+
+  /**
    * Filter subject areas based on selected namespace
    */
   const availableSubjectAreas = subjectAreasData?.meta_subjectarea.filter(
@@ -186,7 +198,7 @@ export default function Meta() {
 
       {/* Cascading Dropdowns */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Namespace Dropdown */}
+        {/* Namespace Dropdown - Grouped by Type */}
         <div className="space-y-2">
           <Label htmlFor="namespace">NameSpace</Label>
           <Select onValueChange={handleNamespaceChange} value={selectedNamespace}>
@@ -194,10 +206,17 @@ export default function Meta() {
               <SelectValue placeholder="Select namespace..." />
             </SelectTrigger>
             <SelectContent>
-              {namespacesData?.meta_namespace.map((namespace) => (
-                <SelectItem key={namespace.id} value={namespace.id}>
-                  {namespace.name}
-                </SelectItem>
+              {Object.entries(groupedNamespaces).map(([type, namespaces]) => (
+                <div key={type}>
+                  <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                    {type}
+                  </div>
+                  {namespaces.map((namespace) => (
+                    <SelectItem key={namespace.id} value={namespace.id} className="pl-6">
+                      {namespace.name}
+                    </SelectItem>
+                  ))}
+                </div>
               ))}
             </SelectContent>
           </Select>
