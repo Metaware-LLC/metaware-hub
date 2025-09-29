@@ -19,6 +19,8 @@
 import { useQuery } from '@apollo/client';
 import { DataTable, Column, TableData } from "@/components/table/DataTable";
 import { GET_SUBJECTAREAS, type GetSubjectAreasResponse } from "@/graphql/queries";
+import { subjectAreaAPI } from "@/services/api";
+import { useToast } from "@/components/ui/use-toast";
 
 /**
  * Column configuration for the subject area table
@@ -39,6 +41,8 @@ const subjectAreaColumns: Column[] = [
  * from the GraphQL API and provides full CRUD functionality.
  */
 export default function SubjectArea() {
+  const { toast } = useToast();
+  
   /**
    * GraphQL query to fetch all subject areas with nested namespace data
    * Handles loading states, errors, and data updates automatically
@@ -63,59 +67,113 @@ export default function SubjectArea() {
 
   /**
    * Handle adding new subject area
-   * TODO: Implement GraphQL mutation for creating subject areas
-   * 
-   * @param newRow - Partial data for the new subject area
    */
-  const handleAdd = (newRow: Partial<TableData>) => {
-    console.log('Add subject area:', newRow);
-    // TODO: Implement CREATE_SUBJECTAREA mutation
-    // Example:
-    // await createSubjectArea({ variables: { input: newRow } });
-    // refetch(); // Refresh data after successful creation
+  const handleAdd = async (newRow: Partial<TableData>) => {
+    try {
+      const subjectAreaData = {
+        id: newRow.id || '',
+        type: newRow.type || '',
+        name: newRow.name || '',
+        tags: newRow.tags || '',
+        custom_props: '',
+        ns_id: newRow.ns_id || '',
+        update_strategy_: 'I',
+        ns: newRow.namespace_name || '',
+      };
+
+      await subjectAreaAPI.create([subjectAreaData]);
+      await refetch();
+      toast({
+        title: "Success",
+        description: "Subject area created successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to create subject area: ${error}`,
+        variant: "destructive",
+      });
+    }
   };
 
   /**
    * Handle editing existing subject area
-   * TODO: Implement GraphQL mutation for updating subject areas
-   * 
-   * @param id - Unique identifier of the subject area to edit
-   * @param updatedData - Updated field values
    */
-  const handleEdit = (id: string, updatedData: Partial<TableData>) => {
-    console.log('Edit subject area:', id, updatedData);
-    // TODO: Implement UPDATE_SUBJECTAREA mutation
-    // Example:
-    // await updateSubjectArea({ variables: { id, input: updatedData } });
-    // refetch(); // Refresh data after successful update
+  const handleEdit = async (id: string, updatedData: Partial<TableData>) => {
+    try {
+      const existingSubjectArea = tableData.find(item => item.id === id);
+      if (!existingSubjectArea) return;
+
+      const subjectAreaData = {
+        ...existingSubjectArea,
+        ...updatedData,
+        update_strategy_: 'U',
+      };
+
+      await subjectAreaAPI.create([subjectAreaData]);
+      await refetch();
+      toast({
+        title: "Success",
+        description: "Subject area updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to update subject area: ${error}`,
+        variant: "destructive",
+      });
+    }
   };
 
   /**
    * Handle deleting subject areas
-   * TODO: Implement GraphQL mutation for deleting subject areas
-   * 
-   * @param ids - Array of subject area IDs to delete
    */
-  const handleDelete = (ids: string[]) => {
-    console.log('Delete subject areas:', ids);
-    // TODO: Implement DELETE_SUBJECTAREA mutation
-    // Example:
-    // await deleteSubjectAreas({ variables: { ids } });
-    // refetch(); // Refresh data after successful deletion
+  const handleDelete = async (ids: string[]) => {
+    try {
+      await subjectAreaAPI.delete(ids);
+      await refetch();
+      toast({
+        title: "Success",
+        description: `${ids.length} subject area(s) deleted successfully`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to delete subject areas: ${error}`,
+        variant: "destructive",
+      });
+    }
   };
 
   /**
    * Handle bulk save operations
-   * TODO: Implement GraphQL mutation for batch updates
-   * 
-   * @param data - Array of subject area data to save
    */
-  const handleSave = (data: TableData[]) => {
-    console.log('Save subject areas:', data);
-    // TODO: Implement batch update mutation
-    // Example:
-    // await batchUpdateSubjectAreas({ variables: { input: data } });
-    // refetch(); // Refresh data after successful save
+  const handleSave = async (data: TableData[]) => {
+    try {
+      const subjectAreasToSave = data.map(item => ({
+        id: item.id,
+        type: item.type || '',
+        name: item.name || '',
+        tags: item.tags || '',
+        custom_props: '',
+        ns_id: item.ns_id || '',
+        update_strategy_: 'U',
+        ns: item.namespace_name || '',
+      }));
+
+      await subjectAreaAPI.create(subjectAreasToSave);
+      await refetch();
+      toast({
+        title: "Success",
+        description: "Changes saved successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to save changes: ${error}`,
+        variant: "destructive",
+      });
+    }
   };
 
   // Handle loading state

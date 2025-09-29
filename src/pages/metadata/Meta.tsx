@@ -37,6 +37,8 @@ import {
   type GetEntitiesResponse,
   type GetMetaForEntityResponse
 } from "@/graphql/queries";
+import { entityAPI, metaAPI } from "@/services/api";
+import { useToast } from "@/components/ui/use-toast";
 
 /**
  * Column configuration for the meta fields table
@@ -64,6 +66,7 @@ export default function Meta() {
   const [selectedNamespace, setSelectedNamespace] = useState<string>('');
   const [selectedSubjectArea, setSelectedSubjectArea] = useState<string>('');
   const [selectedEntity, setSelectedEntity] = useState<string>('');
+  const { toast } = useToast();
 
   // GraphQL queries for dropdown data
   const { data: namespacesData } = useQuery<GetNamespacesResponse>(GET_NAMESPACES);
@@ -157,28 +160,125 @@ export default function Meta() {
   };
 
   /**
-   * Meta field CRUD operations
-   * TODO: Implement GraphQL mutations for meta field management
+   * Handle adding new meta field
    */
-  const handleAdd = (newRow: Partial<TableData>) => {
-    console.log('Add meta field:', newRow);
-    // TODO: Implement CREATE_META_FIELD mutation
+  const handleAdd = async (newRow: Partial<TableData>) => {
+    if (!selectedEntity) {
+      toast({
+        title: "Error",
+        description: "Please select an entity first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const selectedEntityData = availableEntities.find(e => e.id === selectedEntity);
+      if (!selectedEntityData) return;
+
+      const entityData = {
+        id: selectedEntityData.id,
+        type: selectedEntityData.type,
+        subtype: selectedEntityData.subtype || '',
+        name: selectedEntityData.name,
+        description: selectedEntityData.description || '',
+        is_delta: selectedEntityData.is_delta || false,
+        runtime: '',
+        tags: '',
+        custom_props: [],
+        dependency: '',
+        primary_grain: selectedEntityData.primary_grain || '',
+        secondary_grain: '',
+        tertiary_grain: '',
+        sa_id: selectedEntityData.sa_id,
+        update_strategy_: 'U',
+        ns: selectedEntityData.subjectarea.namespace.name,
+        sa: selectedEntityData.subjectarea.name,
+        ns_type: 'staging',
+      };
+
+      const metaField = {
+        id: newRow.id || '',
+        type: newRow.type || '',
+        subtype: '',
+        name: newRow.name || '',
+        description: newRow.description || '',
+        order: Number(newRow.order) || 0,
+        alias: newRow.alias || '',
+        length: 0,
+        default: newRow.default || '',
+        nullable: newRow.nullable === 'Yes',
+        format: '',
+        is_primary_grain: newRow.grain_info?.includes('Primary') || false,
+        is_secondary_grain: newRow.grain_info?.includes('Secondary') || false,
+        is_tertiary_grain: newRow.grain_info?.includes('Tertiary') || false,
+        tags: '',
+        custom_props: [],
+        entity_id: selectedEntity,
+        ns: selectedEntityData.subjectarea.namespace.name,
+        sa: selectedEntityData.subjectarea.name,
+        en: selectedEntityData.name,
+        entity_core: {
+          ns: selectedEntityData.subjectarea.namespace.name,
+          sa: selectedEntityData.subjectarea.name,
+          en: selectedEntityData.name,
+          ns_type: 'staging',
+          ns_id: selectedNamespace, // Use the selected namespace ID
+          sa_id: selectedEntityData.sa_id,
+          en_id: selectedEntityData.id,
+        },
+      };
+
+      await entityAPI.createWithMeta(entityData, [metaField]);
+      await refetch();
+      toast({
+        title: "Success",
+        description: "Meta field created successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to create meta field: ${error}`,
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleEdit = (id: string, updatedData: Partial<TableData>) => {
+  const handleEdit = async (id: string, updatedData: Partial<TableData>) => {
     console.log('Edit meta field:', id, updatedData);
-    // TODO: Implement UPDATE_META_FIELD mutation
+    // Note: API doesn't provide update for individual meta fields
+    // Would need to update entire entity with meta fields
+    toast({
+      title: "Info", 
+      description: "Meta field updates not yet supported via API",
+    });
   };
 
-  const handleDelete = (ids: string[]) => {
-    console.log('Delete meta fields:', ids);
-    // TODO: Implement DELETE_META_FIELD mutation
+  const handleDelete = async (ids: string[]) => {
+    try {
+      await metaAPI.delete(ids);
+      await refetch();
+      toast({
+        title: "Success",
+        description: `${ids.length} meta field(s) deleted successfully`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to delete meta fields: ${error}`,
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleSave = (data: TableData[]) => {
+  const handleSave = async (data: TableData[]) => {
     console.log('Save meta fields:', data);
-    // TODO: Implement batch update mutation
-    // refetch(); // Refresh data after successful save
+    // Note: API doesn't provide batch update for meta fields
+    // Would need to update entire entity with meta fields
+    toast({
+      title: "Info",
+      description: "Bulk meta field updates not yet supported via API",
+    });
   };
 
   /**

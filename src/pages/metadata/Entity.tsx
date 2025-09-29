@@ -19,6 +19,8 @@
 import { useQuery } from '@apollo/client';
 import { DataTable, Column, TableData } from "@/components/table/DataTable";
 import { GET_ENTITIES, type GetEntitiesResponse } from "@/graphql/queries";
+import { entityAPI } from "@/services/api";
+import { useToast } from "@/components/ui/use-toast";
 
 /**
  * Column configuration for the entity table
@@ -42,6 +44,8 @@ const entityColumns: Column[] = [
  * from the GraphQL API and provides full CRUD functionality.
  */
 export default function Entity() {
+  const { toast } = useToast();
+  
   /**
    * GraphQL query to fetch all entities with nested subject area and namespace data
    * Handles loading states, errors, and data updates automatically
@@ -69,59 +73,134 @@ export default function Entity() {
 
   /**
    * Handle adding new entity
-   * TODO: Implement GraphQL mutation for creating entities
-   * 
-   * @param newRow - Partial data for the new entity
    */
-  const handleAdd = (newRow: Partial<TableData>) => {
-    console.log('Add entity:', newRow);
-    // TODO: Implement CREATE_ENTITY mutation
-    // Example:
-    // await createEntity({ variables: { input: newRow } });
-    // refetch(); // Refresh data after successful creation
+  const handleAdd = async (newRow: Partial<TableData>) => {
+    try {
+      const entityData = {
+        id: newRow.id || '',
+        type: newRow.type || '',
+        subtype: newRow.subtype || '',
+        name: newRow.name || '',
+        description: newRow.description || '',
+        is_delta: newRow.is_delta === 'Yes',
+        runtime: '',
+        tags: '',
+        custom_props: [],
+        dependency: '',
+        primary_grain: newRow.primary_grain || '',
+        secondary_grain: '',
+        tertiary_grain: '',
+        sa_id: newRow.sa_id || '',
+        update_strategy_: 'I',
+        ns: newRow.namespace_name || '',
+        sa: newRow.subjectarea_name || '',
+        ns_type: 'staging',
+      };
+
+      await entityAPI.create([entityData]);
+      await refetch();
+      toast({
+        title: "Success",
+        description: "Entity created successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to create entity: ${error}`,
+        variant: "destructive",
+      });
+    }
   };
 
   /**
    * Handle editing existing entity
-   * TODO: Implement GraphQL mutation for updating entities
-   * 
-   * @param id - Unique identifier of the entity to edit
-   * @param updatedData - Updated field values
    */
-  const handleEdit = (id: string, updatedData: Partial<TableData>) => {
-    console.log('Edit entity:', id, updatedData);
-    // TODO: Implement UPDATE_ENTITY mutation
-    // Example:
-    // await updateEntity({ variables: { id, input: updatedData } });
-    // refetch(); // Refresh data after successful update
+  const handleEdit = async (id: string, updatedData: Partial<TableData>) => {
+    try {
+      const existingEntity = tableData.find(item => item.id === id);
+      if (!existingEntity) return;
+
+      const entityData = {
+        ...existingEntity,
+        ...updatedData,
+        is_delta: updatedData.is_delta === 'Yes',
+        update_strategy_: 'U',
+      };
+
+      await entityAPI.create([entityData]);
+      await refetch();
+      toast({
+        title: "Success",
+        description: "Entity updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to update entity: ${error}`,
+        variant: "destructive",
+      });
+    }
   };
 
   /**
    * Handle deleting entities
-   * TODO: Implement GraphQL mutation for deleting entities
-   * 
-   * @param ids - Array of entity IDs to delete
    */
-  const handleDelete = (ids: string[]) => {
-    console.log('Delete entities:', ids);
-    // TODO: Implement DELETE_ENTITY mutation
-    // Example:
-    // await deleteEntities({ variables: { ids } });
-    // refetch(); // Refresh data after successful deletion
+  const handleDelete = async (ids: string[]) => {
+    try {
+      await entityAPI.delete(ids);
+      await refetch();
+      toast({
+        title: "Success",
+        description: `${ids.length} entit${ids.length === 1 ? 'y' : 'ies'} deleted successfully`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to delete entities: ${error}`,
+        variant: "destructive",
+      });
+    }
   };
 
   /**
    * Handle bulk save operations
-   * TODO: Implement GraphQL mutation for batch updates
-   * 
-   * @param data - Array of entity data to save
    */
-  const handleSave = (data: TableData[]) => {
-    console.log('Save entities:', data);
-    // TODO: Implement batch update mutation
-    // Example:
-    // await batchUpdateEntities({ variables: { input: data } });
-    // refetch(); // Refresh data after successful save
+  const handleSave = async (data: TableData[]) => {
+    try {
+      const entitiesToSave = data.map(item => ({
+        id: item.id,
+        type: item.type || '',
+        subtype: item.subtype || '',
+        name: item.name || '',
+        description: item.description || '',
+        is_delta: item.is_delta === 'Yes',
+        runtime: '',
+        tags: '',
+        custom_props: [],
+        dependency: '',
+        primary_grain: item.primary_grain || '',
+        secondary_grain: '',
+        tertiary_grain: '',
+        sa_id: item.sa_id || '',
+        update_strategy_: 'U',
+        ns: item.namespace_name || '',
+        sa: item.subjectarea_name || '',
+        ns_type: 'staging',
+      }));
+
+      await entityAPI.create(entitiesToSave);
+      await refetch();
+      toast({
+        title: "Success",
+        description: "Changes saved successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to save changes: ${error}`,
+        variant: "destructive",
+      });
+    }
   };
 
   // Handle loading state

@@ -19,6 +19,8 @@
 import { useQuery } from '@apollo/client';
 import { DataTable, Column, TableData } from "@/components/table/DataTable";
 import { GET_NAMESPACES, type GetNamespacesResponse } from "@/graphql/queries";
+import { namespaceAPI } from "@/services/api";
+import { useToast } from "@/components/ui/use-toast";
 
 /**
  * Column configuration for the namespace table
@@ -38,6 +40,8 @@ const namespaceColumns: Column[] = [
  * from the GraphQL API and provides full CRUD functionality.
  */
 export default function NameSpace() {
+  const { toast } = useToast();
+  
   /**
    * GraphQL query to fetch all namespaces
    * Handles loading states, errors, and data updates automatically
@@ -58,59 +62,120 @@ export default function NameSpace() {
 
   /**
    * Handle adding new namespace
-   * TODO: Implement GraphQL mutation for creating namespaces
-   * 
-   * @param newRow - Partial data for the new namespace
    */
-  const handleAdd = (newRow: Partial<TableData>) => {
-    console.log('Add namespace:', newRow);
-    // TODO: Implement CREATE_NAMESPACE mutation
-    // Example:
-    // await createNamespace({ variables: { input: newRow } });
-    // refetch(); // Refresh data after successful creation
+  const handleAdd = async (newRow: Partial<TableData>) => {
+    try {
+      const namespaceData = {
+        id: newRow.id || '',
+        type: newRow.type || '',
+        name: newRow.name || '',
+        runtime: '',
+        privilege: '',
+        tags: newRow.tags || '',
+        custom_props: '',
+        github_repo: '',
+        status: 'Active',
+        update_strategy_: 'I',
+        namespace_id: newRow.id || '',
+      };
+
+      await namespaceAPI.create([namespaceData]);
+      await refetch();
+      toast({
+        title: "Success",
+        description: "Namespace created successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to create namespace: ${error}`,
+        variant: "destructive",
+      });
+    }
   };
 
   /**
    * Handle editing existing namespace
-   * TODO: Implement GraphQL mutation for updating namespaces
-   * 
-   * @param id - Unique identifier of the namespace to edit
-   * @param updatedData - Updated field values
    */
-  const handleEdit = (id: string, updatedData: Partial<TableData>) => {
-    console.log('Edit namespace:', id, updatedData);
-    // TODO: Implement UPDATE_NAMESPACE mutation
-    // Example:
-    // await updateNamespace({ variables: { id, input: updatedData } });
-    // refetch(); // Refresh data after successful update
+  const handleEdit = async (id: string, updatedData: Partial<TableData>) => {
+    try {
+      // For now, we'll use create API for updates (as update endpoint wasn't provided)
+      const existingNamespace = tableData.find(item => item.id === id);
+      if (!existingNamespace) return;
+
+      const namespaceData = {
+        ...existingNamespace,
+        ...updatedData,
+        update_strategy_: 'U',
+      };
+
+      await namespaceAPI.create([namespaceData]);
+      await refetch();
+      toast({
+        title: "Success",
+        description: "Namespace updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to update namespace: ${error}`,
+        variant: "destructive",
+      });
+    }
   };
 
   /**
    * Handle deleting namespaces
-   * TODO: Implement GraphQL mutation for deleting namespaces
-   * 
-   * @param ids - Array of namespace IDs to delete
    */
-  const handleDelete = (ids: string[]) => {
-    console.log('Delete namespaces:', ids);
-    // TODO: Implement DELETE_NAMESPACE mutation
-    // Example:
-    // await deleteNamespaces({ variables: { ids } });
-    // refetch(); // Refresh data after successful deletion
+  const handleDelete = async (ids: string[]) => {
+    try {
+      await namespaceAPI.delete(ids);
+      await refetch();
+      toast({
+        title: "Success",
+        description: `${ids.length} namespace(s) deleted successfully`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to delete namespaces: ${error}`,
+        variant: "destructive",
+      });
+    }
   };
 
   /**
    * Handle bulk save operations
-   * TODO: Implement GraphQL mutation for batch updates
-   * 
-   * @param data - Array of namespace data to save
    */
-  const handleSave = (data: TableData[]) => {
-    console.log('Save namespaces:', data);
-    // TODO: Implement batch update mutation
-    // Example:
-    // await batchUpdateNamespaces({ variables: { input: data } });
-    // refetch(); // Refresh data after successful save
+  const handleSave = async (data: TableData[]) => {
+    try {
+      const namespacesToSave = data.map(item => ({
+        id: item.id,
+        type: item.type || '',
+        name: item.name || '',
+        runtime: '',
+        privilege: '',
+        tags: item.tags || '',
+        custom_props: '',
+        github_repo: '',
+        status: item.status || 'Active',
+        update_strategy_: 'U',
+        namespace_id: item.id,
+      }));
+
+      await namespaceAPI.create(namespacesToSave);
+      await refetch();
+      toast({
+        title: "Success",
+        description: "Changes saved successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to save changes: ${error}`,
+        variant: "destructive",
+      });
+    }
   };
 
   // Handle loading state
