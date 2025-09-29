@@ -60,18 +60,29 @@ export const DataTable = ({
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [editedData, setEditedData] = useState<TableData[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [newlyAddedIds, setNewlyAddedIds] = useState<string[]>([]);
 
   const filteredData = useMemo(() => {
     const dataToFilter = editedData.length > 0 ? editedData : data;
-    if (!searchTerm) return dataToFilter;
+    let filtered = dataToFilter;
     
-    return dataToFilter.filter((row) =>
-      columns.some((col) =>
-        String(row[col.key])
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())
-      )
-    );
+    if (searchTerm) {
+      filtered = dataToFilter.filter((row) =>
+        columns.some((col) =>
+          String(row[col.key])
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
+        )
+      );
+    }
+    
+    // Sort to show draft rows at the top
+    return filtered.sort((a, b) => {
+      if (a._status === 'draft' && b._status !== 'draft') return -1;
+      if (a._status !== 'draft' && b._status === 'draft') return 1;
+      return 0;
+    });
   }, [data, editedData, searchTerm, columns]);
 
   const hasChanges = useMemo(() => {
@@ -104,10 +115,26 @@ export const DataTable = ({
     }
   };
 
-  const handleSave = () => {
-    onSave?.(editedData);
-    setEditingRows([]);
-    setEditedData([]);
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await onSave?.(editedData);
+      
+      // Store newly added IDs for animation
+      const draftIds = editedData.filter(row => row._status === 'draft').map(row => row.id);
+      setNewlyAddedIds(draftIds);
+      
+      // Clear states
+      setEditingRows([]);
+      setEditedData([]);
+      
+      // Clear animation after 3 seconds
+      setTimeout(() => {
+        setNewlyAddedIds([]);
+      }, 3000);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleAddRow = () => {
@@ -144,13 +171,19 @@ export const DataTable = ({
   };
 
   const getRowClassName = (row: TableData) => {
+    const baseClasses = 'transition-all duration-200';
+    const isNewlyAdded = newlyAddedIds.includes(row.id);
+    
     switch (row._status) {
       case 'draft':
-        return 'bg-table-row-draft border-l-4 border-l-warning/70 transition-all duration-200';
+        return `bg-table-row-draft border-l-4 border-l-warning/70 ${baseClasses}`;
       case 'edited':
-        return 'bg-table-row-edited border-l-4 border-l-primary/70 transition-all duration-200';
+        return `bg-table-row-edited border-l-4 border-l-primary/70 ${baseClasses}`;
       default:
-        return 'hover:bg-table-row-hover transition-all duration-200';
+        if (isNewlyAdded) {
+          return `bg-success/10 hover:bg-table-row-hover animate-fade-in ${baseClasses}`;
+        }
+        return `hover:bg-table-row-hover ${baseClasses}`;
     }
   };
 
@@ -177,10 +210,20 @@ export const DataTable = ({
               variant="default" 
               size="sm" 
               onClick={handleSave}
+              disabled={isSaving}
               className="animate-fade-in"
             >
-              <Save className="h-4 w-4 mr-2" />
-              Save Changes
+              {isSaving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Changes
+                </>
+              )}
             </Button>
           )}
           
