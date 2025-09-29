@@ -94,7 +94,9 @@ export const DataTable = ({
     } else {
       // Toggle editing for all rows
       if (editingRows.length > 0) {
+        // Exiting edit mode - revert changes
         setEditingRows([]);
+        setEditedData([]);
       } else {
         setEditingRows(filteredData.map(row => row.id));
         if (editedData.length === 0) setEditedData([...data]);
