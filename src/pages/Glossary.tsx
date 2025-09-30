@@ -6,14 +6,14 @@ export default function Glossary() {
   const [selectedSubjectArea, setSelectedSubjectArea] = useState<any>(null);
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] absolute left-0 right-0 top-14">
+    <div className="flex h-[calc(100vh-3.5rem)]">
       <SubSidebar
         namespaceType="glossary"
         onSubjectAreaSelect={setSelectedSubjectArea}
         selectedSubjectAreaId={selectedSubjectArea?.id}
       />
       
-      <div className="flex-1 p-6 overflow-y-auto ml-64">
+      <div className="flex-1 p-6 overflow-y-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground">Glossary Management</h1>
           <p className="text-muted-foreground">
