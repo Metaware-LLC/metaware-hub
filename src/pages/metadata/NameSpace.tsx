@@ -20,7 +20,29 @@ import { useQuery } from '@apollo/client';
 import { DataTable, Column, TableData } from "@/components/table/DataTable";
 import { GET_NAMESPACES, type GetNamespacesResponse } from "@/graphql/queries";
 import { namespaceAPI } from "@/services/api";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+/**
+ * Helper function to get badge variant for namespace type
+ */
+const getTypeBadgeVariant = (type: string): "staging" | "glossary" | "model" | "reference" => {
+  const typeMap: Record<string, "staging" | "glossary" | "model" | "reference"> = {
+    'staging': 'staging',
+    'glossary': 'glossary',
+    'model': 'model',
+    'reference': 'reference',
+  };
+  return typeMap[type.toLowerCase()] || 'staging';
+};
 
 /**
  * Column configuration for the namespace table
@@ -33,7 +55,33 @@ const namespaceColumns: Column[] = [
     title: 'Type', 
     type: 'select',
     options: ['staging', 'glossary', 'model', 'reference'],
-    required: true 
+    required: true,
+    renderCell: (row, isEditing, onChange) => {
+      if (isEditing) {
+        return (
+          <Select
+            value={row.type || ''}
+            onValueChange={onChange}
+          >
+            <SelectTrigger className="h-8">
+              <SelectValue placeholder="Select type..." />
+            </SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              {['staging', 'glossary', 'model', 'reference'].map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      }
+      return (
+        <Badge variant={getTypeBadgeVariant(row.type)}>
+          {row.type}
+        </Badge>
+      );
+    }
   },
   { key: 'status', title: 'Status', type: 'text' },
   { key: 'tags', title: 'Tags', type: 'text' },
