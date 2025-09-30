@@ -11,7 +11,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
       <Header />
       <div className="flex">
         <Sidebar />
-        <main className="flex-1 ml-64 mt-14">
+        <main className="flex-1 ml-64 mt-14 p-6">
           {children}
         </main>
       </div>
