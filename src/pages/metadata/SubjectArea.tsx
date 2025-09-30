@@ -26,6 +26,19 @@ import { GroupedNamespaceSelect } from "@/components/table/GroupedNamespaceSelec
 import { Badge } from "@/components/ui/badge";
 
 /**
+ * Helper function to get badge variant for namespace type
+ */
+const getTypeBadgeVariant = (type: string): "staging" | "glossary" | "model" | "reference" => {
+  const typeMap: Record<string, "staging" | "glossary" | "model" | "reference"> = {
+    'staging': 'staging',
+    'glossary': 'glossary',
+    'model': 'model',
+    'reference': 'reference',
+  };
+  return typeMap[type.toLowerCase()] || 'staging';
+};
+
+/**
  * Column configuration for the subject area table
  * Defines the structure and display properties for each column
  */
@@ -115,7 +128,7 @@ export default function SubjectArea() {
           }
           return (
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+              <Badge variant={getTypeBadgeVariant(row.namespace_type)} className="text-[10px] px-1.5 py-0">
                 {row.namespace_type}
               </Badge>
               <span>{row.namespace_name}</span>

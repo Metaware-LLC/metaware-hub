@@ -14,6 +14,19 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 
+/**
+ * Helper function to get badge variant for namespace type
+ */
+const getTypeBadgeVariant = (type: string): "staging" | "glossary" | "model" | "reference" => {
+  const typeMap: Record<string, "staging" | "glossary" | "model" | "reference"> = {
+    'staging': 'staging',
+    'glossary': 'glossary',
+    'model': 'model',
+    'reference': 'reference',
+  };
+  return typeMap[type.toLowerCase()] || 'staging';
+};
+
 interface Namespace {
   id: string;
   name: string;
@@ -58,7 +71,7 @@ export const GroupedNamespaceSelect = ({
         <SelectValue placeholder={placeholder}>
           {selectedNamespace && showTypePrefix && (
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+              <Badge variant={getTypeBadgeVariant(selectedNamespace.type)} className="text-[10px] px-1.5 py-0">
                 {selectedNamespace.type}
               </Badge>
               <span>{selectedNamespace.name}</span>
@@ -81,7 +94,7 @@ export const GroupedNamespaceSelect = ({
               >
                 {showTypePrefix ? (
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    <Badge variant={getTypeBadgeVariant(namespace.type)} className="text-[10px] px-1.5 py-0">
                       {namespace.type}
                     </Badge>
                     <span>{namespace.name}</span>
