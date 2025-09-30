@@ -352,7 +352,7 @@ export default function Meta() {
                 sa: selectedEntityData.subjectarea.name,
                 en: selectedEntityData.name,
                 ns_type: 'staging',
-                ns_id: '',
+                ns_id: selectedNamespace,
                 sa_id: selectedEntityData.sa_id,
                 en_id: selectedEntity,
               }
@@ -408,7 +408,7 @@ export default function Meta() {
                 sa: selectedEntityData.subjectarea.name,
                 en: selectedEntityData.name,
                 ns_type: 'staging',
-                ns_id: '',
+                ns_id: selectedNamespace,
                 sa_id: selectedEntityData.sa_id,
                 en_id: selectedEntity,
               }
