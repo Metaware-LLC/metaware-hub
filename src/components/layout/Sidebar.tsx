@@ -82,7 +82,7 @@ export const Sidebar = () => {
   };
 
   return (
-    <aside className="fixed left-0 top-14 bottom-0 w-64 border-r border-sidebar-border bg-sidebar-background">
+    <aside className="fixed left-0 top-14 bottom-0 w-64 border-r border-sidebar-border bg-sidebar-background z-30">
       <nav className="p-4 space-y-2">
         {navItems.map((item) => (
           <div key={item.title}>

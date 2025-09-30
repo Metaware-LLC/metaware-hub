@@ -30,7 +30,7 @@ export function SubSidebar({ namespaceType, onSubjectAreaSelect, selectedSubject
   };
 
   return (
-    <div className="w-64 border-r border-border bg-background overflow-y-auto">
+    <div className="w-64 border-r border-border bg-background overflow-y-auto z-30">
       <div className="p-4">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase mb-4">
           {namespaceType} Namespaces
