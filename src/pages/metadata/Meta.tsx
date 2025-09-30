@@ -79,6 +79,7 @@ export default function Meta() {
   const [selectedSubjectArea, setSelectedSubjectArea] = useState<string>('');
   const [selectedEntity, setSelectedEntity] = useState<string>('');
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [draftRowsFromUpload, setDraftRowsFromUpload] = useState<TableData[]>([]);
   const { toast } = useToast();
 
   // GraphQL queries for dropdown data
@@ -124,7 +125,7 @@ export default function Meta() {
   /**
    * Transform GraphQL meta data to table format
    */
-  const tableData: TableData[] = metaData?.meta_meta.map(field => {
+  const existingTableData: TableData[] = metaData?.meta_meta.map(field => {
     return {
       id: field.id,
       name: field.name,
@@ -140,6 +141,9 @@ export default function Meta() {
       order: field.order || 0,
     };
   }) || [];
+
+  // Combine existing data with draft rows from upload
+  const tableData: TableData[] = [...draftRowsFromUpload, ...existingTableData];
 
   /**
    * Handle namespace selection change
@@ -166,6 +170,7 @@ export default function Meta() {
    */
   const handleEntityChange = (value: string) => {
     setSelectedEntity(value);
+    setDraftRowsFromUpload([]); // Clear draft rows when entity changes
   };
 
   /**
@@ -423,6 +428,9 @@ export default function Meta() {
 
       await entityAPI.createWithMeta(entityData, metaFields);
       
+      // Clear draft rows after successful save
+      setDraftRowsFromUpload([]);
+      
       await refetch();
       toast({
         title: "Success",
@@ -451,8 +459,29 @@ export default function Meta() {
   /**
    * Handle file upload success
    */
-  const handleUploadSuccess = () => {
-    refetch();
+  const handleUploadSuccess = (draftRows?: any[]) => {
+    if (draftRows && draftRows.length > 0) {
+      // Convert server response to table data format with draft status
+      const formattedDraftRows: TableData[] = draftRows.map((row, index) => ({
+        id: `draft_${Date.now()}_${index}`,
+        name: row.name || '',
+        alias: row.alias || '',
+        description: row.description || '',
+        type: row.type || '',
+        subtype: row.subtype || '',
+        is_primary_grain: row.is_primary_grain || false,
+        is_secondary_grain: row.is_secondary_grain || false,
+        is_tertiary_grain: row.is_tertiary_grain || false,
+        default: row.default || '',
+        nullable: row.nullable || false,
+        order: row.order || index,
+        _status: 'draft',
+      }));
+      setDraftRowsFromUpload(formattedDraftRows);
+    } else {
+      // If data was persisted, refetch from server
+      refetch();
+    }
   };
 
   return (

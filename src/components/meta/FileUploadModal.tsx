@@ -22,7 +22,7 @@ interface FileUploadModalProps {
   entity: string;
   namespaceType: string;
   primaryGrain: string;
-  onSuccess: () => void;
+  onSuccess: (draftRows?: any[]) => void;
 }
 
 export function FileUploadModal({
@@ -101,9 +101,16 @@ export function FileUploadModal({
         throw new Error(`Upload failed: ${response.status} - ${response.statusText}`);
       }
 
+      const responseData = await response.json();
+
+      // If both create_meta and load_data are false, pass the detected fields as draft rows
+      const shouldReturnDraftRows = !createMeta && !loadData;
+
       toast({
         title: "Success",
-        description: "File processed successfully",
+        description: shouldReturnDraftRows 
+          ? "Meta fields detected. Click Save to persist them."
+          : "File processed successfully",
       });
 
       // Reset form
@@ -112,7 +119,7 @@ export function FileUploadModal({
       setCreateMeta(false);
       setLoadData(false);
       onOpenChange(false);
-      onSuccess();
+      onSuccess(shouldReturnDraftRows ? responseData : undefined);
     } catch (error) {
       toast({
         title: "Error",
