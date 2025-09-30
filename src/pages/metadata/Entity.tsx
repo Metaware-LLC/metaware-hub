@@ -229,11 +229,23 @@ export default function Entity() {
       if (!existingEntity) return;
 
       const entityData = {
-        ...existingEntity,
-        ...updatedData,
-        is_delta: Boolean(updatedData.is_delta_bool),
-        ns_type: existingEntity.namespace_type || updatedData.namespace_type || 'staging',
+        type: updatedData.type || existingEntity.type,
+        subtype: updatedData.subtype || existingEntity.subtype || '',
+        name: updatedData.name || existingEntity.name,
+        description: updatedData.description || existingEntity.description || '',
+        is_delta: Boolean(updatedData.is_delta_bool ?? existingEntity.is_delta_bool),
+        runtime: updatedData.runtime || existingEntity.runtime || '',
+        tags: '',
+        custom_props: [],
+        dependency: '',
+        primary_grain: updatedData.primary_grain || existingEntity.primary_grain || '',
+        secondary_grain: updatedData.secondary_grain || existingEntity.secondary_grain || '',
+        tertiary_grain: updatedData.tertiary_grain || existingEntity.tertiary_grain || '',
+        sa_id: updatedData.sa_id || existingEntity.sa_id,
+        ns: updatedData.namespace_name || existingEntity.namespace_name || '',
+        sa: updatedData.subjectarea_name || existingEntity.subjectarea_name || '',
         en: updatedData.name || existingEntity.name,
+        ns_type: existingEntity.namespace_type || updatedData.namespace_type || 'staging',
         update_strategy_: 'U',
       };
 
@@ -327,7 +339,6 @@ export default function Entity() {
             if (!hasChanges) return null;
             
             return {
-              id: item.id,
               type: item.type || '',
               subtype: item.subtype || '',
               name: item.name || '',
