@@ -274,9 +274,9 @@ export const DataTable = ({
     
     switch (row._status) {
       case 'draft':
-        return `bg-table-row-draft border-l-4 border-l-warning/70 ${baseClasses}`;
+        return `bg-table-row-draft ${baseClasses}`;
       case 'edited':
-        return `bg-table-row-edited border-l-4 border-l-primary/70 ${baseClasses}`;
+        return `bg-table-row-edited ${baseClasses}`;
       default:
         if (isNewlyAdded) {
           return `bg-success/10 hover:bg-table-row-hover animate-fade-in ${baseClasses}`;
@@ -405,9 +405,16 @@ export const DataTable = ({
             {filteredData.map((row) => (
               <TableRow
                 key={row.id}
-                className={getRowClassName(row)}
+                className={cn(
+                  getRowClassName(row),
+                  row._status === 'draft' && "border-l-4 border-l-warning/70",
+                  row._status === 'edited' && "border-l-4 border-l-primary/70"
+                )}
               >
-                <TableCell>
+                <TableCell className={cn(
+                  row._status === 'draft' && "pl-2",
+                  row._status === 'edited' && "pl-2"
+                )}>
                   <input
                     type="checkbox"
                     checked={selectedRows.includes(row.id)}

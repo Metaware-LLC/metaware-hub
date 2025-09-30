@@ -300,7 +300,6 @@ export default function Meta() {
       if (!selectedEntityData) return;
 
       const entityData = {
-        id: selectedEntityData.id,
         type: selectedEntityData.type,
         subtype: selectedEntityData.subtype || '',
         name: selectedEntityData.name,
