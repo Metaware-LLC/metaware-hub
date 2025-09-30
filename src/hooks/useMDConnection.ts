@@ -52,11 +52,11 @@ export function useMDConnection(): UseMDConnectionReturn {
       }
 
       // Select bundle with correct paths
-      // Load both WASM and worker from CDN to avoid COEP issues
+      // WASM from CDN, worker served locally with proper COEP headers
       const bundle = await duckdb.selectBundle({
         mvp: {
           mainModule: 'https://unpkg.com/@duckdb/duckdb-wasm@1.28.0/dist/duckdb-mvp.wasm',
-          mainWorker: 'https://unpkg.com/@duckdb/duckdb-wasm@1.28.0/dist/duckdb-browser-mvp.worker.js',
+          mainWorker: '/duckdb/duckdb-browser-mvp.worker.js',
         },
       });
 
