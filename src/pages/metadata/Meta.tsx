@@ -459,25 +459,30 @@ export default function Meta() {
   /**
    * Handle file upload success
    */
-  const handleUploadSuccess = (draftRows?: any[]) => {
-    if (draftRows && draftRows.length > 0) {
-      // Convert server response to table data format with draft status
-      const formattedDraftRows: TableData[] = draftRows.map((row, index) => ({
-        id: `draft_${Date.now()}_${index}`,
-        name: row.name || '',
-        alias: row.alias || '',
-        description: row.description || '',
-        type: row.type || '',
-        subtype: row.subtype || '',
-        is_primary_grain: row.is_primary_grain || false,
-        is_secondary_grain: row.is_secondary_grain || false,
-        is_tertiary_grain: row.is_tertiary_grain || false,
-        default: row.default || '',
-        nullable: row.nullable || false,
-        order: row.order || index,
-        _status: 'draft',
-      }));
-      setDraftRowsFromUpload(formattedDraftRows);
+  const handleUploadSuccess = (draftRows?: any) => {
+    if (draftRows && draftRows.return_data) {
+      // Meta fields are in return_data[1] (return_data[0] is entity data)
+      const metaFields = draftRows.return_data[1];
+      
+      if (metaFields && Array.isArray(metaFields) && metaFields.length > 0) {
+        // Convert server response to table data format with draft status
+        const formattedDraftRows: TableData[] = metaFields.map((row: any, index: number) => ({
+          id: `draft_${Date.now()}_${index}`,
+          name: row.name || '',
+          alias: row.alias || '',
+          description: row.description || '',
+          type: row.type || '',
+          subtype: row.subtype || '',
+          is_primary_grain: row.is_primary_grain || false,
+          is_secondary_grain: row.is_secondary_grain || false,
+          is_tertiary_grain: row.is_tertiary_grain || false,
+          default: row.default || '',
+          nullable: row.nullable || false,
+          order: row.order || index,
+          _status: 'draft',
+        }));
+        setDraftRowsFromUpload(formattedDraftRows);
+      }
     } else {
       // If data was persisted, refetch from server
       refetch();
