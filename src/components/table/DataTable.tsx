@@ -418,11 +418,13 @@ export const DataTable = ({
                 <input
                   type="checkbox"
                   checked={selectedRows.length === filteredData.length && filteredData.length > 0}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    e.stopPropagation();
                     setSelectedRows(
                       e.target.checked ? filteredData.map(row => row.id) : []
-                    )
-                  }
+                    );
+                  }}
+                  onClick={(e) => e.stopPropagation()}
                   className="w-5 h-5 cursor-pointer rounded-md"
                 />
               </TableHead>
@@ -457,13 +459,15 @@ export const DataTable = ({
                   <input
                     type="checkbox"
                     checked={selectedRows.includes(row.id)}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      e.stopPropagation();
                       setSelectedRows(prev =>
                         e.target.checked
                           ? [...prev, row.id]
                           : prev.filter(id => id !== row.id)
-                      )
-                    }
+                      );
+                    }}
+                    onClick={(e) => e.stopPropagation()}
                     className="w-5 h-5 cursor-pointer rounded-md"
                   />
                 </TableCell>
