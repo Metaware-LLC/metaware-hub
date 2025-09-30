@@ -14,6 +14,7 @@ import Staging from "./pages/Staging";
 import Model from "./pages/Model";
 import Glossary from "./pages/Glossary";
 import Admin from "./pages/Admin";
+import DuckDBDemo from "./pages/DuckDBDemo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/model" element={<Model />} />
             <Route path="/glossary" element={<Glossary />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/duckdb-demo" element={<DuckDBDemo />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
