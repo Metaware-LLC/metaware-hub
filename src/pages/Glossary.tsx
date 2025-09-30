@@ -27,6 +27,11 @@ export default function Glossary() {
     }
   }, [ready, connection, selectedEntity]);
 
+  // Reset selected entity when subject area changes
+  useEffect(() => {
+    setSelectedEntity(null);
+  }, [selectedSubjectAreaId]);
+
   const fetchData = async () => {
     if (!connection || !selectedEntity) return;
 
