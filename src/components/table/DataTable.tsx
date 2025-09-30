@@ -28,11 +28,12 @@ import {
   Maximize,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export interface Column {
   key: string;
   title: string;
-  type?: 'text' | 'number' | 'date' | 'select';
+  type?: 'text' | 'number' | 'date' | 'select' | 'checkbox';
   options?: string[] | { value: string; label: string }[];
   renderCell?: (row: TableData, isEditing: boolean, onChange: (value: string) => void) => React.ReactNode;
   required?: boolean;
@@ -180,7 +181,10 @@ export const DataTable = ({
     const newRow: TableData = {
       id: `new_${Date.now()}`,
       _status: 'draft',
-      ...columns.reduce((acc, col) => ({ ...acc, [col.key]: '' }), {}),
+      ...columns.reduce((acc, col) => ({ 
+        ...acc, 
+        [col.key]: col.type === 'checkbox' ? false : '' 
+      }), {}),
     };
     
     // Add to local state and mark as editing
@@ -192,7 +196,7 @@ export const DataTable = ({
     setEditingRows(prev => [...prev, newRow.id]);
   };
 
-  const handleCellEdit = (id: string, key: string, value: string) => {
+  const handleCellEdit = (id: string, key: string, value: string | boolean) => {
     setEditedData(prev =>
       prev.map(row =>
         row.id === id
@@ -358,6 +362,11 @@ export const DataTable = ({
                     {(editingRows.includes(row.id) || row._status === 'draft' || row._status === 'edited') ? (
                       column.renderCell ? (
                         column.renderCell(row, true, (value) => handleCellEdit(row.id, column.key, value))
+                      ) : column.type === 'checkbox' ? (
+                        <Checkbox
+                          checked={Boolean(row[column.key])}
+                          onCheckedChange={(checked) => handleCellEdit(row.id, column.key, checked)}
+                        />
                       ) : column.type === 'select' && column.options ? (
                         <Select
                           value={row[column.key] || ''}
@@ -387,12 +396,19 @@ export const DataTable = ({
                         />
                       )
                     ) : (
-                      <span className={searchTerm && String(row[column.key]).toLowerCase().includes(searchTerm.toLowerCase())
-                        ? "bg-yellow-200 dark:bg-yellow-900 px-1 rounded"
-                        : ""
-                      }>
-                        {column.renderCell ? column.renderCell(row, false, () => {}) : row[column.key]}
-                      </span>
+                      column.type === 'checkbox' ? (
+                        <Checkbox
+                          checked={Boolean(row[column.key])}
+                          disabled
+                        />
+                      ) : (
+                        <span className={searchTerm && String(row[column.key]).toLowerCase().includes(searchTerm.toLowerCase())
+                          ? "bg-yellow-200 dark:bg-yellow-900 px-1 rounded"
+                          : ""
+                        }>
+                          {column.renderCell ? column.renderCell(row, false, () => {}) : row[column.key]}
+                        </span>
+                      )
                     )}
                   </TableCell>
                 ))}

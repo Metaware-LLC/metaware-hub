@@ -28,7 +28,6 @@ import { useToast } from "@/components/ui/use-toast";
  */
 const namespaceColumns: Column[] = [
   { key: 'name', title: 'Name', type: 'text', required: true },
-  { key: 'status', title: 'Status', type: 'text' },
   { 
     key: 'type', 
     title: 'Type', 
@@ -36,6 +35,7 @@ const namespaceColumns: Column[] = [
     options: ['staging', 'glossary', 'model', 'reference'],
     required: true 
   },
+  { key: 'status', title: 'Status', type: 'text' },
   { key: 'tags', title: 'Tags', type: 'text' },
 ];
 

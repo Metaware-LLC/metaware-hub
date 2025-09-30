@@ -41,10 +41,14 @@ const entityColumns: Column[] = [
   { key: 'type', title: 'Type', type: 'text', required: true },
   { key: 'subtype', title: 'Subtype', type: 'text' },
   { key: 'description', title: 'Description', type: 'text' },
-  { key: 'subjectarea_display', title: 'Subject Area', type: 'text', required: true },
   { key: 'namespace_display', title: 'NameSpace', type: 'text', required: true },
+  { key: 'subjectarea_display', title: 'Subject Area', type: 'text', required: true },
   { key: 'is_delta', title: 'Delta Enabled', type: 'text' },
   { key: 'primary_grain', title: 'Primary Grain', type: 'text' },
+  { key: 'secondary_grain', title: 'Secondary Grain', type: 'text' },
+  { key: 'tertiary_grain', title: 'Tertiary Grain', type: 'text' },
+  { key: 'is_delta_bool', title: 'Is Delta', type: 'checkbox' },
+  { key: 'runtime', title: 'Runtime', type: 'text' },
 ];
 
 /**
@@ -88,6 +92,10 @@ export default function Entity() {
       namespace_type: entity.subjectarea.namespace.type,
       is_delta: entity.is_delta ? 'Yes' : 'No',
       primary_grain: entity.primary_grain || '',
+      secondary_grain: entity.secondary_grain || '',
+      tertiary_grain: entity.tertiary_grain || '',
+      is_delta_bool: entity.is_delta || false,
+      runtime: '',
       sa_id: entity.sa_id,
       ns_id: nsId,
     };
@@ -210,7 +218,7 @@ export default function Entity() {
       const entityData = {
         ...existingEntity,
         ...updatedData,
-        is_delta: updatedData.is_delta === 'Yes',
+        is_delta: Boolean(updatedData.is_delta_bool),
         update_strategy_: 'U',
       };
 
@@ -265,14 +273,14 @@ export default function Entity() {
               subtype: item.subtype || '',
               name: item.name || '',
               description: item.description || '',
-              is_delta: item.is_delta === 'Yes',
-              runtime: '',
+              is_delta: Boolean(item.is_delta_bool),
+              runtime: item.runtime || '',
               tags: item.tags || '',
               custom_props: [],
               dependency: '',
               primary_grain: item.primary_grain || '',
-              secondary_grain: '',
-              tertiary_grain: '',
+              secondary_grain: item.secondary_grain || '',
+              tertiary_grain: item.tertiary_grain || '',
               sa_id: item.sa_id || '',
               update_strategy_: 'I',
               ns: item.namespace_name || '',
@@ -305,12 +313,24 @@ export default function Entity() {
                 changes.description = item.description;
                 hasChanges = true;
               }
-              if (item.is_delta !== originalRow.is_delta) {
-                changes.is_delta = item.is_delta === 'Yes';
+              if (item.is_delta_bool !== originalRow.is_delta_bool) {
+                changes.is_delta = Boolean(item.is_delta_bool);
                 hasChanges = true;
               }
               if (item.primary_grain !== originalRow.primary_grain) {
                 changes.primary_grain = item.primary_grain;
+                hasChanges = true;
+              }
+              if (item.secondary_grain !== originalRow.secondary_grain) {
+                changes.secondary_grain = item.secondary_grain;
+                hasChanges = true;
+              }
+              if (item.tertiary_grain !== originalRow.tertiary_grain) {
+                changes.tertiary_grain = item.tertiary_grain;
+                hasChanges = true;
+              }
+              if (item.runtime !== originalRow.runtime) {
+                changes.runtime = item.runtime;
                 hasChanges = true;
               }
               if (item.sa_id !== originalRow.sa_id) {

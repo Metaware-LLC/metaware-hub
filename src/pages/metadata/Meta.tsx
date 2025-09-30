@@ -45,14 +45,17 @@ import { useToast } from "@/components/ui/use-toast";
  * Defines the structure and display properties for each column
  */
 const metaColumns: Column[] = [
-  { key: 'name', title: 'Field Name', type: 'text' },
-  { key: 'type', title: 'Data Type', type: 'text' },
-  { key: 'nullable', title: 'Nullable', type: 'text' },
-  { key: 'default', title: 'Default Value', type: 'text' },
-  { key: 'description', title: 'Description', type: 'text' },
-  { key: 'alias', title: 'Alias', type: 'text' },
-  { key: 'order', title: 'Order', type: 'number' },
-  { key: 'grain_info', title: 'Grain Level', type: 'text' },
+  { key: 'name', title: 'name', type: 'text' },
+  { key: 'alias', title: 'alias', type: 'text' },
+  { key: 'description', title: 'description', type: 'text' },
+  { key: 'type', title: 'type', type: 'text' },
+  { key: 'subtype', title: 'subtype', type: 'text' },
+  { key: 'is_primary_grain', title: 'is_primary_grain', type: 'checkbox' },
+  { key: 'is_secondary_grain', title: 'is_secondary_grain', type: 'checkbox' },
+  { key: 'is_tertiary_grain', title: 'is_tertiary_grain', type: 'checkbox' },
+  { key: 'default', title: 'default', type: 'text' },
+  { key: 'nullable', title: 'nullable', type: 'checkbox' },
+  { key: 'order', title: 'order', type: 'number' },
 ];
 
 /**
@@ -112,23 +115,19 @@ export default function Meta() {
    * Transform GraphQL meta data to table format
    */
   const tableData: TableData[] = metaData?.meta_meta.map(field => {
-    // Determine grain level information
-    let grainInfo = '';
-    if (field.is_primary_grain) grainInfo += 'Primary ';
-    if (field.is_secondary_grain) grainInfo += 'Secondary ';
-    if (field.is_tertiary_grain) grainInfo += 'Tertiary ';
-    if (grainInfo) grainInfo += 'Grain';
-
     return {
       id: field.id,
       name: field.name,
-      type: field.type,
-      nullable: field.nullable ? 'Yes' : 'No',
-      default: field.default || '',
-      description: field.description || '',
       alias: field.alias || '',
+      description: field.description || '',
+      type: field.type,
+      subtype: field.subtype || '',
+      is_primary_grain: field.is_primary_grain || false,
+      is_secondary_grain: field.is_secondary_grain || false,
+      is_tertiary_grain: field.is_tertiary_grain || false,
+      default: field.default || '',
+      nullable: field.nullable || false,
       order: field.order || 0,
-      grain_info: grainInfo.trim(),
     };
   }) || [];
 
@@ -200,18 +199,18 @@ export default function Meta() {
       const metaField = {
         id: newRow.id || '',
         type: newRow.type || '',
-        subtype: '',
+        subtype: newRow.subtype || '',
         name: newRow.name || '',
         description: newRow.description || '',
         order: Number(newRow.order) || 0,
         alias: newRow.alias || '',
         length: 0,
         default: newRow.default || '',
-        nullable: newRow.nullable === 'Yes',
+        nullable: Boolean(newRow.nullable),
         format: '',
-        is_primary_grain: newRow.grain_info?.includes('Primary') || false,
-        is_secondary_grain: newRow.grain_info?.includes('Secondary') || false,
-        is_tertiary_grain: newRow.grain_info?.includes('Tertiary') || false,
+        is_primary_grain: Boolean(newRow.is_primary_grain),
+        is_secondary_grain: Boolean(newRow.is_secondary_grain),
+        is_tertiary_grain: Boolean(newRow.is_tertiary_grain),
         tags: '',
         custom_props: [],
         entity_id: selectedEntity,
@@ -315,18 +314,18 @@ export default function Meta() {
             return {
               id: `meta_${Date.now()}_${Math.random()}`,
               type: item.type || '',
-              subtype: '',
+              subtype: item.subtype || '',
               name: item.name || '',
               description: item.description || '',
               order: Number(item.order) || 0,
               alias: item.alias || '',
               length: 0,
               default: item.default || '',
-              nullable: item.nullable === 'Yes',
+              nullable: Boolean(item.nullable),
               format: '',
-              is_primary_grain: item.grain_info?.includes('Primary') || false,
-              is_secondary_grain: item.grain_info?.includes('Secondary') || false,
-              is_tertiary_grain: item.grain_info?.includes('Tertiary') || false,
+              is_primary_grain: Boolean(item.is_primary_grain),
+              is_secondary_grain: Boolean(item.is_secondary_grain),
+              is_tertiary_grain: Boolean(item.is_tertiary_grain),
               tags: '',
               custom_props: [],
               entity_id: selectedEntity,
@@ -352,12 +351,15 @@ export default function Meta() {
             if (
               item.name !== originalRow.name ||
               item.type !== originalRow.type ||
+              item.subtype !== originalRow.subtype ||
               item.nullable !== originalRow.nullable ||
               item.default !== originalRow.default ||
               item.description !== originalRow.description ||
               item.alias !== originalRow.alias ||
               item.order !== originalRow.order ||
-              item.grain_info !== originalRow.grain_info
+              item.is_primary_grain !== originalRow.is_primary_grain ||
+              item.is_secondary_grain !== originalRow.is_secondary_grain ||
+              item.is_tertiary_grain !== originalRow.is_tertiary_grain
             ) {
               hasChanges = true;
             }
@@ -368,18 +370,18 @@ export default function Meta() {
             return {
               id: item.id,
               type: item.type || '',
-              subtype: '',
+              subtype: item.subtype || '',
               name: item.name || '',
               description: item.description || '',
               order: Number(item.order) || 0,
               alias: item.alias || '',
               length: 0,
               default: item.default || '',
-              nullable: item.nullable === 'Yes',
+              nullable: Boolean(item.nullable),
               format: '',
-              is_primary_grain: item.grain_info?.includes('Primary') || false,
-              is_secondary_grain: item.grain_info?.includes('Secondary') || false,
-              is_tertiary_grain: item.grain_info?.includes('Tertiary') || false,
+              is_primary_grain: Boolean(item.is_primary_grain),
+              is_secondary_grain: Boolean(item.is_secondary_grain),
+              is_tertiary_grain: Boolean(item.is_tertiary_grain),
               tags: '',
               custom_props: [],
               entity_id: selectedEntity,
@@ -388,7 +390,7 @@ export default function Meta() {
               en: selectedEntityData.name,
               entity_core: {
                 ns: selectedEntityData.subjectarea.namespace.name,
-                sa: selectedEntityData.subjectarea.namespace.name,
+                sa: selectedEntityData.subjectarea.name,
                 en: selectedEntityData.name,
                 ns_type: 'staging',
                 ns_id: '',
