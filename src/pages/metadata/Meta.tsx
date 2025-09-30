@@ -18,6 +18,7 @@
 
 import { useState } from "react";
 import { useQuery } from '@apollo/client';
+import { Upload } from "lucide-react";
 import { DataTable, Column, TableData } from "@/components/table/DataTable";
 import {
   Select,
@@ -27,6 +28,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { 
   GET_NAMESPACES, 
   GET_SUBJECTAREAS, 
@@ -39,6 +47,7 @@ import {
 } from "@/graphql/queries";
 import { entityAPI, metaAPI } from "@/services/api";
 import { useToast } from "@/components/ui/use-toast";
+import { FileUploadModal } from "@/components/meta/FileUploadModal";
 
 /**
  * Column configuration for the meta fields table
@@ -69,6 +78,7 @@ export default function Meta() {
   const [selectedNamespace, setSelectedNamespace] = useState<string>('');
   const [selectedSubjectArea, setSelectedSubjectArea] = useState<string>('');
   const [selectedEntity, setSelectedEntity] = useState<string>('');
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const { toast } = useToast();
 
   // GraphQL queries for dropdown data
@@ -431,6 +441,19 @@ export default function Meta() {
    * Get the selected entity name for display
    */
   const selectedEntityName = availableEntities.find(e => e.id === selectedEntity)?.name || '';
+  const selectedEntityData = availableEntities.find(e => e.id === selectedEntity);
+  
+  /**
+   * Check if meta exists for the selected entity
+   */
+  const hasExistingMeta = tableData.length > 0;
+
+  /**
+   * Handle file upload success
+   */
+  const handleUploadSuccess = () => {
+    refetch();
+  };
 
   return (
     <div className="space-y-6">
@@ -492,24 +515,65 @@ export default function Meta() {
         {/* Entity Dropdown */}
         <div className="space-y-2">
           <Label htmlFor="entity">Entity</Label>
-          <Select 
-            onValueChange={handleEntityChange} 
-            value={selectedEntity}
-            disabled={!selectedSubjectArea}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select entity..." />
-            </SelectTrigger>
-            <SelectContent>
-              {availableEntities.map((entity) => (
-                <SelectItem key={entity.id} value={entity.id}>
-                  {entity.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <Select 
+              onValueChange={handleEntityChange} 
+              value={selectedEntity}
+              disabled={!selectedSubjectArea}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select entity..." />
+              </SelectTrigger>
+              <SelectContent>
+                {availableEntities.map((entity) => (
+                  <SelectItem key={entity.id} value={entity.id}>
+                    {entity.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            {/* File Upload Button */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setUploadModalOpen(true)}
+                      disabled={!selectedEntity || hasExistingMeta}
+                    >
+                      <Upload className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {!selectedEntity 
+                    ? "Select an entity first"
+                    : hasExistingMeta 
+                    ? "Meta already exists - File Upload Disabled"
+                    : "Upload CSV to auto-detect meta fields"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
       </div>
+
+      {/* File Upload Modal */}
+      {selectedEntityData && (
+        <FileUploadModal
+          open={uploadModalOpen}
+          onOpenChange={setUploadModalOpen}
+          namespace={selectedEntityData.subjectarea.namespace.name}
+          subjectArea={selectedEntityData.subjectarea.name}
+          entity={selectedEntityData.name}
+          namespaceType={selectedEntityData.subjectarea.namespace.type}
+          primaryGrain={selectedEntityData.primary_grain || ''}
+          onSuccess={handleUploadSuccess}
+        />
+      )}
 
       {/* Entity Meta Table */}
       {selectedEntity && (

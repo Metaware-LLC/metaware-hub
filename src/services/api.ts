@@ -115,4 +115,41 @@ export const metaAPI = {
       }),
     });
   },
+
+  autoDetectStaging: async (
+    file: File,
+    params: {
+      ns: string;
+      sa: string;
+      en: string;
+      ns_type: string;
+      create_meta: boolean;
+      load_data: boolean;
+      primary_grain: string;
+    }
+  ) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const queryParams = new URLSearchParams({
+      ns: params.ns,
+      sa: params.sa,
+      en: params.en,
+      ns_type: params.ns_type,
+      create_meta: String(params.create_meta),
+      load_data: String(params.load_data),
+      primary_grain: params.primary_grain,
+    });
+
+    const response = await fetch(`${API_BASE_URL}/mwn/auto_detect_staging?${queryParams}`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status} - ${response.statusText}`);
+    }
+
+    return response.json();
+  },
 };
