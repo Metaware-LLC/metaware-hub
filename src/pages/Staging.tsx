@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { SubSidebar } from "@/components/layout/SubSidebar";
 import { EntityGrid } from "@/components/entity/EntityGrid";
+import { EntityDataDialog } from "@/components/entity/EntityDataDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
@@ -8,6 +9,8 @@ import { Search, X } from "lucide-react";
 export default function Staging() {
   const [selectedSubjectAreaId, setSelectedSubjectAreaId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedEntity, setSelectedEntity] = useState<any>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] fixed left-64 right-0 top-14">
@@ -54,10 +57,19 @@ export default function Staging() {
             subjectAreaId={selectedSubjectAreaId || undefined}
             namespaceType="staging"
             searchQuery={searchQuery}
-            onEntityClick={(entity) => console.log("Entity clicked:", entity)}
+            onEntityClick={(entity) => {
+              setSelectedEntity(entity);
+              setDialogOpen(true);
+            }}
           />
         </div>
       </div>
+
+      <EntityDataDialog
+        entity={selectedEntity}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+      />
     </div>
   );
 }
