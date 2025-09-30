@@ -232,6 +232,7 @@ export default function Entity() {
         ...existingEntity,
         ...updatedData,
         is_delta: Boolean(updatedData.is_delta_bool),
+        ns_type: existingEntity.namespace_type || updatedData.namespace_type || 'staging',
         update_strategy_: 'U',
       };
 
@@ -341,6 +342,7 @@ export default function Entity() {
               sa_id: item.sa_id || '',
               ns: item.namespace_name || '',
               sa: item.subjectarea_name || '',
+              ns_type: item.namespace_type || 'staging',
               update_strategy_: 'U',
             };
           }
