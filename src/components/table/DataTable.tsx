@@ -29,6 +29,7 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -268,6 +269,36 @@ export const DataTable = ({
       : <ArrowDown className="h-4 w-4 ml-2" />;
   };
 
+  const handleDownloadCSV = () => {
+    // Convert data to CSV format
+    const headers = columns.map(col => col.title).join(',');
+    const rows = filteredData.map(row => 
+      columns.map(col => {
+        const value = row[col.key];
+        // Handle values that contain commas or quotes
+        if (value == null) return '';
+        const stringValue = String(value);
+        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+          return `"${stringValue.replace(/"/g, '""')}"`;
+        }
+        return stringValue;
+      }).join(',')
+    ).join('\n');
+    
+    const csv = `${headers}\n${rows}`;
+    
+    // Create and trigger download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${entityType.toLowerCase().replace(/\s+/g, '_')}_data_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const getRowClassName = (row: TableData) => {
     const baseClasses = 'transition-all duration-200';
     const isNewlyAdded = newlyAddedIds.includes(row.id);
@@ -359,6 +390,14 @@ export const DataTable = ({
           </div>
           <Button variant="outline" size="sm">
             <Filter className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadCSV}
+            title="Download as CSV"
+          >
+            <Download className="h-4 w-4" />
           </Button>
           <Button
             variant="outline"
