@@ -13,13 +13,14 @@
  */
 
 import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
+import { API_CONFIG } from '../config/api';
 
 /**
  * HTTP Link configuration for GraphQL endpoint
  * Enhanced with error handling and connection management
  */
 const httpLink = createHttpLink({
-  uri: 'http://localhost:8000/graphql',
+  uri: API_CONFIG.GRAPHQL_ENDPOINT,
   // credentials: 'include',
 });
 

@@ -5,7 +5,9 @@
  * for managing namespaces, subject areas, entities, and metadata fields.
  */
 
-const API_BASE_URL = 'http://localhost:8000';
+import { API_CONFIG } from '../config/api';
+
+const API_BASE_URL = API_CONFIG.REST_ENDPOINT;
 
 /**
  * Generic API request helper

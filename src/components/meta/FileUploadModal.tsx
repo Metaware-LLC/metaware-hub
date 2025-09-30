@@ -90,7 +90,7 @@ export function FileUploadModal({
       });
 
       const response = await fetch(
-        `http://localhost:8000/mwn/auto_detect_staging?${queryParams}`,
+        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/mwn/auto_detect_staging?${queryParams}`,
         {
           method: 'POST',
           body: formData,
