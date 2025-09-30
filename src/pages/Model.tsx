@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { SubSidebar } from "@/components/layout/SubSidebar";
 import { EntityGrid } from "@/components/entity/EntityGrid";
 import { DataTable } from "@/components/table/DataTable";
-import { useMDConnection, queryMDTable } from "@/hooks/useMDConnection";
+import { useMDConnectionContext } from "@/contexts/MDConnectionContext";
+import { queryMDTable } from "@/hooks/useMDConnection";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, X, Database, Loader2 } from "lucide-react";
@@ -11,15 +12,14 @@ export default function Model() {
   const [selectedSubjectAreaId, setSelectedSubjectAreaId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEntity, setSelectedEntity] = useState<any>(null);
-  const { connection, connect, ready } = useMDConnection();
+  const { connection, connect, ready } = useMDConnectionContext();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<{ columns: string[]; rows: any[] }>({ columns: [], rows: [] });
 
+  // Connect to database on mount
   useEffect(() => {
-    if (!ready && !connection) {
-      connect();
-    }
-  }, [ready, connection, connect]);
+    connect();
+  }, [connect]);
 
   useEffect(() => {
     if (ready && connection && selectedEntity) {

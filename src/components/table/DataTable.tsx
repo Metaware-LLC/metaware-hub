@@ -371,9 +371,9 @@ export const DataTable = ({
       </div>
 
       {/* Table */}
-      <div className="border rounded-lg">
+      <div className="border rounded-lg overflow-auto max-h-[calc(100vh-280px)]">
         <Table>
-          <TableHeader className="bg-table-header">
+          <TableHeader className="bg-table-header sticky top-0 z-10">
             <TableRow>
               <TableHead className="w-12">
                 <input
