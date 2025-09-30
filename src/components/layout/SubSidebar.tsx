@@ -25,7 +25,7 @@ export const SubSidebar = ({
   const { data: subjectAreasData } = useQuery(GET_SUBJECTAREAS);
 
   const namespaces = namespacesData?.namespaces || [];
-  const allSubjectAreas = subjectAreasData?.subjectareas || [];
+  const allSubjectAreas = subjectAreasData?.meta_subjectarea || [];
 
   const toggleNamespace = (namespaceId: string) => {
     setExpandedNamespaces(prev =>
