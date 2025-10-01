@@ -85,6 +85,16 @@ export function AddGlossaryMetaModal({
     (meta) => !alreadySelectedIds.has(meta.id)
   );
 
+  console.log("AddGlossaryMetaModal render:", {
+    open,
+    loading,
+    metaFieldsCount: metaFields.length,
+    alreadySelectedIdsCount: alreadySelectedIds.size,
+    availableFieldsCount: availableFields.length,
+    metaFields,
+    availableFields
+  });
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl">
