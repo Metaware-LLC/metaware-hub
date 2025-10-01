@@ -98,9 +98,54 @@ export default function BuildModels() {
       return;
     }
 
+    if (selectedMetas.size === 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please select at least one metadata attribute",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      const payload = {
+      // Step 1: Build Conceptual Model
+      const buildPayload = {
+        glossary_entity_core: {
+          ns: selectedEntity.subjectarea.namespace.name,
+          sa: selectedEntity.subjectarea.name,
+          en: selectedEntity.name,
+          ns_type: "glossary",
+        },
+        conceptual_model_meta_request: {
+          meta_names: Array.from(selectedMetas),
+        },
+        load_model: true,
+      };
+
+      const buildResponse = await fetch(
+        `${API_CONFIG.REST_ENDPOINT}/mwn/build_conceptual_model?project_code=${projectCode}&load_model=true`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(buildPayload),
+        }
+      );
+
+      if (!buildResponse.ok) {
+        throw new Error(`Build model failed with status: ${buildResponse.status}`);
+      }
+
+      const buildResult = await buildResponse.json();
+      
+      if (buildResult.status !== "success") {
+        throw new Error("Build model returned unsuccessful status");
+      }
+
+      // Step 2: Load Conceptual Model
+      const loadPayload = {
         ns: selectedEntity.subjectarea.namespace.name,
         sa: selectedEntity.subjectarea.name,
         en: selectedEntity.name,
@@ -110,26 +155,26 @@ export default function BuildModels() {
         en_id: selectedEntity.id,
       };
 
-      const response = await fetch(
+      const loadResponse = await fetch(
         `${API_CONFIG.REST_ENDPOINT}/mwn/load_conceptual_model?project_code=${projectCode}`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(loadPayload),
         }
       );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!loadResponse.ok) {
+        throw new Error(`Load model failed with status: ${loadResponse.status}`);
       }
 
-      const result = await response.json();
+      const loadResult = await loadResponse.json();
 
       toast({
         title: "Success",
-        description: "Model published successfully",
+        description: "Model built and published successfully",
       });
 
       // Refresh the existing model data
@@ -138,7 +183,7 @@ export default function BuildModels() {
       console.error("Error publishing model:", error);
       toast({
         title: "Error",
-        description: "Failed to publish model. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to publish model. Please try again.",
         variant: "destructive",
       });
     } finally {
