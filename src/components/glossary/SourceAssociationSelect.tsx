@@ -26,15 +26,15 @@ export function SourceAssociationSelect({
   const sourceAssociations = useMemo(() => {
     if (!data?.meta_entity || !glossaryEntity) return [];
 
-    // Get the primary grain from the glossary entity
-    const glossaryGrain = glossaryEntity.primary_grain;
-    if (!glossaryGrain) return [];
+    // Get the entity name from the glossary entity - this is the grain to match
+    const glossaryEntityName = glossaryEntity.name;
+    if (!glossaryEntityName) return [];
 
-    // Find staging entities that match this grain
+    // Find staging entities whose primary_grain matches the glossary entity name
     return data.meta_entity.filter(
       (entity: Entity) =>
         entity.subjectarea.namespace.type === "staging" &&
-        entity.primary_grain === glossaryGrain
+        entity.primary_grain === glossaryEntityName
     );
   }, [data, glossaryEntity]);
 
