@@ -33,33 +33,53 @@ export function AddGlossaryMetaModal({
   const [selectedMetas, setSelectedMetas] = useState<Set<string>>(new Set());
   const [metaFields, setMetaFields] = useState<MetaField[]>([]);
 
-  const [fetchMeta, { loading, data, error }] = useLazyQuery(GET_META_FOR_ENTITY);
-
-  useEffect(() => {
-    if (data?.meta_meta) {
-      console.log("Fetched meta fields:", data.meta_meta);
-      setMetaFields(data.meta_meta);
-    }
-  }, [data]);
-
-  useEffect(() => {
-    if (error) {
-      console.error("Error fetching meta:", error);
+  const [fetchMeta, { loading, data, error }] = useLazyQuery(GET_META_FOR_ENTITY, {
+    fetchPolicy: 'network-only',
+    onCompleted: (data) => {
+      console.log("✅ Query completed successfully:", data);
+      if (data?.meta_meta) {
+        console.log("✅ Setting metaFields with", data.meta_meta.length, "items");
+        setMetaFields(data.meta_meta);
+      } else {
+        console.warn("⚠️ Query returned but meta_meta is empty");
+      }
+    },
+    onError: (error) => {
+      console.error("❌ Query error:", error);
       toast({
         title: "Error",
         description: "Failed to fetch metadata fields",
         variant: "destructive",
       });
     }
-  }, [error, toast]);
+  });
 
   const handleOpenChange = (newOpen: boolean) => {
+    console.log("🔄 handleOpenChange called with:", { newOpen, entityId, alreadySelectedIds: Array.from(alreadySelectedIds) });
+    
     if (newOpen) {
       // Initialize with already selected IDs so they show as checked
       setSelectedMetas(new Set(alreadySelectedIds));
       setMetaFields([]);
-      console.log("Opening modal, fetching meta for entity:", entityId);
-      fetchMeta({ variables: { enid: entityId } });
+      console.log("🚀 Opening modal, calling fetchMeta with entityId:", entityId);
+      
+      if (!entityId) {
+        console.error("❌ Entity ID is missing!");
+        toast({
+          title: "Error",
+          description: "Entity ID is missing",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      fetchMeta({ variables: { enid: entityId } })
+        .then(result => {
+          console.log("📊 fetchMeta promise resolved:", result);
+        })
+        .catch(err => {
+          console.error("❌ fetchMeta promise rejected:", err);
+        });
     }
     onOpenChange(newOpen);
   };
