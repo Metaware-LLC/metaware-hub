@@ -293,7 +293,7 @@ export const RelationshipGraph = ({ entityId, entityName }: RelationshipGraphPro
                   </div>
                 </div>
 
-                {selectedNode.type === "staging" && selectedNode.entity.metas && selectedNode.entity.metas.length > 0 && (
+                {selectedNode.entity.metas && selectedNode.entity.metas.length > 0 && (
                   <div>
                     <p className="text-sm font-medium mb-2">Meta Fields</p>
                     <Table>
