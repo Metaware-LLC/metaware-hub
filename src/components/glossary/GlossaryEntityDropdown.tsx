@@ -28,7 +28,7 @@ interface GlossaryEntityDropdownProps {
 export function GlossaryEntityDropdown({
   value,
   onSelect,
-  placeholder = "Select Business Glossary (Blueprint)",
+  placeholder = "Blueprint Meta Data",
 }: GlossaryEntityDropdownProps) {
   const [open, setOpen] = useState(false);
 

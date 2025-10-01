@@ -49,14 +49,14 @@ const navItems: NavItem[] = [
     icon: Archive,
   },
   {
-    title: "Model",
-    href: "/model",
-    icon: Layers,
-  },
-  {
     title: "Glossary",
     href: "/glossary",
     icon: BookOpen,
+  },
+  {
+    title: "Model",
+    href: "/model",
+    icon: Layers,
   },
   {
     title: "Admin",
