@@ -59,7 +59,16 @@ export const Header = () => {
               className="h-8 w-8 object-contain drop-shadow-md dark:brightness-100 brightness-0 dark:invert-0 invert" 
             />
           </div>
-          <span className="text-lg font-bold text-foreground">MetaWare</span>
+          <img 
+            src="/images/Metaware Name Dark.png" 
+            alt="MetaWare" 
+            className="h-6 object-contain dark:hidden"
+          />
+          <img 
+            src="/images/Metaware Name White.png" 
+            alt="MetaWare" 
+            className="h-6 object-contain hidden dark:block"
+          />
         </div>
 
         {/* Right side - Theme, Settings and Profile */}
