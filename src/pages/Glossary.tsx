@@ -1,67 +1,53 @@
 import { useState, useEffect } from "react";
+import { useLazyQuery } from "@apollo/client";
 import { SubSidebar } from "@/components/layout/SubSidebar";
 import { EntityGrid } from "@/components/entity/EntityGrid";
 import { DataTable } from "@/components/table/DataTable";
-import { useMDConnectionContext } from "@/contexts/MDConnectionContext";
-import { queryMDTable } from "@/hooks/useMDConnection";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, X, Database, Loader2 } from "lucide-react";
+import { GET_META_FOR_ENTITY, type MetaField } from "@/graphql/queries/meta";
+import { SourceAssociationSelect } from "@/components/glossary/SourceAssociationSelect";
+import { MappingTable } from "@/components/glossary/MappingTable";
+import { type Entity } from "@/graphql/queries/entity";
 
 export default function Glossary() {
   const [selectedSubjectAreaId, setSelectedSubjectAreaId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedEntity, setSelectedEntity] = useState<any>(null);
-  const { connection, connect, ready } = useMDConnectionContext();
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<{ columns: string[]; rows: any[] }>({ columns: [], rows: [] });
+  const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
+  const [metaFields, setMetaFields] = useState<MetaField[]>([]);
+  const [sourceEntity, setSourceEntity] = useState<Entity | null>(null);
+  const [activeTab, setActiveTab] = useState("meta");
 
-  // Connect to database on mount
-  useEffect(() => {
-    connect();
-  }, [connect]);
-
-  useEffect(() => {
-    if (ready && connection && selectedEntity) {
-      fetchData();
-    }
-  }, [ready, connection, selectedEntity]);
+  const [fetchMeta, { loading: metaLoading }] = useLazyQuery(GET_META_FOR_ENTITY, {
+    onCompleted: (data) => {
+      if (data?.meta_meta) {
+        setMetaFields(data.meta_meta);
+      }
+    },
+    onError: (error) => {
+      console.error("Error fetching meta:", error);
+    },
+  });
 
   // Reset selected entity when subject area changes
   useEffect(() => {
     setSelectedEntity(null);
   }, [selectedSubjectAreaId]);
 
-  const fetchData = async () => {
-    if (!connection || !selectedEntity) return;
-
-    setLoading(true);
-    try {
-      const namespace = selectedEntity.subjectarea.namespace.name;
-      const subjectarea = selectedEntity.subjectarea.name;
-      const entityName = selectedEntity.name;
-
-      const result = await queryMDTable(connection, namespace, subjectarea, entityName);
-      
-      // Add unique IDs to rows if they don't have them
-      const rowsWithIds = result.rows.map((row, index) => ({
-        ...row,
-        id: row.id || `row_${index}`
-      }));
-      
-      setData({ ...result, rows: rowsWithIds });
-    } catch (error) {
-      console.error("Error fetching entity data:", error);
-      setData({ columns: [], rows: [] });
-    } finally {
-      setLoading(false);
+  // Fetch meta when entity is selected
+  useEffect(() => {
+    if (selectedEntity) {
+      fetchMeta({ variables: { enid: selectedEntity.id } });
+      setSourceEntity(null);
     }
-  };
+  }, [selectedEntity, fetchMeta]);
 
-  const columns = data.columns.map((col) => ({
-    key: col,
-    title: col,
-    type: "text" as const,
+  const columns = metaFields.map((meta) => ({
+    key: meta.alias,
+    title: meta.name,
+    type: meta.type as any,
   }));
 
   return (
@@ -113,20 +99,6 @@ export default function Glossary() {
               onEntityClick={setSelectedEntity}
             />
           </div>
-        ) : !ready ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center space-y-2">
-              <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Connecting to database...</p>
-            </div>
-          </div>
-        ) : loading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center space-y-2">
-              <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Loading data...</p>
-            </div>
-          </div>
         ) : (
           <div className="h-full flex flex-col p-6">
             <div className="mb-4 flex items-center gap-4">
@@ -143,26 +115,79 @@ export default function Glossary() {
                   {selectedEntity.name}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  {selectedEntity.subjectarea.namespace.name}.{selectedEntity.subjectarea.name}
+                  {selectedEntity.subjectarea.namespace.name} / {selectedEntity.subjectarea.name}
                 </p>
               </div>
             </div>
-            
-            {data.rows.length === 0 ? (
-              <div className="flex items-center justify-center flex-1">
-                <div className="text-center space-y-2">
-                  <Database className="h-12 w-12 mx-auto text-muted-foreground opacity-50" />
-                  <p className="text-muted-foreground">No data found</p>
-                  <Button variant="outline" size="sm" onClick={fetchData}>
-                    Retry
-                  </Button>
+
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+              <TabsList>
+                <TabsTrigger value="meta">Meta</TabsTrigger>
+                <TabsTrigger value="associations">Source Associations</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="meta" className="flex-1 overflow-hidden mt-4">
+                {metaLoading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : metaFields.length === 0 ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center space-y-2">
+                      <Database className="h-12 w-12 mx-auto text-muted-foreground opacity-50" />
+                      <p className="text-muted-foreground">No metadata found</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border rounded-lg overflow-hidden h-full">
+                    <div className="overflow-auto h-full">
+                      <table className="w-full">
+                        <thead className="bg-muted/50 sticky top-0">
+                          <tr>
+                            <th className="text-left p-4 font-medium">Name</th>
+                            <th className="text-left p-4 font-medium">Alias</th>
+                            <th className="text-left p-4 font-medium">Type</th>
+                            <th className="text-left p-4 font-medium">Description</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {metaFields.map((field) => (
+                            <tr key={field.id} className="border-t hover:bg-muted/30">
+                              <td className="p-4">{field.name}</td>
+                              <td className="p-4 font-mono text-sm">{field.alias}</td>
+                              <td className="p-4">{field.type}</td>
+                              <td className="p-4 text-muted-foreground">
+                                {field.description || "-"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="associations" className="flex-1 overflow-auto mt-4">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Select Association</label>
+                    <SourceAssociationSelect
+                      glossaryEntity={selectedEntity}
+                      value={sourceEntity?.id}
+                      onSelect={setSourceEntity}
+                    />
+                  </div>
+
+                  {sourceEntity && (
+                    <MappingTable
+                      glossaryEntity={selectedEntity}
+                      sourceEntity={sourceEntity}
+                    />
+                  )}
                 </div>
-              </div>
-            ) : (
-              <div className="flex-1 overflow-hidden">
-                <DataTable columns={columns} data={data.rows} />
-              </div>
-            )}
+              </TabsContent>
+            </Tabs>
           </div>
         )}
       </div>
