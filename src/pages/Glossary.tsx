@@ -11,6 +11,7 @@ import { GET_META_FOR_ENTITY, type MetaField } from "@/graphql/queries/meta";
 import { GET_RULESETS_BY_ENTITY, type RulesetWithSource } from "@/graphql/queries/ruleset";
 import { SourceAssociationSelect } from "@/components/glossary/SourceAssociationSelect";
 import { MappingTable } from "@/components/glossary/MappingTable";
+import { RelationshipGraph } from "@/components/glossary/RelationshipGraph";
 import { type Entity } from "@/graphql/queries/entity";
 
 export default function Glossary() {
@@ -161,6 +162,7 @@ export default function Glossary() {
               <TabsList>
                 <TabsTrigger value="meta">Meta</TabsTrigger>
                 <TabsTrigger value="associations">Source Associations</TabsTrigger>
+                <TabsTrigger value="relationships">Glossary Relationship</TabsTrigger>
               </TabsList>
 
               <TabsContent value="meta" className="flex-1 overflow-hidden mt-4">
@@ -224,6 +226,13 @@ export default function Glossary() {
                     />
                   )}
                 </div>
+              </TabsContent>
+
+              <TabsContent value="relationships" className="flex-1 overflow-hidden mt-4">
+                <RelationshipGraph
+                  entityId={selectedEntity.id}
+                  entityName={selectedEntity.name}
+                />
               </TabsContent>
             </Tabs>
           </div>
