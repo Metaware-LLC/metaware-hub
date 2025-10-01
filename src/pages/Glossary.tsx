@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, X, Database, Loader2 } from "lucide-react";
 import { GET_META_FOR_ENTITY, type MetaField } from "@/graphql/queries/meta";
+import { GET_RULESETS_BY_ENTITY, type RulesetWithSource } from "@/graphql/queries/ruleset";
 import { SourceAssociationSelect } from "@/components/glossary/SourceAssociationSelect";
 import { MappingTable } from "@/components/glossary/MappingTable";
 import { type Entity } from "@/graphql/queries/entity";
@@ -19,6 +20,7 @@ export default function Glossary() {
   const [metaFields, setMetaFields] = useState<MetaField[]>([]);
   const [sourceEntity, setSourceEntity] = useState<Entity | null>(null);
   const [activeTab, setActiveTab] = useState("meta");
+  const [existingRuleset, setExistingRuleset] = useState<RulesetWithSource | null>(null);
 
   const [fetchMeta, { loading: metaLoading }] = useLazyQuery(GET_META_FOR_ENTITY, {
     onCompleted: (data) => {
@@ -31,9 +33,29 @@ export default function Glossary() {
     },
   });
 
+  const [fetchRulesets] = useLazyQuery(GET_RULESETS_BY_ENTITY, {
+    onCompleted: (data) => {
+      if (data.meta_ruleset && data.meta_ruleset.length > 0) {
+        const matchingRuleset = data.meta_ruleset.find(
+          (rs: RulesetWithSource) =>
+            rs.source?.source_en_id === sourceEntity?.id
+        );
+        setExistingRuleset(matchingRuleset || null);
+      } else {
+        setExistingRuleset(null);
+      }
+    },
+    onError: (error) => {
+      console.error("Error fetching rulesets:", error);
+      setExistingRuleset(null);
+    },
+  });
+
   // Reset selected entity when subject area changes
   useEffect(() => {
     setSelectedEntity(null);
+    setSourceEntity(null);
+    setExistingRuleset(null);
   }, [selectedSubjectAreaId]);
 
   // Fetch meta when entity is selected
@@ -41,8 +63,23 @@ export default function Glossary() {
     if (selectedEntity) {
       fetchMeta({ variables: { enid: selectedEntity.id } });
       setSourceEntity(null);
+      setExistingRuleset(null);
     }
   }, [selectedEntity, fetchMeta]);
+
+  // Fetch existing rulesets when source entity is selected
+  useEffect(() => {
+    if (selectedEntity && sourceEntity) {
+      fetchRulesets({
+        variables: {
+          targetEnId: selectedEntity.id,
+          type: "glossary_association",
+        },
+      });
+    } else {
+      setExistingRuleset(null);
+    }
+  }, [selectedEntity, sourceEntity, fetchRulesets]);
 
   const columns = metaFields.map((meta) => ({
     key: meta.alias,
@@ -183,6 +220,7 @@ export default function Glossary() {
                     <MappingTable
                       glossaryEntity={selectedEntity}
                       sourceEntity={sourceEntity}
+                      existingRuleset={existingRuleset || undefined}
                     />
                   )}
                 </div>

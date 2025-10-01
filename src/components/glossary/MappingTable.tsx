@@ -13,6 +13,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { GET_META_FOR_ENTITY, type MetaField } from "@/graphql/queries/meta";
 import { type Entity } from "@/graphql/queries/entity";
+import { type RulesetWithSource } from "@/graphql/queries/ruleset";
 import { AddGlossaryMetaModal } from "./AddGlossaryMetaModal";
 import { API_CONFIG } from "@/config/api";
 
@@ -25,9 +26,10 @@ interface MappingRow {
 interface MappingTableProps {
   glossaryEntity: Entity;
   sourceEntity: Entity;
+  existingRuleset?: RulesetWithSource;
 }
 
-export function MappingTable({ glossaryEntity, sourceEntity }: MappingTableProps) {
+export function MappingTable({ glossaryEntity, sourceEntity, existingRuleset }: MappingTableProps) {
   const { toast } = useToast();
   const [mappingRows, setMappingRows] = useState<MappingRow[]>([]);
   const [sourceMetaFields, setSourceMetaFields] = useState<MetaField[]>([]);
@@ -56,9 +58,31 @@ export function MappingTable({ glossaryEntity, sourceEntity }: MappingTableProps
   useEffect(() => {
     if (sourceEntity) {
       fetchSourceMeta({ variables: { enid: sourceEntity.id } });
-      setMappingRows([]);
     }
   }, [sourceEntity, fetchSourceMeta]);
+
+  // Load existing ruleset mappings when existingRuleset changes
+  useEffect(() => {
+    if (existingRuleset && existingRuleset.rules) {
+      const existingRows: MappingRow[] = existingRuleset.rules.map((rule) => ({
+        id: rule.id || crypto.randomUUID(),
+        glossaryMeta: {
+          id: rule.meta_id || "",
+          name: rule.meta?.name || rule.name,
+          alias: rule.meta?.name || rule.alias || "",
+          type: "string",
+          is_primary_grain: false,
+          is_secondary_grain: false,
+          is_tertiary_grain: false,
+          nullable: true,
+        } as MetaField,
+        sourceMetaAlias: rule.rule_expression,
+      }));
+      setMappingRows(existingRows);
+    } else {
+      setMappingRows([]);
+    }
+  }, [existingRuleset, sourceEntity]);
 
   const handleAddGlossaryMetas = (selectedMetas: MetaField[]) => {
     const newRows: MappingRow[] = selectedMetas.map((meta) => ({

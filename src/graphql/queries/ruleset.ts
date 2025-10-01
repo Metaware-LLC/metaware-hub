@@ -41,6 +41,106 @@ export const GET_META_RULESETS = gql`
 `;
 
 /**
+ * Query to fetch mapping rules for a specific ruleset
+ */
+export const GET_MAPPING_RULES = gql`
+  query MAPPING_RULES($id: String!) {
+    meta_ruleset(id: $id) {
+      id
+      type
+      name
+      target_en_id
+      view_name
+      rules {
+        id
+        type
+        subtype
+        name
+        alias
+        rule_expression
+        rule_status
+        description
+        is_shared
+        language
+        meta_id
+        meta {
+          id
+          name
+        }
+      }
+      source {
+        id
+        type
+        source_filter
+        source_en_id
+        source_entity {
+          id
+          name
+          subjectarea {
+            id
+            name
+            namespace {
+              id
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * Query to fetch rulesets by target entity ID and type
+ */
+export const GET_RULESETS_BY_ENTITY = gql`
+  query GET_RULESETS_BY_ENTITY($targetEnId: String!, $type: String!) {
+    meta_ruleset(targetEnId: $targetEnId, type: $type) {
+      id
+      type
+      name
+      target_en_id
+      view_name
+      rules {
+        id
+        type
+        subtype
+        name
+        alias
+        rule_expression
+        rule_status
+        description
+        is_shared
+        language
+        meta_id
+        meta {
+          id
+          name
+        }
+      }
+      source {
+        id
+        type
+        source_filter
+        source_en_id
+        source_entity {
+          id
+          name
+          subjectarea {
+            id
+            name
+            namespace {
+              id
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+/**
  * TypeScript interfaces for type safety
  */
 
@@ -90,6 +190,46 @@ export interface GetMetaRulesetsResponse {
 export interface GetMetaRulesetsVariables {
   id: string;
   sourceId: string;
+  targetEnId: string;
+  type: string;
+}
+
+export interface Source {
+  id: string;
+  type: string;
+  source_filter?: string;
+  source_en_id: string;
+  source_entity: {
+    id: string;
+    name: string;
+    subjectarea: {
+      id: string;
+      name: string;
+      namespace: {
+        id: string;
+        name: string;
+      };
+    };
+  };
+}
+
+export interface RulesetWithSource extends Ruleset {
+  source?: Source;
+}
+
+export interface GetMappingRulesResponse {
+  meta_ruleset: RulesetWithSource[];
+}
+
+export interface GetMappingRulesVariables {
+  id: string;
+}
+
+export interface GetRulesetsByEntityResponse {
+  meta_ruleset: RulesetWithSource[];
+}
+
+export interface GetRulesetsByEntityVariables {
   targetEnId: string;
   type: string;
 }
