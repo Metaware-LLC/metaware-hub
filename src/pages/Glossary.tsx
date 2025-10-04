@@ -6,12 +6,13 @@ import { DataTable } from "@/components/table/DataTable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, X, Database, Loader2 } from "lucide-react";
+import { Search, X, Database, Loader2, Upload } from "lucide-react";
 import { GET_META_FOR_ENTITY, type MetaField } from "@/graphql/queries/meta";
 import { GET_RULESETS_BY_ENTITY, type RulesetWithSource } from "@/graphql/queries/ruleset";
 import { SourceAssociationSelect } from "@/components/glossary/SourceAssociationSelect";
 import { MappingTable } from "@/components/glossary/MappingTable";
 import { RelationshipGraph } from "@/components/glossary/RelationshipGraph";
+import { ImportConfigModal } from "@/components/glossary/ImportConfigModal";
 import { type Entity } from "@/graphql/queries/entity";
 
 export default function Glossary() {
@@ -22,6 +23,7 @@ export default function Glossary() {
   const [sourceEntity, setSourceEntity] = useState<Entity | null>(null);
   const [activeTab, setActiveTab] = useState("meta");
   const [existingRuleset, setExistingRuleset] = useState<RulesetWithSource | null>(null);
+  const [importModalOpen, setImportModalOpen] = useState(false);
 
   const [fetchMeta, { loading: metaLoading }] = useLazyQuery(GET_META_FOR_ENTITY, {
     onCompleted: (data) => {
@@ -120,6 +122,14 @@ export default function Glossary() {
               <Button
                 variant="outline"
                 size="icon"
+                onClick={() => setImportModalOpen(true)}
+                title="Import configuration"
+              >
+                <Upload className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
                 onClick={() => {
                   setSearchQuery("");
                   setSelectedSubjectAreaId(null);
@@ -129,6 +139,14 @@ export default function Glossary() {
                 <X className="h-4 w-4" />
               </Button>
             </div>
+
+            <ImportConfigModal
+              open={importModalOpen}
+              onOpenChange={setImportModalOpen}
+              onSuccess={() => {
+                // Optionally refresh data after import
+              }}
+            />
 
             <EntityGrid
               subjectAreaId={selectedSubjectAreaId || undefined}
