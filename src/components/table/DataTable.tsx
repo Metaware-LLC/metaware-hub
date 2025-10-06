@@ -32,6 +32,8 @@ import {
   Download,
   Group,
   FilterX,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -94,6 +96,7 @@ export const DataTable = ({
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
   const [groupByColumn, setGroupByColumn] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Use external edited data if provided, otherwise use internal state
   const editedData = externalEditedData !== undefined ? externalEditedData : internalEditedData;
@@ -434,6 +437,23 @@ export const DataTable = ({
             />
           </div>
 
+          <Select value={groupByColumn || '_none'} onValueChange={(value) => setGroupByColumn(value === '_none' ? null : value)}>
+            <SelectTrigger className="w-48">
+              <div className="flex items-center gap-2">
+                <Group className="h-4 w-4" />
+                <SelectValue placeholder="Group by..." />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              <SelectItem value="_none">No grouping</SelectItem>
+              {columns.map((col) => (
+                <SelectItem key={col.key} value={col.key}>
+                  {col.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Button
             variant={showFilters ? "default" : "outline"}
             size="sm"
@@ -475,31 +495,7 @@ export const DataTable = ({
 
       {/* Table */}
       <div className="border rounded-lg overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-2 bg-muted/30 border-b">
-          <div className="flex items-center gap-2">
-            <Group className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Group by:</span>
-            <Select value={groupByColumn || '_none'} onValueChange={(value) => setGroupByColumn(value === '_none' ? null : value)}>
-              <SelectTrigger className="h-8 w-[180px] bg-background">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-popover z-50">
-                <SelectItem value="_none">None</SelectItem>
-                {columns.map((col) => (
-                  <SelectItem key={col.key} value={col.key}>
-                    {col.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {groupByColumn && (
-            <Badge variant="secondary" className="text-xs">
-              Grouped by {columns.find(c => c.key === groupByColumn)?.title}
-            </Badge>
-          )}
-        </div>
-        <div className="overflow-y-auto max-h-[calc(100vh-340px)]">
+        <div className="overflow-y-auto max-h-[calc(100vh-280px)]">
         <Table>
           <TableHeader className="bg-table-header sticky top-0 z-20 shadow-sm">
             <TableRow>
@@ -586,17 +582,38 @@ export const DataTable = ({
           <TableBody>
             {groupedData ? (
               // Render grouped data
-              Object.entries(groupedData).map(([groupValue, groupRows]) => (
-                <>
-                  <TableRow key={`group-${groupValue}`} className="bg-muted/30 font-semibold">
-                    <TableCell colSpan={columns.length + 1}>
-                      <div className="flex items-center gap-2">
-                        <Group className="h-4 w-4" />
-                        {groupValue} ({groupRows.length})
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  {groupRows.map((row) => {
+              Object.entries(groupedData).map(([groupValue, groupRows]) => {
+                const isExpanded = expandedGroups.has(groupValue);
+                return (
+                  <>
+                    <TableRow 
+                      key={`group-${groupValue}`} 
+                      className="bg-muted/30 font-semibold cursor-pointer hover:bg-muted/50"
+                      onClick={() => {
+                        setExpandedGroups(prev => {
+                          const newSet = new Set(prev);
+                          if (isExpanded) {
+                            newSet.delete(groupValue);
+                          } else {
+                            newSet.add(groupValue);
+                          }
+                          return newSet;
+                        });
+                      }}
+                    >
+                      <TableCell colSpan={columns.length + 1}>
+                        <div className="flex items-center gap-2">
+                          {isExpanded ? (
+                            <ChevronDown className="h-4 w-4" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4" />
+                          )}
+                          <Group className="h-4 w-4" />
+                          {groupValue} ({groupRows.length})
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                    {isExpanded && groupRows.map((row) => {
                     const isRowEditing = editingRows.includes(row.id) || row._status === 'draft' || row._status === 'edited';
                     
                     return (
@@ -696,7 +713,8 @@ export const DataTable = ({
                     );
                   })}
                 </>
-              ))
+              );
+              })
             ) : (
               // Render ungrouped data
               filteredData.map((row) => {
