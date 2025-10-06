@@ -433,7 +433,7 @@ export const DataTable = ({
             />
           </div>
           
-          <Select value={groupByColumn || ''} onValueChange={(value) => setGroupByColumn(value || null)}>
+          <Select value={groupByColumn || '_none'} onValueChange={(value) => setGroupByColumn(value === '_none' ? null : value)}>
             <SelectTrigger className="w-48">
               <div className="flex items-center gap-2">
                 <Group className="h-4 w-4" />
@@ -441,7 +441,7 @@ export const DataTable = ({
               </div>
             </SelectTrigger>
             <SelectContent className="bg-popover z-50">
-              <SelectItem value="">No grouping</SelectItem>
+              <SelectItem value="_none">No grouping</SelectItem>
               {columns.map((col) => (
                 <SelectItem key={col.key} value={col.key}>
                   {col.title}
