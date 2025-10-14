@@ -106,7 +106,18 @@ export default function Glossary() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Business Glossary</BreadcrumbPage>
+                  <BreadcrumbLink asChild>
+                    <button 
+                      onClick={() => {
+                        setSelectedEntity(null);
+                        setSelectedSubjectAreaId(null);
+                        setSearchQuery("");
+                      }}
+                      className="hover:text-foreground transition-colors"
+                    >
+                      Business Glossary
+                    </button>
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>

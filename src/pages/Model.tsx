@@ -82,7 +82,18 @@ export default function Model() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Data Model</BreadcrumbPage>
+                  <BreadcrumbLink asChild>
+                    <button 
+                      onClick={() => {
+                        setSelectedEntity(null);
+                        setSelectedSubjectAreaId(null);
+                        setSearchQuery("");
+                      }}
+                      className="hover:text-foreground transition-colors"
+                    >
+                      Data Model
+                    </button>
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>

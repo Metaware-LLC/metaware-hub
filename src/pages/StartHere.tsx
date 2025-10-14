@@ -21,14 +21,6 @@ export default function StartHere() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbPage>Start Here</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
       <div className="space-y-2">
         <h1 className="text-4xl font-bold text-foreground">Welcome to MetaWare</h1>
         <p className="text-lg text-muted-foreground max-w-3xl">

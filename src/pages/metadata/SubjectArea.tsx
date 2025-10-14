@@ -307,13 +307,6 @@ export default function SubjectArea() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbPage>Subject Area</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">Subject Area Management</h1>

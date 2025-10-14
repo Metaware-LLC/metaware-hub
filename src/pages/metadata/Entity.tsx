@@ -428,13 +428,6 @@ export default function Entity() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbPage>Entity</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">Entity Management</h1>

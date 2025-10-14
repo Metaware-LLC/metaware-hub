@@ -98,7 +98,18 @@ export default function Staging() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Staging</BreadcrumbPage>
+                  <BreadcrumbLink asChild>
+                    <button 
+                      onClick={() => {
+                        setSelectedEntity(null);
+                        setSelectedSubjectAreaId(null);
+                        setSearchQuery("");
+                      }}
+                      className="hover:text-foreground transition-colors"
+                    >
+                      Staging
+                    </button>
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
