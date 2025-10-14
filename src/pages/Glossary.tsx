@@ -193,7 +193,13 @@ export default function Glossary() {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <button onClick={() => setSelectedEntity(null)} className="hover:text-foreground transition-colors">
+                    <button 
+                      onClick={() => {
+                        setSelectedEntity(null);
+                        setSelectedSubjectAreaId(null);
+                      }} 
+                      className="hover:text-foreground transition-colors"
+                    >
                       {selectedEntity.subjectarea.namespace.name}
                     </button>
                   </BreadcrumbLink>
