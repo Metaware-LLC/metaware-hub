@@ -489,7 +489,7 @@ export const DataTable = ({
 
   return (
     <div className={cn(
-      "space-y-4",
+      "space-y-4 flex flex-col overflow-hidden",
       isFullscreen && "fixed inset-0 z-50 bg-background p-6",
       className
     )}>
