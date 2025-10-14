@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Database, CheckCircle, XCircle } from "lucide-react";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { Link } from "react-router-dom";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb";
 
 export default function DuckDBDemo() {
   const { connection, connect, ready, error } = useMDConnection();
@@ -42,12 +41,6 @@ export default function DuckDBDemo() {
       <div className="max-w-4xl mx-auto space-y-6">
         <Breadcrumb>
           <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/">Home</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbPage>DuckDB Demo</BreadcrumbPage>
             </BreadcrumbItem>
