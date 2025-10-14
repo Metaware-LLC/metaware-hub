@@ -654,8 +654,8 @@ export const DataTable = ({
         </div>
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
-        <div className="overflow-y-auto max-h-[calc(100vh-280px)]">
+      <div className="border rounded-lg overflow-hidden flex flex-col h-[calc(100vh-280px)]">
+        <div className="overflow-auto flex-1">
         <Table>
           <TableHeader className="bg-table-header sticky top-0 z-20 shadow-sm">
             <TableRow>

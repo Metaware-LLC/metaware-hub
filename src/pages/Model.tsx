@@ -82,6 +82,12 @@ export default function Model() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/">Home</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
                   <BreadcrumbPage>Data Model</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
@@ -148,6 +154,12 @@ export default function Model() {
           <div className="h-full flex flex-col p-6">
             <Breadcrumb className="mb-4">
               <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/">Home</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
                     <Link to="/model">Data Model</Link>
