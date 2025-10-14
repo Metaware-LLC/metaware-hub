@@ -68,7 +68,7 @@ export const Header = () => {
       <div className="flex h-full items-center justify-between px-6">
         {/* Left side - Logo and Company Name */}
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded flex items-center justify-center" style={{ marginRight: '10px' }}>
+          <div className="h-8 w-8 rounded flex items-center justify-center bg-primary/10 dark:bg-transparent" style={{ marginRight: '10px' }}>
             <img 
               src="/images/Metaware Logo White.png" 
               alt="MetaWare Logo" 
@@ -77,7 +77,7 @@ export const Header = () => {
             <img 
               src="/images/Metaware Logo White.png" 
               alt="MetaWare Logo" 
-              className="h-8 w-8 object-contain drop-shadow-md dark:hidden brightness-0 invert" 
+              className="h-7 w-7 object-contain drop-shadow-md dark:hidden" 
             />
           </div>
           <img 

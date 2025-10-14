@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import React from "react";
 import {
   Table,
   TableBody,
@@ -17,6 +18,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 import {
   Edit,
   Trash2,
@@ -67,7 +74,7 @@ interface DataTableProps {
   onDelete?: (ids: string[]) => void;
   onSave?: (data: TableData[]) => void;
   className?: string;
-  entityType?: string; // e.g., "Namespace", "Subject Area", "Entity"
+  entityType?: string;
   externalEditedData?: TableData[];
   onEditedDataChange?: (data: TableData[]) => void;
 }
@@ -94,11 +101,10 @@ export const DataTable = ({
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
-  const [groupByColumn, setGroupByColumn] = useState<string | null>(null);
+  const [groupByColumns, setGroupByColumns] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
-  // Use external edited data if provided, otherwise use internal state
   const editedData = externalEditedData !== undefined ? externalEditedData : internalEditedData;
   const setEditedData = onEditedDataChange || setInternalEditedData;
 
@@ -106,7 +112,6 @@ export const DataTable = ({
     const dataToFilter = editedData.length > 0 ? editedData : data;
     let filtered = dataToFilter;
     
-    // Apply global search
     if (searchTerm) {
       filtered = filtered.filter((row) =>
         columns.some((col) =>
@@ -117,7 +122,6 @@ export const DataTable = ({
       );
     }
     
-    // Apply column-specific filters
     Object.entries(columnFilters).forEach(([columnKey, filterValue]) => {
       if (filterValue) {
         filtered = filtered.filter((row) =>
@@ -128,23 +132,18 @@ export const DataTable = ({
       }
     });
     
-    // Sort data
     return filtered.sort((a, b) => {
-      // Always show draft rows at the top regardless of sorting
       if (a._status === 'draft' && b._status !== 'draft') return -1;
       if (a._status !== 'draft' && b._status === 'draft') return 1;
       
-      // Apply column sorting if a column is selected
       if (sortColumn) {
         const aValue = a[sortColumn];
         const bValue = b[sortColumn];
         
-        // Handle null/undefined values
         if (aValue == null && bValue == null) return 0;
         if (aValue == null) return 1;
         if (bValue == null) return -1;
         
-        // Compare values
         let comparison = 0;
         if (typeof aValue === 'number' && typeof bValue === 'number') {
           comparison = aValue - bValue;
@@ -168,14 +167,41 @@ export const DataTable = ({
     );
   }, [editedData, data]);
 
+  // Recursive grouping function for multiple levels
+  const createNestedGroups = (rows: TableData[], groupColumns: string[], level: number = 0): any => {
+    if (groupColumns.length === 0 || level >= groupColumns.length) {
+      return rows;
+    }
+
+    const currentGroupColumn = groupColumns[level];
+    const grouped = rows.reduce((acc, row) => {
+      const groupValue = String(row[currentGroupColumn] || 'Ungrouped');
+      if (!acc[groupValue]) {
+        acc[groupValue] = [];
+      }
+      acc[groupValue].push(row);
+      return acc;
+    }, {} as { [key: string]: TableData[] });
+
+    const result: any = {};
+    Object.entries(grouped).forEach(([key, values]) => {
+      result[key] = createNestedGroups(values, groupColumns, level + 1);
+    });
+
+    return result;
+  };
+
+  const groupedData = useMemo(() => {
+    return groupByColumns.length > 0
+      ? createNestedGroups(filteredData, groupByColumns)
+      : null;
+  }, [filteredData, groupByColumns]);
+
   const handleEditMode = () => {
     if (editingRows.length > 0) {
-      // Exit edit mode - revert all changes and remove draft rows
       setEditingRows([]);
       setEditedData(prev => {
-        // Remove all draft rows
         const withoutDrafts = prev.filter(row => row._status !== 'draft');
-        // Revert all edited rows to original data
         return withoutDrafts.map(row => {
           if (row._status === 'edited') {
             const original = data.find(d => d.id === row.id);
@@ -185,11 +211,9 @@ export const DataTable = ({
         });
       });
     } else if (selectedRows.length > 0) {
-      // Enter edit mode for selected rows
       setEditingRows(prev => [...prev, ...selectedRows.filter(id => !prev.includes(id))]);
       if (editedData.length === 0) setEditedData([...data]);
     } else {
-      // Enter edit mode for all rows
       setEditingRows(filteredData.map(row => row.id));
       if (editedData.length === 0) setEditedData([...data]);
     }
@@ -206,7 +230,6 @@ export const DataTable = ({
   };
 
   const handleSave = async () => {
-    // Validate required fields
     if (!validateRequiredFields(editedData)) {
       const requiredFieldNames = columns.filter(col => col.required).map(col => col.title).join(', ');
       alert(`Please fill in all required fields: ${requiredFieldNames}`);
@@ -217,15 +240,12 @@ export const DataTable = ({
     try {
       await onSave?.(editedData);
       
-      // Store newly added IDs for animation
       const draftIds = editedData.filter(row => row._status === 'draft').map(row => row.id);
       setNewlyAddedIds(draftIds);
       
-      // Clear states
       setEditingRows([]);
       setEditedData([]);
       
-      // Clear animation after 3 seconds
       setTimeout(() => {
         setNewlyAddedIds([]);
       }, 3000);
@@ -244,7 +264,6 @@ export const DataTable = ({
       }), {}),
     };
     
-    // Add to local state and mark as editing
     if (editedData.length === 0) {
       setEditedData([...data, newRow]);
     } else {
@@ -272,7 +291,6 @@ export const DataTable = ({
 
   const handleSort = (columnKey: string) => {
     if (sortColumn === columnKey) {
-      // Toggle direction or clear sort
       if (sortDirection === 'asc') {
         setSortDirection('desc');
       } else {
@@ -280,7 +298,6 @@ export const DataTable = ({
         setSortDirection('asc');
       }
     } else {
-      // Sort by new column
       setSortColumn(columnKey);
       setSortDirection('asc');
     }
@@ -296,12 +313,10 @@ export const DataTable = ({
   };
 
   const handleDownloadCSV = () => {
-    // Convert data to CSV format
     const headers = columns.map(col => col.title).join(',');
     const rows = filteredData.map(row => 
       columns.map(col => {
         const value = row[col.key];
-        // Handle values that contain commas or quotes
         if (value == null) return '';
         const stringValue = String(value);
         if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
@@ -313,7 +328,6 @@ export const DataTable = ({
     
     const csv = `${headers}\n${rows}`;
     
-    // Create and trigger download
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -342,21 +356,6 @@ export const DataTable = ({
     }
   };
 
-  const groupedData = useMemo(() => {
-    if (!groupByColumn) return null;
-    
-    const groups: Record<string, TableData[]> = {};
-    filteredData.forEach((row) => {
-      const groupValue = String(row[groupByColumn] || 'Ungrouped');
-      if (!groups[groupValue]) {
-        groups[groupValue] = [];
-      }
-      groups[groupValue].push(row);
-    });
-    
-    return groups;
-  }, [filteredData, groupByColumn]);
-
   const clearAllFilters = () => {
     setColumnFilters({});
     setSearchTerm('');
@@ -364,13 +363,136 @@ export const DataTable = ({
 
   const hasActiveFilters = Object.keys(columnFilters).length > 0 || searchTerm !== '';
 
+  // Helper function to count total rows in nested structure
+  const countRows = (data: any): number => {
+    if (Array.isArray(data)) return data.length;
+    return Object.values(data).reduce<number>((sum, val) => {
+      return sum + countRows(val);
+    }, 0);
+  };
+
+  // Recursive render function for nested groups
+  const renderNestedGroups = (data: any, groupColumns: string[], level: number = 0, parentKey: string = ''): React.ReactNode => {
+    if (Array.isArray(data)) {
+      return data.map((row) => (
+        <TableRow key={row.id} className={getRowClassName(row)}>
+          <TableCell className="w-12">
+            <Checkbox
+              checked={selectedRows.includes(row.id)}
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  setSelectedRows(prev => [...prev, row.id]);
+                } else {
+                  setSelectedRows(prev => prev.filter(id => id !== row.id));
+                }
+              }}
+            />
+          </TableCell>
+          {columns.map((col, idx) => {
+            const isEditing = editingRows.includes(row.id);
+            const cellStyle = idx === 0 ? { paddingLeft: `${(level + 1) * 1.5}rem` } : {};
+            
+            return (
+              <TableCell key={col.key} style={cellStyle}>
+                {isEditing ? (
+                  col.type === 'select' && col.options ? (
+                    <Select
+                      value={String(row[col.key] || '')}
+                      onValueChange={(value) => handleCellEdit(row.id, col.key, value)}
+                    >
+                      <SelectTrigger className="h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover z-50">
+                        {col.options.map((opt) => {
+                          const value = typeof opt === 'string' ? opt : opt.value;
+                          const label = typeof opt === 'string' ? opt : opt.label;
+                          return (
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  ) : col.type === 'checkbox' ? (
+                    <Checkbox
+                      checked={Boolean(row[col.key])}
+                      onCheckedChange={(checked) => handleCellEdit(row.id, col.key, Boolean(checked))}
+                    />
+                  ) : col.renderCell ? (
+                    col.renderCell(row, isEditing, (value) => handleCellEdit(row.id, col.key, value))
+                  ) : (
+                    <Input
+                      type={col.type === 'number' ? 'number' : col.type === 'date' ? 'date' : 'text'}
+                      value={String(row[col.key] || '')}
+                      onChange={(e) => handleCellEdit(row.id, col.key, e.target.value)}
+                      className="h-8"
+                      required={col.required}
+                    />
+                  )
+                ) : col.renderCell ? (
+                  col.renderCell(row, isEditing, () => {})
+                ) : col.type === 'checkbox' ? (
+                  <Checkbox checked={Boolean(row[col.key])} disabled />
+                ) : (
+                  String(row[col.key] || '')
+                )}
+              </TableCell>
+            );
+          })}
+        </TableRow>
+      ));
+    }
+
+    return Object.entries(data).map(([groupValue, groupData]) => {
+      const groupKey = `${parentKey}-${groupValue}`;
+      const isExpanded = expandedGroups.has(groupKey);
+      const rowCount = countRows(groupData);
+
+      return (
+        <React.Fragment key={groupKey}>
+          <TableRow 
+            className="bg-muted/30 font-semibold cursor-pointer hover:bg-muted/50"
+            onClick={() => {
+              setExpandedGroups(prev => {
+                const newSet = new Set(prev);
+                if (isExpanded) {
+                  newSet.delete(groupKey);
+                } else {
+                  newSet.add(groupKey);
+                }
+                return newSet;
+              });
+            }}
+          >
+            <TableCell colSpan={columns.length + 1}>
+              <div className="flex items-center gap-2" style={{ paddingLeft: `${level * 1.5}rem` }}>
+                {isExpanded ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+                <Group className="h-4 w-4" />
+                <span className="text-xs text-muted-foreground mr-2">
+                  {columns.find(c => c.key === groupColumns[level])?.title}:
+                </span>
+                {groupValue} <span className="text-muted-foreground">({rowCount})</span>
+              </div>
+            </TableCell>
+          </TableRow>
+          {isExpanded && renderNestedGroups(groupData, groupColumns, level + 1, groupKey)}
+        </React.Fragment>
+      );
+    });
+  };
+
   return (
     <div className={cn(
       "space-y-4",
       isFullscreen && "fixed inset-0 z-50 bg-background p-6",
       className
     )}>
-      {/* Toolbar */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <Button
@@ -437,22 +559,61 @@ export const DataTable = ({
             />
           </div>
 
-          <Select value={groupByColumn || '_none'} onValueChange={(value) => setGroupByColumn(value === '_none' ? null : value)}>
-            <SelectTrigger className="w-48">
-              <div className="flex items-center gap-2">
-                <Group className="h-4 w-4" />
-                <SelectValue placeholder="Group by..." />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Group className="h-4 w-4 mr-2" />
+                Group By
+                {groupByColumns.length > 0 && (
+                  <Badge variant="secondary" className="ml-2 h-5 px-1.5">
+                    {groupByColumns.length}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
+              <div className="p-2 space-y-1">
+                <div className="text-xs font-medium text-muted-foreground mb-2">Select columns to group by (in order)</div>
+                {columns.map((col) => {
+                  const isSelected = groupByColumns.includes(col.key);
+                  const order = groupByColumns.indexOf(col.key);
+                  return (
+                    <div
+                      key={col.key}
+                      className="flex items-center justify-between p-2 hover:bg-accent rounded cursor-pointer"
+                      onClick={() => {
+                        if (isSelected) {
+                          setGroupByColumns(prev => prev.filter(k => k !== col.key));
+                        } else {
+                          setGroupByColumns(prev => [...prev, col.key]);
+                        }
+                      }}
+                    >
+                      <span className="text-sm">{col.title}</span>
+                      {isSelected && (
+                        <Badge variant="default" className="h-5 w-5 p-0 flex items-center justify-center">
+                          {order + 1}
+                        </Badge>
+                      )}
+                    </div>
+                  );
+                })}
+                {groupByColumns.length > 0 && (
+                  <>
+                    <Separator className="my-2" />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setGroupByColumns([])}
+                    >
+                      Clear All
+                    </Button>
+                  </>
+                )}
               </div>
-            </SelectTrigger>
-            <SelectContent className="bg-popover z-50">
-              <SelectItem value="_none">No grouping</SelectItem>
-              {columns.map((col) => (
-                <SelectItem key={col.key} value={col.key}>
-                  {col.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <Button
             variant={showFilters ? "default" : "outline"}
@@ -493,81 +654,79 @@ export const DataTable = ({
         </div>
       </div>
 
-      {/* Table */}
       <div className="border rounded-lg overflow-hidden">
         <div className="overflow-y-auto max-h-[calc(100vh-280px)]">
         <Table>
           <TableHeader className="bg-table-header sticky top-0 z-20 shadow-sm">
             <TableRow>
               <TableHead className="w-12">
-                <div onClick={(e) => e.stopPropagation()}>
-                  <input
-                    type="checkbox"
-                    checked={selectedRows.length === filteredData.length && filteredData.length > 0}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      setSelectedRows(
-                        e.target.checked ? filteredData.map(row => row.id) : []
-                      );
-                    }}
-                  />
-                </div>
+                <Checkbox
+                  checked={selectedRows.length === filteredData.length && filteredData.length > 0}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedRows(filteredData.map(row => row.id));
+                    } else {
+                      setSelectedRows([]);
+                    }
+                  }}
+                />
               </TableHead>
-              {columns.map((column) => (
-                <TableHead key={column.key}>
-                  <div className={cn("space-y-2", !showFilters && "space-y-0")}>
-                    <div 
-                      className="flex items-center cursor-pointer select-none hover:bg-muted/50 rounded px-2 py-1"
-                      onClick={(e) => {
-                        if (column.onHeaderClick) {
-                          column.onHeaderClick(column.key);
-                        } else {
-                          handleSort(column.key);
-                        }
-                      }}
-                    >
-                      {column.title}
-                      {!column.onHeaderClick && getSortIcon(column.key)}
+              {columns.map((col) => (
+                <TableHead key={col.key}>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-auto p-0 font-semibold hover:bg-transparent"
+                        onClick={() => handleSort(col.key)}
+                      >
+                        {col.title}
+                        {getSortIcon(col.key)}
+                      </Button>
                     </div>
                     {showFilters && (
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
-                            variant={columnFilters[column.key] ? "default" : "ghost"}
+                            variant="ghost"
                             size="sm"
-                            className="h-7 w-full text-xs"
+                            className={cn(
+                              "h-7 px-2 text-xs",
+                              columnFilters[col.key] && "bg-primary/10 text-primary"
+                            )}
                           >
                             <Filter className="h-3 w-3 mr-1" />
-                            {columnFilters[column.key] ? 'Filtered' : 'Filter'}
+                            {columnFilters[col.key] ? 'Filtered' : 'Filter'}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-64" align="start">
+                        <PopoverContent className="w-64 bg-popover z-50" align="start">
                           <div className="space-y-2">
-                            <h4 className="font-medium text-sm">Filter {column.title}</h4>
                             <Input
-                              placeholder={`Filter by ${column.title}...`}
-                              value={columnFilters[column.key] || ''}
-                              onChange={(e) => {
+                              placeholder={`Filter ${col.title}...`}
+                              value={columnFilters[col.key] || ''}
+                              onChange={(e) => 
                                 setColumnFilters(prev => ({
                                   ...prev,
-                                  [column.key]: e.target.value
-                                }));
-                              }}
+                                  [col.key]: e.target.value
+                                }))
+                              }
                             />
-                            {columnFilters[column.key] && (
+                            {columnFilters[col.key] && (
                               <Button
-                                variant="outline"
+                                variant="ghost"
                                 size="sm"
                                 className="w-full"
                                 onClick={() => {
                                   setColumnFilters(prev => {
                                     const newFilters = { ...prev };
-                                    delete newFilters[column.key];
+                                    delete newFilters[col.key];
                                     return newFilters;
                                   });
                                 }}
                               >
-                                Clear filter
+                                <X className="h-4 w-4 mr-2" />
+                                Clear Filter
                               </Button>
                             )}
                           </div>
@@ -581,253 +740,97 @@ export const DataTable = ({
           </TableHeader>
           <TableBody>
             {groupedData ? (
-              // Render grouped data
-              Object.entries(groupedData).map(([groupValue, groupRows]) => {
-                const isExpanded = expandedGroups.has(groupValue);
-                return (
-                  <>
-                    <TableRow 
-                      key={`group-${groupValue}`} 
-                      className="bg-muted/30 font-semibold cursor-pointer hover:bg-muted/50"
-                      onClick={() => {
-                        setExpandedGroups(prev => {
-                          const newSet = new Set(prev);
-                          if (isExpanded) {
-                            newSet.delete(groupValue);
-                          } else {
-                            newSet.add(groupValue);
-                          }
-                          return newSet;
-                        });
-                      }}
-                    >
-                      <TableCell colSpan={columns.length + 1}>
-                        <div className="flex items-center gap-2">
-                          {isExpanded ? (
-                            <ChevronDown className="h-4 w-4" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4" />
-                          )}
-                          <Group className="h-4 w-4" />
-                          {groupValue} ({groupRows.length})
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                    {isExpanded && groupRows.map((row) => {
-                    const isRowEditing = editingRows.includes(row.id) || row._status === 'draft' || row._status === 'edited';
-                    
-                    return (
-                      <TableRow
-                        key={row.id}
-                        className={cn(
-                          getRowClassName(row),
-                          row._status === 'draft' && "border-l-4 border-l-warning/70",
-                          row._status === 'edited' && "border-l-4 border-l-primary/70",
-                          !isRowEditing && "cursor-pointer"
-                        )}
-                        onClick={(e) => {
-                          if (!isRowEditing && !(e.target as HTMLElement).closest('input, button, select, a')) {
-                            setSelectedRows(prev =>
-                              prev.includes(row.id)
-                                ? prev.filter(id => id !== row.id)
-                                : [...prev, row.id]
-                            );
-                          }
-                        }}
-                      >
-                        <TableCell className={cn(
-                          row._status === 'draft' && "pl-2",
-                          row._status === 'edited' && "pl-2"
-                        )}>
-                          <div onClick={(e) => e.stopPropagation()}>
-                            <input
-                              type="checkbox"
-                              checked={selectedRows.includes(row.id)}
-                              onChange={(e) => {
-                                e.stopPropagation();
-                                setSelectedRows(prev =>
-                                  e.target.checked
-                                    ? [...prev, row.id]
-                                    : prev.filter(id => id !== row.id)
-                                );
-                              }}
-                            />
-                          </div>
-                        </TableCell>
-                        {columns.map((column) => (
-                          <TableCell key={column.key}>
-                            {(editingRows.includes(row.id) || row._status === 'draft' || row._status === 'edited') ? (
-                              column.renderCell ? (
-                                column.renderCell(row, true, (value) => handleCellEdit(row.id, column.key, value))
-                              ) : column.type === 'checkbox' ? (
-                                <Checkbox
-                                  checked={Boolean(row[column.key])}
-                                  onCheckedChange={(checked) => handleCellEdit(row.id, column.key, checked)}
-                                />
-                              ) : column.type === 'select' && column.options ? (
-                                <Select
-                                  value={row[column.key] || ''}
-                                  onValueChange={(value) => handleCellEdit(row.id, column.key, value)}
-                                >
-                                  <SelectTrigger className="h-8">
-                                    <SelectValue placeholder={`Select ${column.title}...`} />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-popover z-50">
-                                    {column.options.map((option) => {
-                                      const value = typeof option === 'string' ? option : option.value;
-                                      const label = typeof option === 'string' ? option : option.label;
-                                      return (
-                                        <SelectItem key={value} value={value}>
-                                          {label}
-                                        </SelectItem>
-                                      );
-                                    })}
-                                  </SelectContent>
-                                </Select>
-                              ) : (
-                                <Input
-                                  value={row[column.key] || ''}
-                                  onChange={(e) => handleCellEdit(row.id, column.key, e.target.value)}
-                                  className={cn("h-8", column.required && !row[column.key] && "border-destructive")}
-                                  placeholder={column.required ? `${column.title} (required)` : column.title}
-                                />
-                              )
-                            ) : (
-                              column.type === 'checkbox' ? (
-                                <Checkbox
-                                  checked={Boolean(row[column.key])}
-                                  disabled
-                                />
-                              ) : (
-                                <span className={searchTerm && String(row[column.key]).toLowerCase().includes(searchTerm.toLowerCase())
-                                  ? "bg-yellow-200 dark:bg-yellow-900 px-1 rounded"
-                                  : ""
-                                }>
-                                  {column.renderCell ? column.renderCell(row, false, () => {}) : row[column.key]}
-                                </span>
-                              )
-                            )}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    );
-                  })}
-                </>
-              );
-              })
+              renderNestedGroups(groupedData, groupByColumns)
             ) : (
-              // Render ungrouped data
-              filteredData.map((row) => {
-              const isRowEditing = editingRows.includes(row.id) || row._status === 'draft' || row._status === 'edited';
-              
-              return (
-                <TableRow
-                  key={row.id}
-                  className={cn(
-                    getRowClassName(row),
-                    row._status === 'draft' && "border-l-4 border-l-warning/70",
-                    row._status === 'edited' && "border-l-4 border-l-primary/70",
-                    !isRowEditing && "cursor-pointer"
-                  )}
-                  onClick={(e) => {
-                    // Only toggle selection if not in edit mode and not clicking on interactive elements
-                    if (!isRowEditing && !(e.target as HTMLElement).closest('input, button, select, a')) {
-                      setSelectedRows(prev =>
-                        prev.includes(row.id)
-                          ? prev.filter(id => id !== row.id)
-                          : [...prev, row.id]
-                      );
-                    }
-                  }}
-                >
-                <TableCell className={cn(
-                  row._status === 'draft' && "pl-2",
-                  row._status === 'edited' && "pl-2"
-                )}>
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <input
-                      type="checkbox"
+              filteredData.map((row) => (
+                <TableRow key={row.id} className={getRowClassName(row)}>
+                  <TableCell className="w-12">
+                    <Checkbox
                       checked={selectedRows.includes(row.id)}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        setSelectedRows(prev =>
-                          e.target.checked
-                            ? [...prev, row.id]
-                            : prev.filter(id => id !== row.id)
-                        );
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedRows(prev => [...prev, row.id]);
+                        } else {
+                          setSelectedRows(prev => prev.filter(id => id !== row.id));
+                        }
                       }}
                     />
-                  </div>
-                </TableCell>
-                {columns.map((column) => (
-                  <TableCell key={column.key}>
-                    {(editingRows.includes(row.id) || row._status === 'draft' || row._status === 'edited') ? (
-                      column.renderCell ? (
-                        column.renderCell(row, true, (value) => handleCellEdit(row.id, column.key, value))
-                      ) : column.type === 'checkbox' ? (
-                        <Checkbox
-                          checked={Boolean(row[column.key])}
-                          onCheckedChange={(checked) => handleCellEdit(row.id, column.key, checked)}
-                        />
-                      ) : column.type === 'select' && column.options ? (
-                        <Select
-                          value={row[column.key] || ''}
-                          onValueChange={(value) => handleCellEdit(row.id, column.key, value)}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue placeholder={`Select ${column.title}...`} />
-                          </SelectTrigger>
-                          <SelectContent className="bg-popover z-50">
-                            {column.options.map((option) => {
-                              const value = typeof option === 'string' ? option : option.value;
-                              const label = typeof option === 'string' ? option : option.label;
-                              return (
-                                <SelectItem key={value} value={value}>
-                                  {label}
-                                </SelectItem>
-                              );
-                            })}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Input
-                          value={row[column.key] || ''}
-                          onChange={(e) => handleCellEdit(row.id, column.key, e.target.value)}
-                          className={cn("h-8", column.required && !row[column.key] && "border-destructive")}
-                          placeholder={column.required ? `${column.title} (required)` : column.title}
-                        />
-                      )
-                    ) : (
-                      column.type === 'checkbox' ? (
-                        <Checkbox
-                          checked={Boolean(row[column.key])}
-                          disabled
-                        />
-                      ) : (
-                        <span className={searchTerm && String(row[column.key]).toLowerCase().includes(searchTerm.toLowerCase())
-                          ? "bg-yellow-200 dark:bg-yellow-900 px-1 rounded"
-                          : ""
-                        }>
-                          {column.renderCell ? column.renderCell(row, false, () => {}) : row[column.key]}
-                        </span>
-                      )
-                    )}
                   </TableCell>
-                ))}
-              </TableRow>
-              );
-            })
+                  {columns.map((col) => {
+                    const isEditing = editingRows.includes(row.id);
+                    
+                    return (
+                      <TableCell key={col.key}>
+                        {isEditing ? (
+                          col.type === 'select' && col.options ? (
+                            <Select
+                              value={String(row[col.key] || '')}
+                              onValueChange={(value) => handleCellEdit(row.id, col.key, value)}
+                            >
+                              <SelectTrigger className="h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-popover z-50">
+                                {col.options.map((opt) => {
+                                  const value = typeof opt === 'string' ? opt : opt.value;
+                                  const label = typeof opt === 'string' ? opt : opt.label;
+                                  return (
+                                    <SelectItem key={value} value={value}>
+                                      {label}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          ) : col.type === 'checkbox' ? (
+                            <Checkbox
+                              checked={Boolean(row[col.key])}
+                              onCheckedChange={(checked) => handleCellEdit(row.id, col.key, Boolean(checked))}
+                            />
+                          ) : col.renderCell ? (
+                            col.renderCell(row, isEditing, (value) => handleCellEdit(row.id, col.key, value))
+                          ) : (
+                            <Input
+                              type={col.type === 'number' ? 'number' : col.type === 'date' ? 'date' : 'text'}
+                              value={String(row[col.key] || '')}
+                              onChange={(e) => handleCellEdit(row.id, col.key, e.target.value)}
+                              className="h-8"
+                              required={col.required}
+                            />
+                          )
+                        ) : col.renderCell ? (
+                          col.renderCell(row, isEditing, () => {})
+                        ) : col.type === 'checkbox' ? (
+                          <Checkbox checked={Boolean(row[col.key])} disabled />
+                        ) : (
+                          String(row[col.key] || '')
+                        )}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>
+      </div>
+      
+      <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
+        <div className="text-sm text-muted-foreground">
+          Total rows: <span className="font-medium text-foreground">{filteredData.length}</span>
+          {filteredData.length !== data.length && (
+            <span className="ml-2">
+              (filtered from {data.length})
+            </span>
+          )}
         </div>
+        {groupByColumns.length > 0 && (
+          <div className="text-sm text-muted-foreground">
+            Grouped by: <span className="font-medium text-foreground">{groupByColumns.map(col => columns.find(c => c.key === col)?.title).join(' → ')}</span>
+          </div>
+        )}
       </div>
-
-      {/* Footer */}
-      <div className="text-sm text-muted-foreground">
-        Total rows: {filteredData.length}
-        {searchTerm && ` (filtered from ${data.length})`}
-      </div>
+    </div>
     </div>
   );
 };

@@ -63,6 +63,7 @@
     --border: 210 11% 89%;
     --input: 210 11% 89%;
     --ring: 217 91% 60%;
+    --ring-width: 1px;
 
     /* Table-specific colors */
     --table-header: 210 11% 98%;
@@ -186,6 +187,7 @@
     --border: 210 11% 20%;
     --input: 210 11% 20%;
     --ring: 217 91% 65%;
+    --ring-width: 1px;
 
     /* Table colors */
     --table-header: 210 11% 12%;
@@ -441,5 +443,13 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Reduce focus ring width to prevent clipping */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  button:focus-visible {
+    @apply ring-1 ring-ring ring-offset-0;
   }
 }
