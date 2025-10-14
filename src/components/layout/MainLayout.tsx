@@ -11,7 +11,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen w-full bg-background">
         <Header />
-        <div className="flex w-full">
+        <div className="flex w-full pt-14">
           <Sidebar />
           <SidebarInset>
             <main className="flex-1 p-6">
