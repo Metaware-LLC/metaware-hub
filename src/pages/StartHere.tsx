@@ -24,12 +24,6 @@ export default function StartHere() {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/">Home</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
             <BreadcrumbPage>Start Here</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>

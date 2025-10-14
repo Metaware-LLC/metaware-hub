@@ -310,12 +310,6 @@ export default function SubjectArea() {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/">Metadata</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
             <BreadcrumbPage>Subject Area</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>

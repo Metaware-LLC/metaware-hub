@@ -431,12 +431,6 @@ export default function Entity() {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/">Metadata</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
             <BreadcrumbPage>Entity</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>

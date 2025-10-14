@@ -317,12 +317,6 @@ export default function NameSpace() {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/">Metadata</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
             <BreadcrumbPage>NameSpace</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
