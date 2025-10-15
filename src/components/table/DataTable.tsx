@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -41,6 +42,7 @@ import {
   FilterX,
   ChevronDown,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -679,7 +681,17 @@ export const DataTable = ({
         </div>
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-hidden relative">
+        {(isCurrentlySaving || isCurrentlyDeleting) && (
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-30 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm font-medium">
+                {isCurrentlySaving ? 'Saving changes...' : 'Deleting rows...'}
+              </p>
+            </div>
+          </div>
+        )}
         <div className="overflow-y-auto max-h-[calc(100vh-280px)]">
         <Table>
           <TableHeader className="bg-table-header sticky top-0 z-20 shadow-sm">
