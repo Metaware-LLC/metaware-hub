@@ -58,7 +58,7 @@ export function FileUploadModal({
         return;
       }
       setFile(selectedFile);
-      setUploadProgress(100); // Show full progress when file is selected
+      setUploadProgress(100);
     }
   };
 
@@ -107,12 +107,9 @@ export function FileUploadModal({
 
       const responseData = await response.json();
 
-      // If both create_meta and load_data are false, pass the detected fields as draft rows
       const shouldReturnDraftRows = !createMeta && !loadData;
 
-      // If load data was checked, show the success modal with table data
       if (loadData && createMeta) {
-        // Fetch the loaded data to display
         const tableResponse = await fetch(
           `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/mwn/table_data?ns=${namespace}&sa=${subjectArea}&en=${entity}`
         );
@@ -131,7 +128,6 @@ export function FileUploadModal({
           : "File processed successfully",
       });
 
-      // Reset form
       setFile(null);
       setUploadProgress(0);
       setCreateMeta(false);
@@ -162,8 +158,199 @@ export function FileUploadModal({
 
   return (
     <>
+      <style>{`
+        .file-upload-content {
+          max-width: 28rem;
+        }
+
+        @media (min-width: 640px) {
+          .file-upload-content {
+            max-width: 28rem;
+          }
+        }
+
+        .file-upload-body {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          padding-top: 1rem;
+          padding-bottom: 1rem;
+        }
+
+        .file-upload-section {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .file-upload-zone {
+          border: 2px dashed hsl(var(--muted));
+          border-radius: 0.5rem;
+          padding: 1.5rem;
+          text-align: center;
+          transition: border-color 0.2s;
+        }
+
+        .file-upload-zone:hover {
+          border-color: hsl(var(--primary));
+        }
+
+        .file-upload-zone-label {
+          cursor: pointer;
+        }
+
+        .file-upload-icon {
+          height: 2rem;
+          width: 2rem;
+          margin-left: auto;
+          margin-right: auto;
+          margin-bottom: 0.5rem;
+          color: hsl(var(--muted-foreground));
+        }
+
+        .file-upload-text {
+          font-size: 0.875rem;
+          color: hsl(var(--muted-foreground));
+        }
+
+        .file-upload-preview-container {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .file-upload-preview {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.75rem;
+          background-color: hsl(var(--muted));
+          border-radius: 0.5rem;
+        }
+
+        .file-upload-preview-icon {
+          height: 1.25rem;
+          width: 1.25rem;
+          color: hsl(var(--primary));
+        }
+
+        .file-upload-preview-name {
+          flex: 1;
+          font-size: 0.875rem;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .file-upload-progress-container {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+
+        .file-upload-progress-header {
+          display: flex;
+          justify-content: space-between;
+          font-size: 0.75rem;
+          color: hsl(var(--muted-foreground));
+        }
+
+        .file-upload-checkboxes {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .file-upload-checkbox-row {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .file-upload-checkbox-label {
+          font-size: 0.875rem;
+          font-weight: 400;
+          cursor: pointer;
+        }
+
+        .file-upload-checkbox-label-disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .file-upload-footer {
+          display: flex;
+          justify-content: space-between;
+        }
+
+        @media (min-width: 640px) {
+          .file-upload-footer {
+            justify-content: space-between;
+          }
+        }
+
+        .file-upload-loader-icon {
+          margin-right: 0.5rem;
+          height: 1rem;
+          width: 1rem;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        .success-modal-content {
+          max-width: 56rem;
+          max-height: 80vh;
+        }
+
+        .success-modal-table-container {
+          overflow: auto;
+          max-height: 50vh;
+        }
+
+        .success-modal-table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        .success-modal-table-header-row {
+          border-bottom: 1px solid hsl(var(--border));
+        }
+
+        .success-modal-table-header-cell {
+          padding: 0.5rem;
+          text-align: left;
+          font-size: 0.875rem;
+          font-weight: 500;
+        }
+
+        .success-modal-table-body-row {
+          border-bottom: 1px solid hsl(var(--border));
+        }
+
+        .success-modal-table-body-cell {
+          padding: 0.5rem;
+          font-size: 0.875rem;
+        }
+
+        .success-modal-footer-text {
+          font-size: 0.875rem;
+          color: hsl(var(--muted-foreground));
+          margin-top: 0.5rem;
+        }
+
+        .success-modal-button-icon {
+          margin-right: 0.5rem;
+          height: 1rem;
+          width: 1rem;
+        }
+      `}</style>
+
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="file-upload-content">
           <DialogHeader>
             <DialogTitle>Upload CSV File</DialogTitle>
             <DialogDescription>
@@ -171,12 +358,11 @@ export function FileUploadModal({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            {/* File Upload Section */}
-            <div className="space-y-2">
+          <div className="file-upload-body">
+            <div className="file-upload-section">
               <Label>CSV File</Label>
               {!file ? (
-                <div className="border-2 border-dashed border-muted rounded-lg p-6 text-center hover:border-primary transition-colors">
+                <div className="file-upload-zone">
                   <input
                     type="file"
                     accept=".csv"
@@ -184,18 +370,18 @@ export function FileUploadModal({
                     className="hidden"
                     id="csv-upload"
                   />
-                  <label htmlFor="csv-upload" className="cursor-pointer">
-                    <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">
+                  <label htmlFor="csv-upload" className="file-upload-zone-label">
+                    <Upload className="file-upload-icon" />
+                    <p className="file-upload-text">
                       Click to upload CSV file
                     </p>
                   </label>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                    <FileText className="h-5 w-5 text-primary" />
-                    <span className="flex-1 text-sm truncate">{file.name}</span>
+                <div className="file-upload-preview-container">
+                  <div className="file-upload-preview">
+                    <FileText className="file-upload-preview-icon" />
+                    <span className="file-upload-preview-name">{file.name}</span>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -205,8 +391,8 @@ export function FileUploadModal({
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs text-muted-foreground">
+                  <div className="file-upload-progress-container">
+                    <div className="file-upload-progress-header">
                       <span>Upload Progress</span>
                       <span>{uploadProgress}%</span>
                     </div>
@@ -216,9 +402,8 @@ export function FileUploadModal({
               )}
             </div>
 
-            {/* Checkboxes */}
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
+            <div className="file-upload-checkboxes">
+              <div className="file-upload-checkbox-row">
                 <Checkbox
                   id="create-meta"
                   checked={createMeta}
@@ -230,12 +415,12 @@ export function FileUploadModal({
                 />
                 <Label
                   htmlFor="create-meta"
-                  className="text-sm font-normal cursor-pointer"
+                  className="file-upload-checkbox-label"
                 >
                   Create Meta
                 </Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="file-upload-checkbox-row">
                 <Checkbox
                   id="load-data"
                   checked={loadData}
@@ -244,7 +429,7 @@ export function FileUploadModal({
                 />
                 <Label
                   htmlFor="load-data"
-                  className={`text-sm font-normal ${!createMeta ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  className={`file-upload-checkbox-label ${!createMeta ? 'file-upload-checkbox-label-disabled' : ''}`}
                 >
                   Load Data
                 </Label>
@@ -252,7 +437,7 @@ export function FileUploadModal({
             </div>
           </div>
 
-          <DialogFooter className="sm:justify-between">
+          <DialogFooter className="file-upload-footer">
             <Button
               variant="outline"
               onClick={handleCancel}
@@ -264,16 +449,15 @@ export function FileUploadModal({
               onClick={handleProcess}
               disabled={!file || isUploading}
             >
-              {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isUploading && <Loader2 className="file-upload-loader-icon" />}
               Process
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Success Modal with Data Table */}
       <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
+        <DialogContent className="success-modal-content">
           <DialogHeader>
             <DialogTitle>Data Loaded Successfully</DialogTitle>
             <DialogDescription>
@@ -281,13 +465,13 @@ export function FileUploadModal({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="overflow-auto max-h-[50vh]">
+          <div className="success-modal-table-container">
             {loadedTableData.length > 0 && (
-              <table className="w-full border-collapse">
+              <table className="success-modal-table">
                 <thead>
-                  <tr className="border-b">
+                  <tr className="success-modal-table-header-row">
                     {Object.keys(loadedTableData[0]).map((key) => (
-                      <th key={key} className="p-2 text-left text-sm font-medium">
+                      <th key={key} className="success-modal-table-header-cell">
                         {key}
                       </th>
                     ))}
@@ -295,9 +479,9 @@ export function FileUploadModal({
                 </thead>
                 <tbody>
                   {loadedTableData.slice(0, 10).map((row, idx) => (
-                    <tr key={idx} className="border-b">
+                    <tr key={idx} className="success-modal-table-body-row">
                       {Object.values(row).map((value: any, colIdx) => (
-                        <td key={colIdx} className="p-2 text-sm">
+                        <td key={colIdx} className="success-modal-table-body-cell">
                           {String(value)}
                         </td>
                       ))}
@@ -307,7 +491,7 @@ export function FileUploadModal({
               </table>
             )}
             {loadedTableData.length > 10 && (
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="success-modal-footer-text">
                 Showing 10 of {loadedTableData.length} rows
               </p>
             )}
@@ -323,7 +507,7 @@ export function FileUploadModal({
                 navigate(`/staging?ns=${namespace}&sa=${subjectArea}&en=${entity}`);
               }}
             >
-              <ExternalLink className="mr-2 h-4 w-4" />
+              <ExternalLink className="success-modal-button-icon" />
               Go to Table Page
             </Button>
           </DialogFooter>

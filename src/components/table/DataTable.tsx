@@ -176,7 +176,6 @@ export const DataTable = ({
     );
   }, [editedData, data]);
 
-  // Recursive grouping function for multiple levels
   const createNestedGroups = (rows: TableData[], groupColumns: string[], level: number = 0): any => {
     if (groupColumns.length === 0 || level >= groupColumns.length) {
       return rows;
@@ -318,11 +317,11 @@ export const DataTable = ({
 
   const getSortIcon = (columnKey: string) => {
     if (sortColumn !== columnKey) {
-      return <ArrowUpDown className="h-4 w-4 ml-2 opacity-50" />;
+      return <ArrowUpDown className="dt-sort-icon dt-sort-icon-inactive" />;
     }
     return sortDirection === 'asc' 
-      ? <ArrowUp className="h-4 w-4 ml-2" />
-      : <ArrowDown className="h-4 w-4 ml-2" />;
+      ? <ArrowUp className="dt-sort-icon" />
+      : <ArrowDown className="dt-sort-icon" />;
   };
 
   const handleDownloadCSV = () => {
@@ -376,7 +375,6 @@ export const DataTable = ({
 
   const hasActiveFilters = Object.keys(columnFilters).length > 0 || searchTerm !== '';
 
-  // Helper function to count total rows in nested structure
   const countRows = (data: any): number => {
     if (Array.isArray(data)) return data.length;
     return Object.values(data).reduce<number>((sum, val) => {
@@ -384,12 +382,11 @@ export const DataTable = ({
     }, 0);
   };
 
-  // Recursive render function for nested groups
   const renderNestedGroups = (data: any, groupColumns: string[], level: number = 0, parentKey: string = ''): React.ReactNode => {
     if (Array.isArray(data)) {
       return data.map((row) => (
         <TableRow key={row.id} className={getRowClassName(row)}>
-          <TableCell className="w-12">
+          <TableCell className="dt-cell-checkbox">
             <Checkbox
               checked={selectedRows.includes(row.id)}
               onCheckedChange={(checked) => {
@@ -413,10 +410,10 @@ export const DataTable = ({
                       value={String(row[col.key] || '')}
                       onValueChange={(value) => handleCellEdit(row.id, col.key, value)}
                     >
-                      <SelectTrigger className="h-8">
+                      <SelectTrigger className="dt-select-trigger">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-popover z-50">
+                      <SelectContent className="dt-select-content">
                         {col.options.map((opt) => {
                           const value = typeof opt === 'string' ? opt : opt.value;
                           const label = typeof opt === 'string' ? opt : opt.label;
@@ -440,7 +437,7 @@ export const DataTable = ({
                       type={col.type === 'number' ? 'number' : col.type === 'date' ? 'date' : 'text'}
                       value={String(row[col.key] || '')}
                       onChange={(e) => handleCellEdit(row.id, col.key, e.target.value)}
-                      className="h-8"
+                      className="dt-input"
                       required={col.required}
                     />
                   )
@@ -466,7 +463,7 @@ export const DataTable = ({
       return (
         <React.Fragment key={groupKey}>
           <TableRow 
-            className="bg-muted/30 font-semibold cursor-pointer hover:bg-muted/50"
+            className="dt-group-row"
             onClick={() => {
               setExpandedGroups(prev => {
                 const newSet = new Set(prev);
@@ -480,17 +477,17 @@ export const DataTable = ({
             }}
           >
             <TableCell colSpan={columns.length + 1}>
-              <div className="flex items-center gap-2" style={{ paddingLeft: `${level * 1.5}rem` }}>
+              <div className="dt-group-content" style={{ paddingLeft: `${level * 1.5}rem` }}>
                 {isExpanded ? (
-                  <ChevronDown className="h-4 w-4" />
+                  <ChevronDown className="dt-icon-sm" />
                 ) : (
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="dt-icon-sm" />
                 )}
-                <Group className="h-4 w-4" />
-                <span className="text-xs text-muted-foreground mr-2">
+                <Group className="dt-icon-sm" />
+                <span className="dt-group-label">
                   {columns.find(c => c.key === groupColumns[level])?.title}:
                 </span>
-                {groupValue} <span className="text-muted-foreground">({rowCount})</span>
+                {groupValue} <span className="dt-group-count">({rowCount})</span>
               </div>
             </TableCell>
           </TableRow>
@@ -501,373 +498,706 @@ export const DataTable = ({
   };
 
   return (
-    <div className={cn(
-      "space-y-4",
-      isFullscreen && "fixed inset-0 z-50 bg-background p-6",
-      className
-    )}>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant={editingRows.length > 0 ? "default" : "outline"}
-            size="sm"
-            onClick={handleEditMode}
-          >
-            <Edit className="h-4 w-4 mr-2" />
-            {editingRows.length > 0 
-              ? "Exit Edit" 
-              : selectedRows.length > 0 
-                ? `Edit ${selectedRows.length} row${selectedRows.length > 1 ? 's' : ''}` 
-                : "Edit All"}
-          </Button>
-          
-          {hasChanges && (
-            <Button 
-              variant="default" 
-              size="sm" 
-              onClick={handleSave}
-              disabled={isCurrentlySaving}
-              className="animate-fade-in"
-            >
-              {isCurrentlySaving ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Changes
-                </>
-              )}
-            </Button>
-          )}
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleAddRow}
-            className="transition-all duration-200 hover:scale-105"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add {entityType}
-          </Button>
-          
-          {selectedRows.length > 0 && (
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              onClick={handleDelete}
-              disabled={isCurrentlyDeleting}
-            >
-              {isCurrentlyDeleting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Deleting...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete ({selectedRows.length})
-                </>
-              )}
-            </Button>
-          )}
-        </div>
-        
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search all columns..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 w-64"
-            />
-          </div>
+    <>
+      <style>{`
+        .dt-container {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Group className="h-4 w-4 mr-2" />
-                Group By
-                {groupByColumns.length > 0 && (
-                  <Badge variant="secondary" className="ml-2 h-5 px-1.5">
-                    {groupByColumns.length}
-                  </Badge>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
-              <div className="p-2 space-y-1">
-                <div className="text-xs font-medium text-muted-foreground mb-2">Select columns to group by (in order)</div>
-                {columns.map((col) => {
-                  const isSelected = groupByColumns.includes(col.key);
-                  const order = groupByColumns.indexOf(col.key);
-                  return (
-                    <div
-                      key={col.key}
-                      className="flex items-center justify-between p-2 hover:bg-accent rounded cursor-pointer"
-                      onClick={() => {
-                        if (isSelected) {
-                          setGroupByColumns(prev => prev.filter(k => k !== col.key));
-                        } else {
-                          setGroupByColumns(prev => [...prev, col.key]);
-                        }
-                      }}
-                    >
-                      <span className="text-sm">{col.title}</span>
-                      {isSelected && (
-                        <Badge variant="default" className="h-5 w-5 p-0 flex items-center justify-center">
-                          {order + 1}
-                        </Badge>
-                      )}
-                    </div>
-                  );
-                })}
-                {groupByColumns.length > 0 && (
+        .dt-container-fullscreen {
+          position: fixed;
+          inset: 0;
+          z-index: 50;
+          background-color: hsl(var(--background));
+          padding: 1.5rem;
+        }
+
+        .dt-toolbar {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+        }
+
+        .dt-toolbar-left, .dt-toolbar-right {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .dt-icon-sm {
+          height: 1rem;
+          width: 1rem;
+        }
+
+        .dt-icon-md {
+          height: 1rem;
+          width: 1rem;
+          margin-right: 0.5rem;
+        }
+
+        .dt-sort-icon {
+          height: 1rem;
+          width: 1rem;
+          margin-left: 0.5rem;
+        }
+
+        .dt-sort-icon-inactive {
+          opacity: 0.5;
+        }
+
+        .dt-button-scale {
+          transition: all 200ms;
+        }
+
+        .dt-button-scale:hover {
+          transform: scale(1.05);
+        }
+
+        .dt-spinner {
+          animation: spin 1s linear infinite;
+          border-radius: 9999px;
+          height: 1rem;
+          width: 1rem;
+          border-bottom-width: 2px;
+          border-color: white;
+          margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        .dt-search-wrapper {
+          position: relative;
+        }
+
+        .dt-search-icon {
+          position: absolute;
+          left: 0.5rem;
+          top: 50%;
+          transform: translateY(-50%);
+          height: 1rem;
+          width: 1rem;
+          color: hsl(var(--muted-foreground));
+        }
+
+        .dt-search-input {
+          padding-left: 2rem;
+          width: 16rem;
+        }
+
+        .dt-badge-count {
+          margin-left: 0.5rem;
+          height: 1.25rem;
+          padding-left: 0.375rem;
+          padding-right: 0.375rem;
+        }
+
+        .dt-dropdown-content {
+          width: 14rem;
+          background-color: hsl(var(--popover));
+          z-index: 50;
+        }
+
+        .dt-dropdown-inner {
+          padding: 0.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+
+        .dt-dropdown-header {
+          font-size: 0.75rem;
+          font-weight: 500;
+          color: hsl(var(--muted-foreground));
+          margin-bottom: 0.5rem;
+        }
+
+        .dt-dropdown-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.5rem;
+          border-radius: 0.375rem;
+          cursor: pointer;
+        }
+
+        .dt-dropdown-item:hover {
+          background-color: hsl(var(--accent));
+        }
+
+        .dt-dropdown-item-text {
+          font-size: 0.875rem;
+        }
+
+        .dt-badge-order {
+          height: 1.25rem;
+          width: 1.25rem;
+          padding: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .dt-separator {
+          margin-top: 0.5rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .dt-clear-button {
+          width: 100%;
+        }
+
+        .dt-table-wrapper {
+          border: 1px solid hsl(var(--border));
+          border-radius: 0.5rem;
+          overflow: hidden;
+          position: relative;
+        }
+
+        .dt-loading-overlay {
+          position: absolute;
+          inset: 0;
+          background-color: hsl(var(--background) / 0.8);
+          backdrop-filter: blur(4px);
+          z-index: 30;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .dt-loading-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .dt-loading-spinner {
+          height: 2rem;
+          width: 2rem;
+          animation: spin 1s linear infinite;
+          color: hsl(var(--primary));
+        }
+
+        .dt-loading-text {
+          font-size: 0.875rem;
+          font-weight: 500;
+        }
+
+        .dt-table-scroll {
+          overflow-y: auto;
+          max-height: calc(100vh - 280px);
+        }
+
+        .dt-table-header {
+          background-color: hsl(var(--table-header));
+          position: sticky;
+          top: 0;
+          z-index: 20;
+          box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        }
+
+        .dt-cell-checkbox {
+          width: 3rem;
+        }
+
+        .dt-header-content {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .dt-header-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .dt-sort-button {
+          height: auto;
+          padding: 0;
+          font-weight: 600;
+        }
+
+        .dt-sort-button:hover {
+          background-color: transparent;
+        }
+
+        .dt-filter-button {
+          height: 1.75rem;
+          padding-left: 0.5rem;
+          padding-right: 0.5rem;
+          font-size: 0.75rem;
+        }
+
+        .dt-filter-button-active {
+          background-color: hsl(var(--primary) / 0.1);
+          color: hsl(var(--primary));
+        }
+
+        .dt-filter-icon {
+          height: 0.75rem;
+          width: 0.75rem;
+          margin-right: 0.25rem;
+        }
+
+        .dt-popover-content {
+          width: 16rem;
+          background-color: hsl(var(--popover));
+          z-index: 50;
+        }
+
+        .dt-popover-inner {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .dt-clear-filter-button {
+          width: 100%;
+        }
+
+        .dt-select-trigger {
+          height: 2rem;
+        }
+
+        .dt-select-content {
+          background-color: hsl(var(--popover));
+          z-index: 50;
+        }
+
+        .dt-input {
+          height: 2rem;
+        }
+
+        .dt-group-row {
+          background-color: hsl(var(--muted) / 0.3);
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .dt-group-row:hover {
+          background-color: hsl(var(--muted) / 0.5);
+        }
+
+        .dt-group-content {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .dt-group-label {
+          font-size: 0.75rem;
+          color: hsl(var(--muted-foreground));
+          margin-right: 0.5rem;
+        }
+
+        .dt-group-count {
+          color: hsl(var(--muted-foreground));
+        }
+
+        .dt-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-left: 1rem;
+          padding-right: 1rem;
+          padding-top: 0.5rem;
+          padding-bottom: 0.5rem;
+          border-top: 1px solid hsl(var(--border));
+          background-color: hsl(var(--muted) / 0.3);
+        }
+
+        .dt-footer-text {
+          font-size: 0.875rem;
+          color: hsl(var(--muted-foreground));
+        }
+
+        .dt-footer-highlight {
+          font-weight: 500;
+          color: hsl(var(--foreground));
+        }
+
+        .dt-footer-filtered {
+          margin-left: 0.5rem;
+        }
+      `}</style>
+
+      <div className={cn(
+        "dt-container",
+        isFullscreen && "dt-container-fullscreen",
+        className
+      )}>
+        <div className="dt-toolbar">
+          <div className="dt-toolbar-left">
+            <Button
+              variant={editingRows.length > 0 ? "default" : "outline"}
+              size="sm"
+              onClick={handleEditMode}
+            >
+              <Edit className="dt-icon-md" />
+              {editingRows.length > 0 
+                ? "Exit Edit" 
+                : selectedRows.length > 0 
+                  ? `Edit ${selectedRows.length} row${selectedRows.length > 1 ? 's' : ''}` 
+                  : "Edit All"}
+            </Button>
+            
+            {hasChanges && (
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={handleSave}
+                disabled={isCurrentlySaving}
+                className="animate-fade-in"
+              >
+                {isCurrentlySaving ? (
                   <>
-                    <Separator className="my-2" />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => setGroupByColumns([])}
-                    >
-                      Clear All
-                    </Button>
+                    <div className="dt-spinner"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="dt-icon-md" />
+                    Save Changes
                   </>
                 )}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <Button
-            variant={showFilters ? "default" : "outline"}
-            size="sm"
-            onClick={() => setShowFilters(!showFilters)}
-            title="Toggle column filters"
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-          </Button>
-
-          {hasActiveFilters && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={clearAllFilters}
-              title="Clear all filters"
+              </Button>
+            )}
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleAddRow}
+              className="dt-button-scale"
             >
-              <FilterX className="h-4 w-4" />
+              <Plus className="dt-icon-md" />
+              Add {entityType}
             </Button>
-          )}
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDownloadCSV}
-            title="Download as CSV"
-          >
-            <Download className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsFullscreen(!isFullscreen)}
-          >
-            <Maximize className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      <div className="border rounded-lg overflow-hidden relative">
-        {(isCurrentlySaving || isCurrentlyDeleting) && (
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-30 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm font-medium">
-                {isCurrentlySaving ? 'Saving changes...' : 'Deleting rows...'}
-              </p>
-            </div>
+            
+            {selectedRows.length > 0 && (
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={handleDelete}
+                disabled={isCurrentlyDeleting}
+              >
+                {isCurrentlyDeleting ? (
+                  <>
+                    <div className="dt-spinner"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="dt-icon-md" />
+                    Delete ({selectedRows.length})
+                  </>
+                )}
+              </Button>
+            )}
           </div>
-        )}
-        <div className="overflow-y-auto max-h-[calc(100vh-280px)]">
-        <Table>
-          <TableHeader className="bg-table-header sticky top-0 z-20 shadow-sm">
-            <TableRow>
-              <TableHead className="w-12">
-                <Checkbox
-                  checked={selectedRows.length === filteredData.length && filteredData.length > 0}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedRows(filteredData.map(row => row.id));
-                    } else {
-                      setSelectedRows([]);
-                    }
-                  }}
-                />
-              </TableHead>
-              {columns.map((col) => (
-                <TableHead key={col.key}>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
+          
+          <div className="dt-toolbar-right">
+            <div className="dt-search-wrapper">
+              <Search className="dt-search-icon" />
+              <Input
+                placeholder="Search all columns..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="dt-search-input"
+              />
+            </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Group className="dt-icon-md" />
+                  Group By
+                  {groupByColumns.length > 0 && (
+                    <Badge variant="secondary" className="dt-badge-count">
+                      {groupByColumns.length}
+                    </Badge>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="dt-dropdown-content">
+                <div className="dt-dropdown-inner">
+                  <div className="dt-dropdown-header">Select columns to group by (in order)</div>
+                  {columns.map((col) => {
+                    const isSelected = groupByColumns.includes(col.key);
+                    const order = groupByColumns.indexOf(col.key);
+                    return (
+                      <div
+                        key={col.key}
+                        className="dt-dropdown-item"
+                        onClick={() => {
+                          if (isSelected) {
+                            setGroupByColumns(prev => prev.filter(k => k !== col.key));
+                          } else {
+                            setGroupByColumns(prev => [...prev, col.key]);
+                          }
+                        }}
+                      >
+                        <span className="dt-dropdown-item-text">{col.title}</span>
+                        {isSelected && (
+                          <Badge variant="default" className="dt-badge-order">
+                            {order + 1}
+                          </Badge>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {groupByColumns.length > 0 && (
+                    <>
+                      <Separator className="dt-separator" />
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-auto p-0 font-semibold hover:bg-transparent"
-                        onClick={() => handleSort(col.key)}
+                        className="dt-clear-button"
+                        onClick={() => setGroupByColumns([])}
                       >
-                        {col.title}
-                        {getSortIcon(col.key)}
+                        Clear All
                       </Button>
-                    </div>
-                    {showFilters && (
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className={cn(
-                              "h-7 px-2 text-xs",
-                              columnFilters[col.key] && "bg-primary/10 text-primary"
-                            )}
-                          >
-                            <Filter className="h-3 w-3 mr-1" />
-                            {columnFilters[col.key] ? 'Filtered' : 'Filter'}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-64 bg-popover z-50" align="start">
-                          <div className="space-y-2">
-                            <Input
-                              placeholder={`Filter ${col.title}...`}
-                              value={columnFilters[col.key] || ''}
-                              onChange={(e) => 
-                                setColumnFilters(prev => ({
-                                  ...prev,
-                                  [col.key]: e.target.value
-                                }))
-                              }
-                            />
-                            {columnFilters[col.key] && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="w-full"
-                                onClick={() => {
-                                  setColumnFilters(prev => {
-                                    const newFilters = { ...prev };
-                                    delete newFilters[col.key];
-                                    return newFilters;
-                                  });
-                                }}
-                              >
-                                <X className="h-4 w-4 mr-2" />
-                                Clear Filter
-                              </Button>
-                            )}
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    )}
-                  </div>
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {groupedData ? (
-              renderNestedGroups(groupedData, groupByColumns)
-            ) : (
-              filteredData.map((row) => (
-                <TableRow key={row.id} className={getRowClassName(row)}>
-                  <TableCell className="w-12">
-                    <Checkbox
-                      checked={selectedRows.includes(row.id)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedRows(prev => [...prev, row.id]);
-                        } else {
-                          setSelectedRows(prev => prev.filter(id => id !== row.id));
-                        }
-                      }}
-                    />
-                  </TableCell>
-                  {columns.map((col) => {
-                    const isEditing = editingRows.includes(row.id);
-                    
-                    return (
-                      <TableCell key={col.key}>
-                        {isEditing ? (
-                          col.type === 'select' && col.options ? (
-                            <Select
-                              value={String(row[col.key] || '')}
-                              onValueChange={(value) => handleCellEdit(row.id, col.key, value)}
-                            >
-                              <SelectTrigger className="h-8">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-popover z-50">
-                                {col.options.map((opt) => {
-                                  const value = typeof opt === 'string' ? opt : opt.value;
-                                  const label = typeof opt === 'string' ? opt : opt.label;
-                                  return (
-                                    <SelectItem key={value} value={value}>
-                                      {label}
-                                    </SelectItem>
-                                  );
-                                })}
-                              </SelectContent>
-                            </Select>
-                          ) : col.type === 'checkbox' ? (
-                            <Checkbox
-                              checked={Boolean(row[col.key])}
-                              onCheckedChange={(checked) => handleCellEdit(row.id, col.key, Boolean(checked))}
-                            />
-                          ) : col.renderCell ? (
-                            col.renderCell(row, isEditing, (value) => handleCellEdit(row.id, col.key, value))
-                          ) : (
-                            <Input
-                              type={col.type === 'number' ? 'number' : col.type === 'date' ? 'date' : 'text'}
-                              value={String(row[col.key] || '')}
-                              onChange={(e) => handleCellEdit(row.id, col.key, e.target.value)}
-                              className="h-8"
-                              required={col.required}
-                            />
-                          )
-                        ) : col.renderCell ? (
-                          col.renderCell(row, isEditing, () => {})
-                        ) : col.type === 'checkbox' ? (
-                          <Checkbox checked={Boolean(row[col.key])} disabled />
-                        ) : (
-                          String(row[col.key] || '')
-                        )}
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              ))
+                    </>
+                  )}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button
+              variant={showFilters ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              title="Toggle column filters"
+            >
+              <Filter className="dt-icon-md" />
+              Filters
+            </Button>
+
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearAllFilters}
+                title="Clear all filters"
+              >
+                <FilterX className="dt-icon-sm" />
+              </Button>
             )}
-          </TableBody>
-        </Table>
-      </div>
-      
-      <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
-        <div className="text-sm text-muted-foreground">
-          Total rows: <span className="font-medium text-foreground">{filteredData.length}</span>
-          {filteredData.length !== data.length && (
-            <span className="ml-2">
-              (filtered from {data.length})
-            </span>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadCSV}
+              title="Download as CSV"
+            >
+              <Download className="dt-icon-sm" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+            >
+              <Maximize className="dt-icon-sm" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="dt-table-wrapper">
+          {(isCurrentlySaving || isCurrentlyDeleting) && (
+            <div className="dt-loading-overlay">
+              <div className="dt-loading-content">
+                <Loader2 className="dt-loading-spinner" />
+                <p className="dt-loading-text">
+                  {isCurrentlySaving ? 'Saving changes...' : 'Deleting rows...'}
+                </p>
+              </div>
+            </div>
+          )}
+          <div className="dt-table-scroll">
+          <Table>
+            <TableHeader className="dt-table-header">
+              <TableRow>
+                <TableHead className="dt-cell-checkbox">
+                  <Checkbox
+                    checked={selectedRows.length === filteredData.length && filteredData.length > 0}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedRows(filteredData.map(row => row.id));
+                      } else {
+                        setSelectedRows([]);
+                      }
+                    }}
+                  />
+                </TableHead>
+                {columns.map((col) => (
+                  <TableHead key={col.key}>
+                    <div className="dt-header-content">
+                      <div className="dt-header-row">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="dt-sort-button"
+                          onClick={() => handleSort(col.key)}
+                        >
+                          {col.title}
+                          {getSortIcon(col.key)}
+                        </Button>
+                      </div>
+                      {showFilters && (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={cn(
+                                "dt-filter-button",
+                                columnFilters[col.key] && "dt-filter-button-active"
+                              )}
+                            >
+                              <Filter className="dt-filter-icon" />
+                              {columnFilters[col.key] ? 'Filtered' : 'Filter'}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="dt-popover-content" align="start">
+                            <div className="dt-popover-inner">
+                              <Input
+                                placeholder={`Filter ${col.title}...`}
+                                value={columnFilters[col.key] || ''}
+                                onChange={(e) => 
+                                  setColumnFilters(prev => ({
+                                    ...prev,
+                                    [col.key]: e.target.value
+                                  }))
+                                }
+                              />
+                              {columnFilters[col.key] && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="dt-clear-filter-button"
+                                  onClick={() => {
+                                    setColumnFilters(prev => {
+                                      const newFilters = { ...prev };
+                                      delete newFilters[col.key];
+                                      return newFilters;
+                                    });
+                                  }}
+                                >
+                                  <X className="dt-icon-md" />
+                                  Clear Filter
+                                </Button>
+                              )}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      )}
+                    </div>
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {groupedData ? (
+                renderNestedGroups(groupedData, groupByColumns)
+              ) : (
+                filteredData.map((row) => (
+                  <TableRow key={row.id} className={getRowClassName(row)}>
+                    <TableCell className="dt-cell-checkbox">
+                      <Checkbox
+                        checked={selectedRows.includes(row.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedRows(prev => [...prev, row.id]);
+                          } else {
+                            setSelectedRows(prev => prev.filter(id => id !== row.id));
+                          }
+                        }}
+                      />
+                    </TableCell>
+                    {columns.map((col) => {
+                      const isEditing = editingRows.includes(row.id);
+                      
+                      return (
+                        <TableCell key={col.key}>
+                          {isEditing ? (
+                            col.type === 'select' && col.options ? (
+                              <Select
+                                value={String(row[col.key] || '')}
+                                onValueChange={(value) => handleCellEdit(row.id, col.key, value)}
+                              >
+                                <SelectTrigger className="dt-select-trigger">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="dt-select-content">
+                                  {col.options.map((opt) => {
+                                    const value = typeof opt === 'string' ? opt : opt.value;
+                                    const label = typeof opt === 'string' ? opt : opt.label;
+                                    return (
+                                      <SelectItem key={value} value={value}>
+                                        {label}
+                                      </SelectItem>
+                                    );
+                                  })}
+                                </SelectContent>
+                              </Select>
+                            ) : col.type === 'checkbox' ? (
+                              <Checkbox
+                                checked={Boolean(row[col.key])}
+                                onCheckedChange={(checked) => handleCellEdit(row.id, col.key, Boolean(checked))}
+                              />
+                            ) : col.renderCell ? (
+                              col.renderCell(row, isEditing, (value) => handleCellEdit(row.id, col.key, value))
+                            ) : (
+                              <Input
+                                type={col.type === 'number' ? 'number' : col.type === 'date' ? 'date' : 'text'}
+                                value={String(row[col.key] || '')}
+                                onChange={(e) => handleCellEdit(row.id, col.key, e.target.value)}
+                                className="dt-input"
+                                required={col.required}
+                              />
+                            )
+                          ) : col.renderCell ? (
+                            col.renderCell(row, isEditing, () => {})
+                          ) : col.type === 'checkbox' ? (
+                            <Checkbox checked={Boolean(row[col.key])} disabled />
+                          ) : (
+                            String(row[col.key] || '')
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        
+        <div className="dt-footer">
+          <div className="dt-footer-text">
+            Total rows: <span className="dt-footer-highlight">{filteredData.length}</span>
+            {filteredData.length !== data.length && (
+              <span className="dt-footer-filtered">
+                (filtered from {data.length})
+              </span>
+            )}
+          </div>
+          {groupByColumns.length > 0 && (
+            <div className="dt-footer-text">
+              Grouped by: <span className="dt-footer-highlight">{groupByColumns.map(col => columns.find(c => c.key === col)?.title).join(' → ')}</span>
+            </div>
           )}
         </div>
-        {groupByColumns.length > 0 && (
-          <div className="text-sm text-muted-foreground">
-            Grouped by: <span className="font-medium text-foreground">{groupByColumns.map(col => columns.find(c => c.key === col)?.title).join(' → ')}</span>
-          </div>
-        )}
       </div>
-    </div>
-    </div>
+      </div>
+    </>
   );
 };
