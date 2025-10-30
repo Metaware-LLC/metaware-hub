@@ -22,6 +22,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
           flex: 1;
           margin-left: 16rem;
           margin-top: 3.5rem;
+          min-width: 0;
           padding: 1.5rem;
         }
       `}</style>

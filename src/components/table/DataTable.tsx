@@ -503,6 +503,7 @@ export const DataTable = ({
         .dt-container {
           display: flex;
           flex-direction: column;
+          flex: 1;
           gap: 1rem;
         }
 
@@ -659,6 +660,8 @@ export const DataTable = ({
           border-radius: 0.5rem;
           overflow: hidden;
           position: relative;
+          display: flex;
+          flex-direction: column;
         }
 
         .dt-loading-overlay {

@@ -270,7 +270,7 @@ export default function Staging() {
                 </div>
               </div>
             ) : (
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1">
                 <DataTable columns={columns} data={data.rows} />
               </div>
             )}

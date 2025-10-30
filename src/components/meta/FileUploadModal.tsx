@@ -379,6 +379,7 @@ export function FileUploadModal({
 
         .success-modal-data-container {
           overflow: auto;
+          display: flex;
           max-height: calc(85vh - 200px);
         }
 
