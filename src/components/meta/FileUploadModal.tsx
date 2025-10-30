@@ -110,29 +110,56 @@ export function FileUploadModal({
 
       const shouldReturnDraftRows = !createMeta && !loadData;
 
-      // If both createMeta and loadData are checked, show the staging data modal
+      // If both createMeta and loadData are checked, fetch staging data from DB
       if (loadData && createMeta) {
-        // The response might have staging_data or data or be an array directly
-        const stagingData = responseData.staging_data || responseData.data || responseData;
-        console.log('Staging data:', stagingData);
-        
-        if (Array.isArray(stagingData) && stagingData.length > 0) {
-          setLoadedTableData(stagingData);
-          // Close upload modal first
-          onOpenChange(false);
-          setFile(null);
-          setUploadProgress(0);
-          setCreateMeta(false);
-          setLoadData(false);
-          // Then show staging data modal
-          setShowSuccessModal(true);
-          // Trigger refetch to update meta table
-          onSuccess(undefined);
-        } else {
-          console.warn('No staging data found in response');
+        try {
+          // Fetch staging data from the database
+          const stagingResponse = await fetch(
+            `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/mwn/staging_data?ns=${namespace}&sa=${subjectArea}&en=${entity}`
+          );
+          
+          if (stagingResponse.ok) {
+            const stagingData = await stagingResponse.json();
+            console.log('Staging data fetched:', stagingData);
+            
+            if (Array.isArray(stagingData) && stagingData.length > 0) {
+              setLoadedTableData(stagingData);
+              // Close upload modal first
+              onOpenChange(false);
+              setFile(null);
+              setUploadProgress(0);
+              setCreateMeta(false);
+              setLoadData(false);
+              // Then show staging data modal
+              setShowSuccessModal(true);
+              // Trigger refetch to update meta table
+              onSuccess(undefined);
+              
+              toast({
+                title: "Success",
+                description: "Data loaded successfully",
+              });
+            } else {
+              console.warn('No staging data found');
+              toast({
+                title: "Success",
+                description: "File processed but no staging data found",
+              });
+              setFile(null);
+              setUploadProgress(0);
+              setCreateMeta(false);
+              setLoadData(false);
+              onOpenChange(false);
+              onSuccess(undefined);
+            }
+          } else {
+            throw new Error('Failed to fetch staging data');
+          }
+        } catch (error) {
+          console.error('Error fetching staging data:', error);
           toast({
             title: "Success",
-            description: "File processed but no staging data returned",
+            description: "File processed but couldn't load staging data",
           });
           setFile(null);
           setUploadProgress(0);
