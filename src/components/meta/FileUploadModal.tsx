@@ -122,6 +122,11 @@ export function FileUploadModal({
         } else {
           console.warn('No staging data found in response');
         }
+        
+        // Trigger refetch to update meta table
+        onSuccess(undefined);
+      } else {
+        onSuccess(shouldReturnDraftRows ? responseData : undefined);
       }
 
       toast({
@@ -136,10 +141,6 @@ export function FileUploadModal({
       setCreateMeta(false);
       setLoadData(false);
       onOpenChange(false);
-      
-      if (!loadData || !createMeta) {
-        onSuccess(shouldReturnDraftRows ? responseData : undefined);
-      }
     } catch (error) {
       toast({
         title: "Error",
