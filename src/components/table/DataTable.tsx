@@ -725,12 +725,12 @@ export const DataTable = ({
 
         .dt-sort-button {
           height: auto;
-          padding: 0;
-          font-weight: 600;
+          padding: 0.25rem;
+          min-width: auto;
         }
 
         .dt-sort-button:hover {
-          background-color: transparent;
+          background-color: hsl(var(--accent));
         }
 
         .dt-filter-button {
@@ -1044,13 +1044,22 @@ export const DataTable = ({
                   <TableHead key={col.key}>
                     <div className="dt-header-content">
                       <div className="dt-header-row">
+                        <span
+                          className={cn(
+                            "font-semibold cursor-pointer hover:text-primary transition-colors",
+                            col.onHeaderClick && "cursor-pointer"
+                          )}
+                          onClick={() => col.onHeaderClick?.(col.key)}
+                        >
+                          {col.title}
+                        </span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="dt-sort-button"
+                          className="dt-sort-button ml-1"
                           onClick={() => handleSort(col.key)}
+                          title="Sort column"
                         >
-                          {col.title}
                           {getSortIcon(col.key)}
                         </Button>
                       </div>
