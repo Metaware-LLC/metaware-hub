@@ -118,29 +118,44 @@ export function FileUploadModal({
         
         if (Array.isArray(stagingData) && stagingData.length > 0) {
           setLoadedTableData(stagingData);
+          // Close upload modal first
+          onOpenChange(false);
+          setFile(null);
+          setUploadProgress(0);
+          setCreateMeta(false);
+          setLoadData(false);
+          // Then show staging data modal
           setShowSuccessModal(true);
+          // Trigger refetch to update meta table
+          onSuccess(undefined);
         } else {
           console.warn('No staging data found in response');
+          toast({
+            title: "Success",
+            description: "File processed but no staging data returned",
+          });
+          setFile(null);
+          setUploadProgress(0);
+          setCreateMeta(false);
+          setLoadData(false);
+          onOpenChange(false);
+          onSuccess(undefined);
         }
-        
-        // Trigger refetch to update meta table
-        onSuccess(undefined);
       } else {
+        toast({
+          title: "Success",
+          description: shouldReturnDraftRows 
+            ? "Meta fields detected. Click Save to persist them."
+            : "File processed successfully",
+        });
+
+        setFile(null);
+        setUploadProgress(0);
+        setCreateMeta(false);
+        setLoadData(false);
+        onOpenChange(false);
         onSuccess(shouldReturnDraftRows ? responseData : undefined);
       }
-
-      toast({
-        title: "Success",
-        description: shouldReturnDraftRows 
-          ? "Meta fields detected. Click Save to persist them."
-          : "File processed successfully",
-      });
-
-      setFile(null);
-      setUploadProgress(0);
-      setCreateMeta(false);
-      setLoadData(false);
-      onOpenChange(false);
     } catch (error) {
       toast({
         title: "Error",
