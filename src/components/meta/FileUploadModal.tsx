@@ -3,6 +3,7 @@ import { X, Upload, FileText, Loader2, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMDConnectionContext } from "@/contexts/MDConnectionContext";
 import { queryMDTable } from "@/hooks/useMDConnection";
+import { DataTable } from "@/components/table/DataTable";
 import {
   Dialog,
   DialogContent,
@@ -46,6 +47,7 @@ export function FileUploadModal({
   const [loadData, setLoadData] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [loadedTableData, setLoadedTableData] = useState<any[]>([]);
+  const [tableColumns, setTableColumns] = useState<string[]>([]);
   const { toast } = useToast();
   const { connection, connect, ready } = useMDConnectionContext();
 
@@ -148,6 +150,7 @@ export function FileUploadModal({
             }));
             
             setLoadedTableData(rowsWithIds);
+            setTableColumns(result.columns || []);
             // Close upload modal first
             onOpenChange(false);
             setFile(null);
@@ -370,44 +373,13 @@ export function FileUploadModal({
         }
 
         .success-modal-content {
-          max-width: 56rem;
-          max-height: 80vh;
+          max-width: 90vw;
+          max-height: 85vh;
         }
 
-        .success-modal-table-container {
+        .success-modal-data-container {
           overflow: auto;
-          max-height: 50vh;
-        }
-
-        .success-modal-table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-
-        .success-modal-table-header-row {
-          border-bottom: 1px solid hsl(var(--border));
-        }
-
-        .success-modal-table-header-cell {
-          padding: 0.5rem;
-          text-align: left;
-          font-size: 0.875rem;
-          font-weight: 500;
-        }
-
-        .success-modal-table-body-row {
-          border-bottom: 1px solid hsl(var(--border));
-        }
-
-        .success-modal-table-body-cell {
-          padding: 0.5rem;
-          font-size: 0.875rem;
-        }
-
-        .success-modal-footer-text {
-          font-size: 0.875rem;
-          color: hsl(var(--muted-foreground));
-          margin-top: 0.5rem;
+          max-height: calc(85vh - 200px);
         }
 
         .success-modal-button-icon {
@@ -529,39 +501,25 @@ export function FileUploadModal({
           <DialogHeader>
             <DialogTitle>Data Loaded Successfully</DialogTitle>
             <DialogDescription>
-              Data has been loaded for {entity}. Preview the data below.
+              Data has been loaded for {entity}. Preview the staging data below.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="success-modal-table-container">
-            {loadedTableData.length > 0 && (
-              <table className="success-modal-table">
-                <thead>
-                  <tr className="success-modal-table-header-row">
-                    {Object.keys(loadedTableData[0]).map((key) => (
-                      <th key={key} className="success-modal-table-header-cell">
-                        {key}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {loadedTableData.slice(0, 10).map((row, idx) => (
-                    <tr key={idx} className="success-modal-table-body-row">
-                      {Object.values(row).map((value: any, colIdx) => (
-                        <td key={colIdx} className="success-modal-table-body-cell">
-                          {String(value)}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-            {loadedTableData.length > 10 && (
-              <p className="success-modal-footer-text">
-                Showing 10 of {loadedTableData.length} rows
-              </p>
+          <div className="success-modal-data-container">
+            {loadedTableData.length > 0 && tableColumns.length > 0 && (
+              <DataTable
+                columns={tableColumns.map((col) => ({
+                  key: col,
+                  title: col,
+                  type: "text" as const,
+                }))}
+                data={loadedTableData}
+                entityType="Staging Row"
+                onAdd={() => {}}
+                onEdit={() => {}}
+                onDelete={() => {}}
+                onSave={() => {}}
+              />
             )}
           </div>
 

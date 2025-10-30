@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@apollo/client";
+import { useSearchParams } from "react-router-dom";
 import { SubSidebar } from "@/components/layout/SubSidebar";
 import { EntityGrid } from "@/components/entity/EntityGrid";
 import { DataTable } from "@/components/table/DataTable";
@@ -11,9 +12,10 @@ import { Search, X, Database, Loader2 } from "lucide-react";
 import { RuleEditor } from "@/components/rules/RuleEditor";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
-import { GET_SUBJECTAREAS, type GetSubjectAreasResponse } from "@/graphql/queries";
+import { GET_SUBJECTAREAS, GET_ENTITIES, type GetSubjectAreasResponse, type GetEntitiesResponse } from "@/graphql/queries";
 
 export default function Staging() {
+  const [searchParams] = useSearchParams();
   const [selectedSubjectAreaId, setSelectedSubjectAreaId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEntity, setSelectedEntity] = useState<any>(null);
@@ -24,12 +26,35 @@ export default function Staging() {
   const [selectedColumn, setSelectedColumn] = useState<string>("");
   
   const { data: subjectAreasData } = useQuery<GetSubjectAreasResponse>(GET_SUBJECTAREAS);
+  const { data: entitiesData } = useQuery<GetEntitiesResponse>(GET_ENTITIES);
   const selectedSubjectArea = subjectAreasData?.meta_subjectarea.find(sa => sa.id === selectedSubjectAreaId);
 
   // Connect to database on mount
   useEffect(() => {
     connect();
   }, [connect]);
+
+  // Handle URL query parameters
+  useEffect(() => {
+    const entityName = searchParams.get('en');
+    const subjectAreaName = searchParams.get('sa');
+    const namespaceName = searchParams.get('ns');
+    
+    if (entityName && subjectAreaName && namespaceName && entitiesData) {
+      // Find the entity that matches all parameters
+      const matchingEntity = entitiesData.meta_entity.find(
+        entity => 
+          entity.name === entityName &&
+          entity.subjectarea.name === subjectAreaName &&
+          entity.subjectarea.namespace.name === namespaceName
+      );
+      
+      if (matchingEntity) {
+        setSelectedSubjectAreaId(matchingEntity.sa_id);
+        setSelectedEntity(matchingEntity);
+      }
+    }
+  }, [searchParams, entitiesData]);
 
   useEffect(() => {
     if (ready && connection && selectedEntity) {
