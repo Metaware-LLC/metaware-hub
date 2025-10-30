@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Upload, FileText, Loader2, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useMDConnectionContext } from "@/contexts/MDConnectionContext";
+import { queryMDTable } from "@/hooks/useMDConnection";
 import {
   Dialog,
   DialogContent,
@@ -45,6 +47,12 @@ export function FileUploadModal({
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [loadedTableData, setLoadedTableData] = useState<any[]>([]);
   const { toast } = useToast();
+  const { connection, connect, ready } = useMDConnectionContext();
+
+  // Connect to MotherDuck on mount
+  useEffect(() => {
+    connect();
+  }, [connect]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -110,56 +118,70 @@ export function FileUploadModal({
 
       const shouldReturnDraftRows = !createMeta && !loadData;
 
-      // If both createMeta and loadData are checked, fetch staging data from DB
+      // If both createMeta and loadData are checked, fetch staging data from MotherDuck
       if (loadData && createMeta) {
+        if (!connection || !ready) {
+          toast({
+            title: "Error",
+            description: "MotherDuck connection not ready. Please try again.",
+            variant: "destructive",
+          });
+          setFile(null);
+          setUploadProgress(0);
+          setCreateMeta(false);
+          setLoadData(false);
+          onOpenChange(false);
+          onSuccess(undefined);
+          return;
+        }
+
         try {
-          // Fetch staging data from the database
-          const stagingResponse = await fetch(
-            `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/mwn/staging_data?ns=${namespace}&sa=${subjectArea}&en=${entity}`
-          );
+          // Query staging table from MotherDuck
+          const result = await queryMDTable(connection, namespace, subjectArea, entity);
+          console.log('Staging data fetched from MotherDuck:', result);
           
-          if (stagingResponse.ok) {
-            const stagingData = await stagingResponse.json();
-            console.log('Staging data fetched:', stagingData);
+          if (result.rows && result.rows.length > 0) {
+            // Add IDs to rows for table rendering
+            const rowsWithIds = result.rows.map((row, index) => ({
+              ...row,
+              id: row.id || `row_${index}`
+            }));
             
-            if (Array.isArray(stagingData) && stagingData.length > 0) {
-              setLoadedTableData(stagingData);
-              // Close upload modal first
-              onOpenChange(false);
-              setFile(null);
-              setUploadProgress(0);
-              setCreateMeta(false);
-              setLoadData(false);
-              // Then show staging data modal
-              setShowSuccessModal(true);
-              // Trigger refetch to update meta table
-              onSuccess(undefined);
-              
-              toast({
-                title: "Success",
-                description: "Data loaded successfully",
-              });
-            } else {
-              console.warn('No staging data found');
-              toast({
-                title: "Success",
-                description: "File processed but no staging data found",
-              });
-              setFile(null);
-              setUploadProgress(0);
-              setCreateMeta(false);
-              setLoadData(false);
-              onOpenChange(false);
-              onSuccess(undefined);
-            }
+            setLoadedTableData(rowsWithIds);
+            // Close upload modal first
+            onOpenChange(false);
+            setFile(null);
+            setUploadProgress(0);
+            setCreateMeta(false);
+            setLoadData(false);
+            // Then show staging data modal
+            setShowSuccessModal(true);
+            // Trigger refetch to update meta table
+            onSuccess(undefined);
+            
+            toast({
+              title: "Success",
+              description: "Data loaded successfully",
+            });
           } else {
-            throw new Error('Failed to fetch staging data');
+            console.warn('No staging data found');
+            toast({
+              title: "Success",
+              description: "File processed but no staging data found",
+            });
+            setFile(null);
+            setUploadProgress(0);
+            setCreateMeta(false);
+            setLoadData(false);
+            onOpenChange(false);
+            onSuccess(undefined);
           }
         } catch (error) {
           console.error('Error fetching staging data:', error);
           toast({
             title: "Success",
             description: "File processed but couldn't load staging data",
+            variant: "destructive",
           });
           setFile(null);
           setUploadProgress(0);
