@@ -200,7 +200,7 @@ export default function Glossary() {
                       }} 
                       className="hover:text-foreground transition-colors"
                     >
-                      {selectedEntity.subjectarea.namespace.name}
+                      {selectedEntity.subjectarea?.namespace?.name || 'Unknown'}
                     </button>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
@@ -238,7 +238,7 @@ export default function Glossary() {
                   {selectedEntity.name}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  {selectedEntity.subjectarea.namespace.name} / {selectedEntity.subjectarea.name}
+                  {selectedEntity.subjectarea?.namespace?.name || 'Unknown'} / {selectedEntity.subjectarea?.name || 'Unknown'}
                 </p>
               </div>
             </div>

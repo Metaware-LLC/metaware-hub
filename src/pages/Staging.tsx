@@ -44,6 +44,8 @@ export default function Staging() {
       // Find the entity that matches all parameters
       const matchingEntity = entitiesData.meta_entity.find(
         entity => 
+          entity.subjectarea &&
+          entity.subjectarea.namespace &&
           entity.name === entityName &&
           entity.subjectarea.name === subjectAreaName &&
           entity.subjectarea.namespace.name === namespaceName
@@ -72,7 +74,7 @@ export default function Staging() {
   }, [selectedSubjectAreaId, searchParams]);
 
   const fetchData = async () => {
-    if (!connection || !selectedEntity) return;
+    if (!connection || !selectedEntity || !selectedEntity.subjectarea || !selectedEntity.subjectarea.namespace) return;
 
     setLoading(true);
     try {
@@ -109,7 +111,7 @@ export default function Staging() {
     onHeaderClick: handleColumnClick,
   }));
 
-  const entityContext = selectedEntity ? {
+  const entityContext = selectedEntity && selectedEntity.subjectarea && selectedEntity.subjectarea.namespace ? {
     ns: selectedEntity.subjectarea.namespace.name,
     sa: selectedEntity.subjectarea.name,
     en: selectedEntity.name,
@@ -220,7 +222,7 @@ export default function Staging() {
                       }} 
                       className="hover:text-foreground transition-colors"
                     >
-                      {selectedEntity.subjectarea.namespace.name}
+                      {selectedEntity.subjectarea?.namespace?.name || 'Unknown'}
                     </button>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
@@ -258,7 +260,7 @@ export default function Staging() {
                   {selectedEntity.name}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  {selectedEntity.subjectarea.namespace.name}.{selectedEntity.subjectarea.name}
+                  {selectedEntity.subjectarea?.namespace?.name || 'Unknown'}.{selectedEntity.subjectarea?.name || 'Unknown'}
                 </p>
               </div>
             </div>

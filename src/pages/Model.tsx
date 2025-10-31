@@ -42,7 +42,7 @@ export default function Model() {
   }, [selectedSubjectAreaId]);
 
   const fetchData = async () => {
-    if (!connection || !selectedEntity) return;
+    if (!connection || !selectedEntity || !selectedEntity.subjectarea || !selectedEntity.subjectarea.namespace) return;
 
     setLoading(true);
     try {
@@ -181,7 +181,7 @@ export default function Model() {
                       }} 
                       className="hover:text-foreground transition-colors"
                     >
-                      {selectedEntity.subjectarea.namespace.name}
+                      {selectedEntity.subjectarea?.namespace?.name || 'Unknown'}
                     </button>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
@@ -219,7 +219,7 @@ export default function Model() {
                   {selectedEntity.name}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  {selectedEntity.subjectarea.namespace.name}.{selectedEntity.subjectarea.name}
+                  {selectedEntity.subjectarea?.namespace?.name || 'Unknown'}.{selectedEntity.subjectarea?.name || 'Unknown'}
                 </p>
               </div>
             </div>
