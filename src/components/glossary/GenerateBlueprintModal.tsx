@@ -14,6 +14,7 @@ interface GenerateBlueprintModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   namespaceId: string;
+  glossaryEntity: any;
   onSuccess: (standardizedMeta: any[], mappings: any[]) => void;
 }
 
@@ -21,6 +22,7 @@ export function GenerateBlueprintModal({
   open,
   onOpenChange,
   namespaceId,
+  glossaryEntity,
   onSuccess,
 }: GenerateBlueprintModalProps) {
   const [selectedEntityIds, setSelectedEntityIds] = useState<string[]>([]);
@@ -79,7 +81,10 @@ export function GenerateBlueprintModal({
 
     setIsGenerating(true);
     try {
-      const response = await glossaryAPI.generateSuggestions(selectedEntityIds) as any;
+      const targetNs = glossaryEntity.subjectarea?.namespace?.name || "";
+      const targetSa = glossaryEntity.subjectarea?.name || "";
+      
+      const response = await glossaryAPI.generateSuggestions(selectedEntityIds, targetNs, targetSa) as any;
       onSuccess(response.standardized_meta || [], response.mappings || []);
       onOpenChange(false);
       setSelectedEntityIds([]);

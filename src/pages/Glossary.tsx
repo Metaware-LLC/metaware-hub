@@ -364,6 +364,7 @@ export default function Glossary() {
               open={blueprintModalOpen}
               onOpenChange={setBlueprintModalOpen}
               namespaceId={selectedEntity.subjectarea?.namespace?.id || ""}
+              glossaryEntity={selectedEntity}
               onSuccess={handleBlueprintGenerated}
             />
 

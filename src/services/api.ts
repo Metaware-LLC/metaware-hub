@@ -176,10 +176,14 @@ export const metaAPI = {
  * Glossary API Operations
  */
 export const glossaryAPI = {
-  generateSuggestions: async (entityIds: string[]) => {
+  generateSuggestions: async (entityIds: string[], targetNs: string, targetSa: string) => {
     return apiRequest('/mwn/generate_glossary_suggestions', {
       method: 'POST',
-      body: JSON.stringify({ entity_ids: entityIds }),
+      body: JSON.stringify({ 
+        entity_ids: entityIds,
+        target_ns: targetNs,
+        target_sa: targetSa,
+      }),
     });
   },
 };
