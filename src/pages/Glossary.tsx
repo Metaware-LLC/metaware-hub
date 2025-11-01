@@ -6,7 +6,7 @@ import { DataTable } from "@/components/table/DataTable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, X, Database, Loader2, Upload } from "lucide-react";
+import { Search, X, Database, Loader2, Upload, Sparkles } from "lucide-react";
 import { GET_META_FOR_ENTITY, type MetaField } from "@/graphql/queries/meta";
 import { GET_RULESETS_BY_ENTITY, type RulesetWithSource } from "@/graphql/queries/ruleset";
 import { GET_SUBJECTAREAS, type GetSubjectAreasResponse } from "@/graphql/queries";
@@ -14,6 +14,9 @@ import { SourceAssociationSelect } from "@/components/glossary/SourceAssociation
 import { MappingTable } from "@/components/glossary/MappingTable";
 import { RelationshipGraph } from "@/components/glossary/RelationshipGraph";
 import { ImportConfigModal } from "@/components/glossary/ImportConfigModal";
+import { GenerateBlueprintModal } from "@/components/glossary/GenerateBlueprintModal";
+import { StandardizedMetaEditor } from "@/components/glossary/StandardizedMetaEditor";
+import { MappingEditorModal } from "@/components/glossary/MappingEditorModal";
 import { type Entity } from "@/graphql/queries/entity";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
@@ -27,6 +30,11 @@ export default function Glossary() {
   const [activeTab, setActiveTab] = useState("meta");
   const [existingRuleset, setExistingRuleset] = useState<RulesetWithSource | null>(null);
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [blueprintModalOpen, setBlueprintModalOpen] = useState(false);
+  const [standardizedMeta, setStandardizedMeta] = useState<any[]>([]);
+  const [mappings, setMappings] = useState<any[]>([]);
+  const [metaEditorOpen, setMetaEditorOpen] = useState(false);
+  const [mappingEditorOpen, setMappingEditorOpen] = useState(false);
   
   const { data: subjectAreasData } = useQuery<GetSubjectAreasResponse>(GET_SUBJECTAREAS);
   const selectedSubjectArea = subjectAreasData?.meta_subjectarea.find(sa => sa.id === selectedSubjectAreaId);
@@ -95,6 +103,30 @@ export default function Glossary() {
     title: meta.name,
     type: meta.type as any,
   }));
+
+  const handleBlueprintGenerated = (generatedMeta: any[], generatedMappings: any[]) => {
+    setStandardizedMeta(generatedMeta);
+    setMappings(generatedMappings);
+    setMetaEditorOpen(true);
+  };
+
+  const handleMetaSaved = (savedMappings: any[]) => {
+    setMappings(savedMappings);
+    setActiveTab("associations");
+    setMappingEditorOpen(true);
+    // Refetch meta to show the newly created meta
+    if (selectedEntity) {
+      fetchMeta({ variables: { enid: selectedEntity.id } });
+    }
+  };
+
+  const handleMappingsSaved = () => {
+    setActiveTab("relationships");
+    // Optionally refetch data
+    if (selectedEntity) {
+      fetchMeta({ variables: { enid: selectedEntity.id } });
+    }
+  };
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] fixed left-64 right-0 top-14">
@@ -257,9 +289,16 @@ export default function Glossary() {
                   </div>
                 ) : metaFields.length === 0 ? (
                   <div className="flex items-center justify-center h-full">
-                    <div className="text-center space-y-2">
+                    <div className="text-center space-y-4">
                       <Database className="h-12 w-12 mx-auto text-muted-foreground opacity-50" />
                       <p className="text-muted-foreground">No metadata found</p>
+                      <Button
+                        onClick={() => setBlueprintModalOpen(true)}
+                        className="mt-4"
+                      >
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Generate Standardized Blueprint
+                      </Button>
                     </div>
                   </div>
                 ) : (
@@ -320,6 +359,30 @@ export default function Glossary() {
                 />
               </TabsContent>
             </Tabs>
+
+            <GenerateBlueprintModal
+              open={blueprintModalOpen}
+              onOpenChange={setBlueprintModalOpen}
+              namespaceId={selectedEntity.subjectarea?.namespace?.id || ""}
+              onSuccess={handleBlueprintGenerated}
+            />
+
+            <StandardizedMetaEditor
+              open={metaEditorOpen}
+              onOpenChange={setMetaEditorOpen}
+              glossaryEntity={selectedEntity}
+              standardizedMeta={standardizedMeta}
+              onSuccess={handleMetaSaved}
+              mappings={mappings}
+            />
+
+            <MappingEditorModal
+              open={mappingEditorOpen}
+              onOpenChange={setMappingEditorOpen}
+              glossaryEntity={selectedEntity}
+              mappings={mappings}
+              onSuccess={handleMappingsSaved}
+            />
           </div>
         )}
       </div>
