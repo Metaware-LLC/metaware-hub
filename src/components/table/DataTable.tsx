@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import React from "react";
 import {
   Table,
@@ -116,6 +116,15 @@ export const DataTable = ({
   const [groupByColumns, setGroupByColumns] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  
+  // Virtual scrolling state
+  const [windowStart, setWindowStart] = useState(0);
+  const [windowEnd, setWindowEnd] = useState(150);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isLoadingMore = useRef(false);
+  
+  const WINDOW_SIZE = 150;
+  const LOAD_THRESHOLD = 100;
 
   const editedData = externalEditedData !== undefined ? externalEditedData : internalEditedData;
   const setEditedData = onEditedDataChange || setInternalEditedData;
@@ -171,6 +180,51 @@ export const DataTable = ({
       return 0;
     });
   }, [data, editedData, searchTerm, columns, sortColumn, sortDirection, columnFilters]);
+
+  // Virtual scrolling: only render a window of data
+  const visibleData = useMemo(() => {
+    if (groupByColumns.length > 0) {
+      // When grouping is active, show all data
+      return filteredData;
+    }
+    return filteredData.slice(windowStart, windowEnd);
+  }, [filteredData, windowStart, windowEnd, groupByColumns]);
+
+  // Reset window when filters change
+  useEffect(() => {
+    setWindowStart(0);
+    setWindowEnd(WINDOW_SIZE);
+    isLoadingMore.current = false;
+  }, [searchTerm, sortColumn, sortDirection, columnFilters, data, editedData]);
+
+  // Handle scroll for infinite loading
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer || groupByColumns.length > 0) return;
+
+    const handleScroll = () => {
+      if (isLoadingMore.current) return;
+
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+      const scrolledRows = Math.floor(scrollTop / 40); // Approximate row height
+      const isNearEnd = scrollTop + clientHeight >= scrollHeight - 200;
+
+      // Load more when scrolled past threshold and near the end
+      if (scrolledRows >= LOAD_THRESHOLD && isNearEnd && windowEnd < filteredData.length) {
+        isLoadingMore.current = true;
+        setWindowEnd(prev => {
+          const newEnd = Math.min(prev + WINDOW_SIZE, filteredData.length);
+          setTimeout(() => {
+            isLoadingMore.current = false;
+          }, 100);
+          return newEnd;
+        });
+      }
+    };
+
+    scrollContainer.addEventListener('scroll', handleScroll);
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, [filteredData.length, windowEnd, groupByColumns]);
 
   const hasChanges = useMemo(() => {
     return editedData.length > 0 && (
@@ -1039,7 +1093,7 @@ export const DataTable = ({
               </div>
             </div>
           )}
-          <div className="dt-table-scroll">
+          <div className="dt-table-scroll" ref={scrollContainerRef}>
           <Table>
             <TableHeader className="dt-table-header">
               <TableRow>
@@ -1135,7 +1189,7 @@ export const DataTable = ({
               {groupedData ? (
                 renderNestedGroups(groupedData, groupByColumns)
               ) : (
-                filteredData.map((row) => (
+                visibleData.map((row) => (
                   <TableRow key={row.id} className={getRowClassName(row)}>
                     <TableCell className="dt-cell-checkbox">
                       <Checkbox
@@ -1214,6 +1268,11 @@ export const DataTable = ({
             {filteredData.length !== data.length && (
               <span className="dt-footer-filtered">
                 (filtered from {data.length})
+              </span>
+            )}
+            {groupByColumns.length === 0 && windowEnd < filteredData.length && (
+              <span className="dt-footer-filtered">
+                (showing first {windowEnd} rows)
               </span>
             )}
           </div>
