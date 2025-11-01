@@ -76,7 +76,7 @@ export function StandardizedMetaEditor({
       };
 
       const metaRequests = editedData.map((meta) => ({
-        id: meta.id,
+        id: meta.id.startsWith('temp-') ? crypto.randomUUID() : meta.id,
         type: meta.type,
         subtype: meta.subtype || "",
         name: meta.name,
