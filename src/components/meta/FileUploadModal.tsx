@@ -93,22 +93,15 @@ export function FileUploadModal({
       const formData = new FormData();
       formData.append('file', file);
 
-      // Build query params, only include primary_grain if it has a valid value
-      const params: Record<string, string> = {
+      const queryParams = new URLSearchParams({
         ns: namespace,
         sa: subjectArea,
         en: entity,
         ns_type: namespaceType,
         create_meta: String(createMeta),
         load_data: String(loadData),
-      };
-
-      // Only include primary_grain if it's not empty and not just a dot
-      if (primaryGrain && primaryGrain.trim() && primaryGrain.trim() !== '.') {
-        params.primary_grain = primaryGrain.trim();
-      }
-
-      const queryParams = new URLSearchParams(params);
+        primary_grain: primaryGrain || '.',
+      });
 
       const response = await fetch(
         `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/mwn/auto_detect_staging?${queryParams}`,
