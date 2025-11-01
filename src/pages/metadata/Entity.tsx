@@ -87,6 +87,11 @@ export default function Entity() {
   const { data: namespacesData } = useQuery<GetNamespacesResponse>(GET_NAMESPACES);
   const { data: subjectAreasData } = useQuery<GetSubjectAreasResponse>(GET_SUBJECTAREAS);
 
+  // Wrapper function to properly handle refresh
+  const handleRefresh = async () => {
+    await refetch();
+  };
+
   const namespaces = namespacesData?.meta_namespace || [];
   const subjectAreas = subjectAreasData?.meta_subjectarea || [];
 
@@ -454,7 +459,7 @@ export default function Entity() {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onSave={handleSave}
-        onRefresh={refetch}
+        onRefresh={handleRefresh}
         entityType="Entity"
         externalEditedData={editedData}
         onEditedDataChange={setEditedData}

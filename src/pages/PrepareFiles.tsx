@@ -80,6 +80,13 @@ export default function PrepareFiles() {
     }
   );
 
+  // Wrapper function to properly handle refresh
+  const handleRefresh = async () => {
+    if (selectedEntity) {
+      await refetch();
+    }
+  };
+
   // Filter data based on selections
   const availableSubjectAreas = subjectAreasData?.meta_subjectarea.filter(
     area => area.ns_id === selectedNamespace
@@ -649,7 +656,7 @@ export default function PrepareFiles() {
                         onEdit={handleEdit}
                         onDelete={handleDelete}
                         onSave={handleSave}
-                        onRefresh={refetch}
+                        onRefresh={handleRefresh}
                         entityType="Meta Field"
                         externalEditedData={editedData}
                         onEditedDataChange={setEditedData}

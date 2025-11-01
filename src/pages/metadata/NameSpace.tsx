@@ -110,6 +110,11 @@ export default function NameSpace() {
    */
   const { data, loading, error, refetch } = useQuery<GetNamespacesResponse>(GET_NAMESPACES);
 
+  // Wrapper function to properly handle refresh
+  const handleRefresh = async () => {
+    await refetch();
+  };
+
   /**
    * Transform GraphQL data to table format
    * Converts the namespace data structure to match DataTable requirements
@@ -348,7 +353,7 @@ export default function NameSpace() {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onSave={handleSave}
-        onRefresh={refetch}
+        onRefresh={handleRefresh}
         entityType="Namespace"
         isDeleting={isDeleting}
         isSaving={isSaving}

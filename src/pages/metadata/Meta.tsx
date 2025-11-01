@@ -102,6 +102,13 @@ export default function Meta() {
     }
   );
 
+  // Wrapper function to properly handle refresh
+  const handleRefresh = async () => {
+    if (selectedEntity) {
+      await refetch();
+    }
+  };
+
   /**
    * Filter subject areas based on selected namespace
    */
@@ -625,7 +632,7 @@ export default function Meta() {
               onEdit={handleEdit}
               onDelete={handleDelete}
               onSave={handleSave}
-              onRefresh={refetch}
+              onRefresh={handleRefresh}
               entityType="Metadata"
               externalEditedData={editedData}
               onEditedDataChange={setEditedData}

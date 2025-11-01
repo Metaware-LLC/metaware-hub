@@ -72,6 +72,11 @@ export default function SubjectArea() {
   const { data, loading, error, refetch } = useQuery<GetSubjectAreasResponse>(GET_SUBJECTAREAS);
   const { data: namespacesData } = useQuery<GetNamespacesResponse>(GET_NAMESPACES);
 
+  // Wrapper function to properly handle refresh
+  const handleRefresh = async () => {
+    await refetch();
+  };
+
   /**
    * Transform GraphQL data to table format with namespace display as "type->namespace"
    * Filter out subject areas with null/deleted namespaces
@@ -333,7 +338,7 @@ export default function SubjectArea() {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onSave={handleSave}
-        onRefresh={refetch}
+        onRefresh={handleRefresh}
         entityType="Subject Area"
         externalEditedData={editedData}
         onEditedDataChange={setEditedData}
