@@ -109,16 +109,26 @@ export function GenerateBlueprintModal({
       
       // Transform the raw_columns into mappings for MappingEditorModal
       const mappings = standardizedMetas.flatMap((meta: any) => 
-        (meta.raw_columns || []).map((rawCol: any) => ({
-          glossary_meta_name: meta.name,
-          glossary_meta_alias: meta.alias,
-          source_ns: rawCol.ns,
-          source_sa: rawCol.sa,
-          source_en: rawCol.en,
-          source_en_id: rawCol.en_id || "",
-          source_column: rawCol.name,
-          source_expression: rawCol.name, // Pre-populate with the raw column name
-        }))
+        (meta.raw_columns || []).map((rawCol: any) => {
+          // Look up the source entity ID from the loaded entities
+          const sourceEntity = stagingEntities.find((e: any) => 
+            e.name === rawCol.en && 
+            e.subjectarea?.name === rawCol.sa &&
+            e.subjectarea?.namespace?.name === rawCol.ns
+          );
+          
+          return {
+            glossary_meta_name: meta.name,
+            glossary_meta_alias: meta.alias,
+            source_ns: rawCol.ns,
+            source_sa: rawCol.sa,
+            source_en: rawCol.en,
+            source_en_id: sourceEntity?.id || "",
+            source_en_name: rawCol.en,
+            source_column: rawCol.name,
+            source_expression: rawCol.name, // Pre-populate with the raw column name
+          };
+        })
       );
       
       onSuccess(transformedMeta, mappings);

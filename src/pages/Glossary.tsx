@@ -20,6 +20,8 @@ import { MappingEditorModal } from "@/components/glossary/MappingEditorModal";
 import { type Entity } from "@/graphql/queries/entity";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { rulesetAPI } from "@/services/api";
 
 export default function Glossary() {
   const [selectedSubjectAreaId, setSelectedSubjectAreaId] = useState<string | null>(null);
@@ -35,6 +37,7 @@ export default function Glossary() {
   const [mappings, setMappings] = useState<any[]>([]);
   const [metaEditorOpen, setMetaEditorOpen] = useState(false);
   const [mappingEditorOpen, setMappingEditorOpen] = useState(false);
+  const { toast } = useToast();
   
   const { data: subjectAreasData } = useQuery<GetSubjectAreasResponse>(GET_SUBJECTAREAS);
   const selectedSubjectArea = subjectAreasData?.meta_subjectarea.find(sa => sa.id === selectedSubjectAreaId);
@@ -110,13 +113,118 @@ export default function Glossary() {
     setMetaEditorOpen(true);
   };
 
-  const handleMetaSaved = (savedMappings: any[]) => {
-    setMappings(savedMappings);
-    setActiveTab("associations");
-    setMappingEditorOpen(true);
-    // Refetch meta to show the newly created meta
-    if (selectedEntity) {
-      fetchMeta({ variables: { enid: selectedEntity.id } });
+  const handleMetaSaved = async (savedMappings: any[], savedMeta: any[]) => {
+    try {
+      // Enrich mappings with glossary_meta_id from saved meta
+      const enrichedMappings = savedMappings.map(mapping => {
+        const matchingMeta = savedMeta.find(meta => meta.name === mapping.glossary_meta_name);
+        return {
+          ...mapping,
+          glossary_meta_id: matchingMeta?.id || "",
+        };
+      });
+
+      // Group mappings by source entity
+      const mappingsBySource = enrichedMappings.reduce<Record<string, any[]>>((acc, mapping) => {
+        const sourceEnId = mapping.source_en_id;
+        if (!acc[sourceEnId]) {
+          acc[sourceEnId] = [];
+        }
+        acc[sourceEnId].push(mapping);
+        return acc;
+      }, {});
+
+      // Create a ruleset for each source entity
+      for (const [sourceEnId, sourceMappings] of Object.entries(mappingsBySource)) {
+        const firstMapping = sourceMappings[0];
+        
+        const payload = {
+          entity_core: {
+            ns: selectedEntity!.subjectarea?.namespace?.name || "",
+            sa: selectedEntity!.subjectarea?.name || "",
+            en: selectedEntity!.name,
+            ns_type: "glossary",
+            ns_id: selectedEntity!.subjectarea?.namespace?.id || "",
+            sa_id: selectedEntity!.sa_id,
+            en_id: selectedEntity!.id,
+          },
+          ruleset_request: {
+            id: `rs_${selectedEntity!.id}_${sourceEnId}_${Date.now()}`,
+            type: "glossary_association",
+            name: `${selectedEntity!.name} to ${firstMapping.source_en_name} mapping`,
+            description: "Auto-generated mapping from standardized blueprint",
+            view_name: "",
+            target_en_id: selectedEntity!.id,
+            source_id: `src_${sourceEnId}_${Date.now()}`,
+            transform_id: `trns_${Date.now()}`,
+            rule_requests: sourceMappings.map((mapping, index) => ({
+              id: `rule_${mapping.glossary_meta_id}_${Date.now()}_${index}`,
+              type: "transformation",
+              subtype: "mapping",
+              name: mapping.glossary_meta_name,
+              alias: mapping.source_expression,
+              description: `Mapping for ${mapping.glossary_meta_name}`,
+              rule_status: "active",
+              is_shared: false,
+              rule_expression: mapping.source_expression,
+              rule_priority: index,
+              rule_category: "mapping",
+              rule_tags: "",
+              rule_params: "",
+              color: "",
+              language: "sql",
+              fn_name: "",
+              fn_package: "",
+              fn_imports: "",
+              update_strategy_: "I",
+              meta_id: mapping.glossary_meta_id,
+              meta: mapping.glossary_meta_name,
+            })),
+            ruleset_id: "",
+          },
+          source_request: {
+            type: "DIRECT",
+            source_ns: firstMapping.source_ns || "",
+            source_sa: firstMapping.source_sa || "",
+            source_en: firstMapping.source_en_name || "",
+            source_filter: "",
+            source_en_id: sourceEnId,
+            source_id: "",
+            sql_override: "",
+          },
+          transform_request: {
+            id: "",
+            strategy: "direct",
+            type: "mapping",
+            subtype: "standard",
+            name: "Direct mapping",
+            status: "Active",
+            transform_config: {},
+          },
+        };
+
+        await rulesetAPI.create(payload);
+      }
+
+      toast({
+        title: "Success",
+        description: "Metadata and mappings saved successfully",
+      });
+
+      // Switch to Source Associations tab
+      setActiveTab("associations");
+      
+      // Refetch meta to show the newly created meta
+      if (selectedEntity) {
+        fetchMeta({ variables: { enid: selectedEntity.id } });
+      }
+    } catch (error) {
+      console.error("Error saving mappings:", error);
+      toast({
+        title: "Mapping save failed",
+        description: error instanceof Error ? error.message : "Failed to save mappings",
+        variant: "destructive",
+      });
     }
   };
 

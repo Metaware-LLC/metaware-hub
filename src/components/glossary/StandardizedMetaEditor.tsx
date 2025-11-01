@@ -11,7 +11,7 @@ interface StandardizedMetaEditorProps {
   onOpenChange: (open: boolean) => void;
   glossaryEntity: any;
   standardizedMeta: any[];
-  onSuccess: (mappings: any[]) => void;
+  onSuccess: (mappings: any[], savedMeta: any[]) => void;
   mappings: any[];
 }
 
@@ -114,7 +114,8 @@ export function StandardizedMetaEditor({
         description: "Standardized metadata saved successfully",
       });
 
-      onSuccess(mappings);
+      // Return the saved meta with IDs so mappings can be enriched
+      onSuccess(mappings, metaRequests);
       onOpenChange(false);
     } catch (error) {
       console.error("Error saving metadata:", error);
