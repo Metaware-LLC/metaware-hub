@@ -125,13 +125,15 @@ export default function Glossary() {
         ns: selectedEntity.subjectarea?.namespace?.name || "",
         sa: selectedEntity.subjectarea?.name || "",
         en: selectedEntity.name,
+        name: selectedEntity.name,
+        type: "glossary",
         ns_type: "glossary",
         ns_id: selectedEntity.subjectarea?.namespace?.id || "",
         sa_id: selectedEntity.sa_id,
         en_id: selectedEntity.id,
       };
 
-      const metaRequests = draftMetaFields.map((item: any) => ({
+      const metaRequests = draftMetaFields.map((item: any, index: number) => ({
         name: item.name || "",
         alias: item.alias || "",
         description: item.description || "",
@@ -143,6 +145,10 @@ export default function Glossary() {
         default_value: item.default_value || null,
         reference: item.reference || null,
         meta_status: "active",
+        order: index,
+        ns: selectedEntity.subjectarea?.namespace?.name || "",
+        sa: selectedEntity.subjectarea?.name || "",
+        en: selectedEntity.name,
       }));
 
       const response = await entityAPI.createWithMeta(entityRequest, metaRequests) as { meta?: any[] };
