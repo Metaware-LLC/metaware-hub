@@ -526,3 +526,176 @@
     }
   }
 }
+
+@layer utilities {
+  /* Layout Utilities */
+  .flex-center {
+    @apply flex items-center justify-center;
+  }
+
+  .flex-between {
+    @apply flex items-center justify-between;
+  }
+
+  .flex-start {
+    @apply flex items-center justify-start;
+  }
+
+  .flex-col-center {
+    @apply flex flex-col items-center justify-center;
+  }
+
+  /* Spacing Utilities */
+  .stack-sm {
+    @apply space-y-2;
+  }
+
+  .stack-md {
+    @apply space-y-4;
+  }
+
+  .stack-lg {
+    @apply space-y-6;
+  }
+
+  .gap-sm {
+    @apply gap-2;
+  }
+
+  .gap-md {
+    @apply gap-4;
+  }
+
+  .gap-lg {
+    @apply gap-6;
+  }
+
+  /* Text Utilities */
+  .text-muted {
+    @apply text-sm text-muted-foreground;
+  }
+
+  .text-heading-lg {
+    @apply text-3xl font-bold text-foreground;
+  }
+
+  .text-heading-md {
+    @apply text-2xl font-bold text-foreground;
+  }
+
+  .text-heading-sm {
+    @apply text-xl font-semibold text-foreground;
+  }
+
+  .text-subheading {
+    @apply text-lg text-muted-foreground;
+  }
+
+  /* Card/Container Utilities */
+  .card-base {
+    @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+  }
+
+  .card-padding {
+    @apply p-6;
+  }
+
+  .card-padding-sm {
+    @apply p-4;
+  }
+
+  .bordered-container {
+    @apply p-4 border rounded-lg;
+  }
+
+  /* Icon Utilities */
+  .icon-xs {
+    @apply h-3 w-3;
+  }
+
+  .icon-sm {
+    @apply h-4 w-4;
+  }
+
+  .icon-md {
+    @apply h-5 w-5;
+  }
+
+  .icon-lg {
+    @apply h-6 w-6;
+  }
+
+  .icon-xl {
+    @apply h-8 w-8;
+  }
+
+  .icon-muted {
+    @apply text-muted-foreground;
+  }
+
+  .icon-primary {
+    @apply text-primary;
+  }
+
+  /* Button/Interactive Utilities */
+  .btn-icon {
+    @apply h-10 w-10;
+  }
+
+  .btn-icon-sm {
+    @apply h-8 w-8;
+  }
+
+  /* Fixed positioning patterns */
+  .fixed-header {
+    @apply fixed top-0 left-0 right-0 z-50;
+  }
+
+  .fixed-sidebar {
+    @apply fixed left-0 top-14 bottom-0;
+  }
+
+  /* Page Layout */
+  .page-container {
+    @apply h-full overflow-hidden;
+  }
+
+  .page-content {
+    @apply p-6 space-y-6 h-full overflow-y-auto;
+  }
+
+  .page-content-no-scroll {
+    @apply p-6 space-y-6;
+  }
+
+  /* Breadcrumb text styles */
+  .breadcrumb-link {
+    @apply hover:text-foreground transition-colors;
+  }
+
+  /* Status indicators */
+  .status-dot {
+    @apply w-2 h-2 rounded-full;
+  }
+
+  .status-dot-primary {
+    @apply status-dot bg-primary;
+  }
+
+  .status-dot-success {
+    @apply status-dot bg-success;
+  }
+
+  .status-dot-warning {
+    @apply status-dot bg-warning;
+  }
+
+  /* Grid layouts */
+  .grid-auto-fill {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4;
+  }
+
+  .grid-half {
+    @apply grid grid-cols-1 lg:grid-cols-2;
+  }
+}

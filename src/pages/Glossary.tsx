@@ -285,7 +285,7 @@ export default function Glossary() {
       
       <div className="flex-1 overflow-hidden">
         {!selectedEntity ? (
-          <div className="p-6 space-y-6 h-full overflow-y-auto">
+          <div className="page-content">
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
@@ -296,7 +296,7 @@ export default function Glossary() {
                         setSelectedSubjectAreaId(null);
                         setSearchQuery("");
                       }}
-                      className="hover:text-foreground transition-colors"
+                      className="breadcrumb-link"
                     >
                       Business Glossary
                     </button>
@@ -313,15 +313,15 @@ export default function Glossary() {
               </BreadcrumbList>
             </Breadcrumb>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Business Glossary</h1>
+              <h1 className="text-heading-md">Business Glossary</h1>
               <p className="text-muted-foreground">
                 Manage business terms and definitions
               </p>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex-start gap-sm">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 icon-sm icon-muted" />
                 <Input
                   type="text"
                   placeholder="Search entities..."
@@ -336,7 +336,7 @@ export default function Glossary() {
                 onClick={() => setImportModalOpen(true)}
                 title="Import configuration"
               >
-                <Upload className="h-4 w-4" />
+                <Upload className="icon-sm" />
               </Button>
               <Button
                 variant="outline"
@@ -347,7 +347,7 @@ export default function Glossary() {
                 }}
                 title="Reset search and filters"
               >
-                <X className="h-4 w-4" />
+                <X className="icon-sm" />
               </Button>
             </div>
 
@@ -367,7 +367,7 @@ export default function Glossary() {
             />
           </div>
         ) : (
-          <div className="h-full flex flex-col p-6">
+          <div className="page-container flex flex-col card-padding">
             <Breadcrumb className="mb-4">
               <BreadcrumbList>
                 <BreadcrumbItem>
@@ -377,7 +377,7 @@ export default function Glossary() {
                         setSelectedEntity(null);
                         setSelectedSubjectAreaId(null);
                       }} 
-                      className="hover:text-foreground transition-colors"
+                      className="breadcrumb-link"
                     >
                       {selectedEntity.subjectarea?.namespace?.name || 'Unknown'}
                     </button>
@@ -391,7 +391,7 @@ export default function Glossary() {
                         setSelectedSubjectAreaId(selectedEntity.sa_id);
                         setSelectedEntity(null);
                       }} 
-                      className="hover:text-foreground transition-colors"
+                      className="breadcrumb-link"
                     >
                       {selectedEntity.subjectarea.name}
                     </button>
@@ -403,7 +403,7 @@ export default function Glossary() {
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
-            <div className="mb-4 flex items-center gap-4">
+            <div className="mb-4 flex-start gap-md">
               <Button
                 variant="ghost"
                 size="sm"
@@ -412,11 +412,11 @@ export default function Glossary() {
                 ← Back to list
               </Button>
               <div className="flex-1">
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <Database className="h-5 w-5 text-primary" />
+                <h2 className="text-heading-sm flex-start gap-sm">
+                  <Database className="icon-md icon-primary" />
                   {selectedEntity.name}
                 </h2>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted">
                   {selectedEntity.subjectarea?.namespace?.name || 'Unknown'} / {selectedEntity.subjectarea?.name || 'Unknown'}
                 </p>
               </div>
@@ -431,16 +431,16 @@ export default function Glossary() {
 
               <TabsContent value="meta" className="mt-0 flex-1 overflow-hidden flex flex-col">
                 {metaLoading ? (
-                  <div className="flex items-center justify-center h-full">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  <div className="flex-center h-full">
+                    <Loader2 className="icon-xl animate-spin text-muted-foreground" />
                   </div>
                 ) : draftMetaFields.length > 0 ? (
-                  <div className="flex flex-col h-full gap-4">
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-muted-foreground">
+                  <div className="flex flex-col h-full gap-md">
+                    <div className="flex-between">
+                      <div className="text-muted">
                         Review and edit the generated metadata below. Click Save to persist changes.
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex-start gap-sm">
                         <Button
                           variant="outline"
                           onClick={() => {
@@ -455,7 +455,7 @@ export default function Glossary() {
                           onClick={handleSaveDraftMeta}
                           disabled={isSavingDraft}
                         >
-                          {isSavingDraft && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                          {isSavingDraft && <Loader2 className="icon-sm mr-2 animate-spin" />}
                           Save Meta
                         </Button>
                       </div>
@@ -491,15 +491,15 @@ export default function Glossary() {
                     </div>
                   </div>
                 ) : metaFields.length === 0 ? (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center space-y-4">
-                      <Database className="h-12 w-12 mx-auto text-muted-foreground opacity-50" />
+                  <div className="flex-center h-full">
+                    <div className="text-center stack-md">
+                      <Database className="h-12 w-12 mx-auto icon-muted opacity-50" />
                       <p className="text-muted-foreground">No metadata found</p>
                       <Button
                         onClick={() => setBlueprintModalOpen(true)}
                         className="mt-4"
                       >
-                        <Sparkles className="h-4 w-4 mr-2" />
+                        <Sparkles className="icon-sm mr-2" />
                         Generate Standardized Blueprint
                       </Button>
                     </div>
@@ -531,7 +531,7 @@ export default function Glossary() {
 
               <TabsContent value="associations" className="mt-0 flex-1 overflow-auto">
                 <div>
-                  <div className="space-y-2">
+                  <div className="stack-sm">
                     <label className="text-sm font-medium">Select Association</label>
                     <SourceAssociationSelect
                       glossaryEntity={selectedEntity}

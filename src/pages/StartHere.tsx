@@ -21,10 +21,10 @@ export default function StartHere() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
+    <div className="stack-lg">
+      <div className="stack-sm">
         <h1 className="text-4xl font-bold text-foreground">Welcome to MetaWare</h1>
-        <p className="text-lg text-muted-foreground max-w-3xl">
+        <p className="text-subheading max-w-3xl">
           Your comprehensive metadata management platform. Follow these essential steps to transform your raw data into a powerful business intelligence foundation.
         </p>
       </div>
@@ -34,13 +34,13 @@ export default function StartHere() {
       {/* Step 1: Load and Connect Source Data */}
       <Card className="border-l-4 border-l-primary">
         <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-4">
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary font-bold text-xl flex-shrink-0">
+          <div className="flex-between">
+            <div className="flex-start gap-md">
+              <div className="flex-center w-12 h-12 rounded-full bg-primary/10 text-primary font-bold text-xl flex-shrink-0">
                 1
               </div>
-              <div className="space-y-2">
-                <CardTitle className="text-2xl">Load and Connect Source Data</CardTitle>
+              <div className="stack-sm">
+                <CardTitle className="text-heading-md">Load and Connect Source Data</CardTitle>
                 <CardDescription className="text-base">
                   Ingest raw data from vendor files, spreadsheets, internal databases, or APIs. MetaWare automatically captures source metadata, data lineage, and maintains a historical audit of all changes—with intelligent auto-detection during the loading process.
                 </CardDescription>
@@ -48,41 +48,41 @@ export default function StartHere() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="stack-md">
           <Collapsible open={openSteps[1]} onOpenChange={() => toggleStep(1)}>
             <CollapsibleTrigger asChild>
-              <Button variant="outline" className="button-anim w-full justify-between hover:bg-muted">
-                <span className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
+              <Button variant="outline" className="button-anim w-full flex-between hover:bg-muted">
+                <span className="flex-start gap-sm">
+                  <BookOpen className="icon-sm" />
                   How to Load Source Data
                 </span>
                 <ArrowRight className={cn(
-                  "h-4 w-4 transform-gpu will-change-transform transition-transform duration-300 ease-in-out",
+                  "icon-sm transform-gpu will-change-transform transition-transform duration-300 ease-in-out",
                   openSteps[1] && "rotate-90"
                 )} />
               </Button>
             </CollapsibleTrigger>
-            <CollapsibleContent className="mt-4 space-y-4">
+            <CollapsibleContent className="mt-4 stack-md">
               <Card className="bg-muted/50">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <FileUp className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-lg flex-start gap-sm">
+                    <FileUp className="icon-md icon-primary" />
                     Option 1: Manual Definition & Registration
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                  <div className="flex-start gap-3">
+                    <CheckCircle2 className="icon-md text-success mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="font-medium">Define Source Metadata</p>
-                      <p className="text-sm text-muted-foreground">Navigate to <strong>Metadata → Sources</strong> to manually define your data source structure, including tables, columns, and data types.</p>
+                      <p className="text-muted">Navigate to <strong>Metadata → Sources</strong> to manually define your data source structure, including tables, columns, and data types.</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                  <div className="flex-start gap-3">
+                    <CheckCircle2 className="icon-md text-success mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="font-medium">Register the Source</p>
-                      <p className="text-sm text-muted-foreground">Complete registration by specifying connection details and validation rules for your data source.</p>
+                      <p className="text-muted">Complete registration by specifying connection details and validation rules for your data source.</p>
                     </div>
                   </div>
                 </CardContent>
@@ -90,48 +90,48 @@ export default function StartHere() {
 
               <Card className="bg-muted/50">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-tertiary" />
+                  <CardTitle className="text-lg flex-start gap-sm">
+                    <Sparkles className="icon-md text-tertiary" />
                     Option 2: Auto-Detection & Smart Loading
                   </CardTitle>
                   <CardDescription>Recommended for faster setup</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                  <div className="flex-start gap-3">
+                    <CheckCircle2 className="icon-md text-success mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="font-medium">Auto-Detect Metadata</p>
-                      <p className="text-sm text-muted-foreground">Go to <strong>Staging</strong> and upload your files. MetaWare's intelligent parser automatically detects schemas, data types, and relationships.</p>
+                      <p className="text-muted">Go to <strong>Staging</strong> and upload your files. MetaWare's intelligent parser automatically detects schemas, data types, and relationships.</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                  <div className="flex-start gap-3">
+                    <CheckCircle2 className="icon-md text-success mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="font-medium">Review & Load Data</p>
-                      <p className="text-sm text-muted-foreground">Verify the auto-detected structure and load data directly into MetaWare's data lake for immediate analysis.</p>
+                      <p className="text-muted">Verify the auto-detected structure and load data directly into MetaWare's data lake for immediate analysis.</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                  <div className="flex-start gap-3">
+                    <CheckCircle2 className="icon-md text-success mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="font-medium">Register & Track</p>
-                      <p className="text-sm text-muted-foreground">Automatically register the source with lineage tracking and change history enabled from day one.</p>
+                      <p className="text-muted">Automatically register the source with lineage tracking and change history enabled from day one.</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex-start gap-sm pt-2">
                 <Badge variant="secondary" className="gap-1">
-                  <History className="h-3 w-3" />
+                  <History className="icon-xs" />
                   Historical Audit
                 </Badge>
                 <Badge variant="secondary" className="gap-1">
-                  <GitBranch className="h-3 w-3" />
+                  <GitBranch className="icon-xs" />
                   Lineage Tracking
                 </Badge>
                 <Badge variant="secondary" className="gap-1">
-                  <Database className="h-3 w-3" />
+                  <Database className="icon-xs" />
                   Multi-Source Support
                 </Badge>
               </div>
