@@ -107,6 +107,18 @@ export default function Glossary() {
     type: meta.type as any,
   }));
 
+  const metaTableColumns = [
+    { key: 'name', title: 'Name', type: 'text' as const },
+    { key: 'alias', title: 'Alias', type: 'text' as const },
+    { key: 'type', title: 'Type', type: 'text' as const },
+    { key: 'description', title: 'Description', type: 'text' as const },
+    { key: 'nullable', title: 'Nullable', type: 'checkbox' as const },
+    { key: 'is_primary_grain', title: 'Primary Grain', type: 'checkbox' as const },
+    { key: 'is_secondary_grain', title: 'Secondary Grain', type: 'checkbox' as const },
+    { key: 'is_tertiary_grain', title: 'Tertiary Grain', type: 'checkbox' as const },
+    { key: 'order', title: 'Order', type: 'number' as const },
+  ];
+
   const handleBlueprintGenerated = (generatedMeta: any[], generatedMappings: any[]) => {
     setStandardizedMeta(generatedMeta);
     setMappings(generatedMappings);
@@ -257,8 +269,10 @@ export default function Glossary() {
     { key: 'type', title: 'Type', type: 'text' as const },
     { key: 'description', title: 'Description', type: 'text' as const },
     { key: 'nullable', title: 'Nullable', type: 'checkbox' as const },
-    { key: 'unique', title: 'Unique', type: 'checkbox' as const },
-    { key: 'primary', title: 'Primary', type: 'checkbox' as const },
+    { key: 'is_primary_grain', title: 'Primary Grain', type: 'checkbox' as const },
+    { key: 'is_secondary_grain', title: 'Secondary Grain', type: 'checkbox' as const },
+    { key: 'is_tertiary_grain', title: 'Tertiary Grain', type: 'checkbox' as const },
+    { key: 'order', title: 'Order', type: 'number' as const },
   ] : [];
 
   return (
@@ -466,8 +480,10 @@ export default function Glossary() {
                             type: 'text',
                             description: '',
                             nullable: true,
-                            unique: false,
-                            primary: false,
+                            is_primary_grain: false,
+                            is_secondary_grain: false,
+                            is_tertiary_grain: false,
+                            order: draftMetaFields.length,
                           };
                           setDraftMetaFields([...draftMetaFields, newField]);
                         }}
@@ -489,31 +505,26 @@ export default function Glossary() {
                     </div>
                   </div>
                 ) : (
-                  <div className="border rounded-lg overflow-hidden h-full">
-                    <div className="overflow-auto h-full">
-                      <table className="w-full">
-                        <thead className="bg-muted/50 sticky top-0">
-                          <tr>
-                            <th className="text-left p-4 font-medium">Name</th>
-                            <th className="text-left p-4 font-medium">Alias</th>
-                            <th className="text-left p-4 font-medium">Type</th>
-                            <th className="text-left p-4 font-medium">Description</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {metaFields.map((field) => (
-                            <tr key={field.id} className="border-t hover:bg-muted/30">
-                              <td className="p-4">{field.name}</td>
-                              <td className="p-4 font-mono text-sm">{field.alias}</td>
-                              <td className="p-4">{field.type}</td>
-                              <td className="p-4 text-muted-foreground">
-                                {field.description || "-"}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                  <div className="flex-1 overflow-hidden">
+                    <DataTable
+                      data={metaFields.map(field => ({
+                        id: field.id,
+                        name: field.name,
+                        alias: field.alias || '',
+                        type: field.type,
+                        description: field.description || '',
+                        nullable: field.nullable || false,
+                        is_primary_grain: field.is_primary_grain || false,
+                        is_secondary_grain: field.is_secondary_grain || false,
+                        is_tertiary_grain: field.is_tertiary_grain || false,
+                        order: field.order || 0,
+                      }))}
+                      columns={metaTableColumns}
+                      onAdd={() => {
+                        // Open blueprint modal to add more meta
+                        setBlueprintModalOpen(true);
+                      }}
+                    />
                   </div>
                 )}
               </TabsContent>
