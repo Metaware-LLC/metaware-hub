@@ -124,11 +124,12 @@ export default function Meta() {
   ) || [];
 
   /**
-   * Transform GraphQL meta data to table format
+   * Transform GraphQL meta data to draft format (not persisted yet)
+   * This matches the Glossary meta behavior where server data is loaded as draft
    */
-  const existingTableData: TableData[] = metaData?.meta_meta.map(field => {
+  const draftMetaFields: TableData[] = metaData?.meta_meta.map((field, index) => {
     return {
-      id: field.id,
+      id: `draft_${field.id}_${index}`,
       name: field.name,
       alias: field.alias || '',
       description: field.description || '',
@@ -140,11 +141,15 @@ export default function Meta() {
       default: field.default || '',
       nullable: field.nullable || false,
       order: field.order || 0,
+      _status: 'draft',
+      _originalId: field.id, // Store original ID for updates
     };
   }) || [];
 
-  // Use existing data as base table data
-  const tableData: TableData[] = existingTableData;
+  // Populate editedData with draft fields when meta data changes
+  if (metaData && editedData.length === 0 && draftMetaFields.length > 0) {
+    setEditedData(draftMetaFields);
+  }
 
   /**
    * Handle namespace selection change
@@ -174,10 +179,33 @@ export default function Meta() {
     setEditedData([]); // Clear draft rows when entity changes
   };
 
+
+
+  const handleDelete = async (ids: string[]) => {
+    setIsDeleting(true);
+    try {
+      await metaAPI.delete(ids);
+      await refetch();
+      toast({
+        title: "Success",
+        description: `${ids.length} meta field(s) deleted successfully`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to delete meta fields: ${error}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   /**
-   * Handle adding new meta field
+   * Handle saving draft meta fields (matches Glossary meta behavior)
+   * Only processes draft rows and persists them to the server
    */
-  const handleAdd = async (newRow: Partial<TableData>) => {
+  const handleSaveDraftMeta = async (data: TableData[]) => {
     if (!selectedEntity) {
       toast({
         title: "Error",
@@ -187,6 +215,7 @@ export default function Meta() {
       return;
     }
 
+    setIsSaving(true);
     try {
       const selectedEntityData = availableEntities.find(e => e.id === selectedEntity);
       if (!selectedEntityData) return;
@@ -212,238 +241,63 @@ export default function Meta() {
         ns_type: 'staging',
       };
 
-      const metaField = {
-        id: newRow.id || '',
-        type: newRow.type || '',
-        subtype: newRow.subtype || '',
-        name: newRow.name || '',
-        description: newRow.description || '',
-        order: Number(newRow.order) || 0,
-        alias: newRow.alias || '',
-        length: 0,
-        default: newRow.default || '',
-        nullable: Boolean(newRow.nullable),
-        format: '',
-        is_primary_grain: Boolean(newRow.is_primary_grain),
-        is_secondary_grain: Boolean(newRow.is_secondary_grain),
-        is_tertiary_grain: Boolean(newRow.is_tertiary_grain),
-        tags: '',
-        custom_props: [],
-        entity_id: selectedEntity,
-        ns: selectedEntityData.subjectarea.namespace.name,
-        sa: selectedEntityData.subjectarea.name,
-        en: selectedEntityData.name,
-        entity_core: {
+      // Process all draft rows
+      const metaFields = data
+        .filter(item => item._status === 'draft')
+        .map(item => ({
+          id: item._originalId || crypto.randomUUID(),
+          type: item.type || '',
+          subtype: item.subtype || '',
+          name: item.name || '',
+          description: item.description || '',
+          order: Number(item.order) || 0,
+          alias: item.alias || '',
+          length: 0,
+          default: item.default || '',
+          nullable: Boolean(item.nullable),
+          format: '',
+          is_primary_grain: Boolean(item.is_primary_grain),
+          is_secondary_grain: Boolean(item.is_secondary_grain),
+          is_tertiary_grain: Boolean(item.is_tertiary_grain),
+          tags: '',
+          custom_props: [],
+          entity_id: selectedEntity,
           ns: selectedEntityData.subjectarea.namespace.name,
           sa: selectedEntityData.subjectarea.name,
           en: selectedEntityData.name,
-          ns_type: 'staging',
-          ns_id: selectedNamespace, // Use the selected namespace ID
-          sa_id: selectedEntityData.sa_id,
-          en_id: selectedEntityData.id,
-        },
-      };
+          entity_core: {
+            ns: selectedEntityData.subjectarea.namespace.name,
+            sa: selectedEntityData.subjectarea.name,
+            en: selectedEntityData.name,
+            ns_type: 'staging',
+            ns_id: selectedNamespace,
+            sa_id: selectedEntityData.sa_id,
+            en_id: selectedEntity,
+          },
+        }));
 
-      await entityAPI.createWithMeta(entityData, [metaField]);
-      await refetch();
-      toast({
-        title: "Success",
-        description: "Meta field created successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: `Failed to create meta field: ${error}`,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleEdit = async (id: string, updatedData: Partial<TableData>) => {
-    console.log('Edit meta field:', id, updatedData);
-    // Note: API doesn't provide update for individual meta fields
-    // Would need to update entire entity with meta fields
-    toast({
-      title: "Info", 
-      description: "Meta field updates not yet supported via API",
-    });
-  };
-
-  const handleDelete = async (ids: string[]) => {
-    setIsDeleting(true);
-    try {
-      await metaAPI.delete(ids);
-      await refetch();
-      toast({
-        title: "Success",
-        description: `${ids.length} meta field(s) deleted successfully`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: `Failed to delete meta fields: ${error}`,
-        variant: "destructive",
-      });
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleSave = async (data: TableData[]) => {
-    if (!selectedEntity) {
-      toast({
-        title: "Error", 
-        description: "Please select an entity first",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      const selectedEntityData = availableEntities.find(e => e.id === selectedEntity);
-      if (!selectedEntityData) return;
-
-      const entityData = {
-        type: selectedEntityData.type,
-        subtype: selectedEntityData.subtype || '',
-        name: selectedEntityData.name,
-        description: selectedEntityData.description || '',
-        is_delta: selectedEntityData.is_delta || false,
-        runtime: '',
-        tags: '',
-        custom_props: [],
-        dependency: '',
-        primary_grain: selectedEntityData.primary_grain || '',
-        secondary_grain: '',
-        tertiary_grain: '',
-        sa_id: selectedEntityData.sa_id,
-        update_strategy_: 'U',
-        ns: selectedEntityData.subjectarea.namespace.name,
-        sa: selectedEntityData.subjectarea.name,
-        ns_type: 'staging',
-      };
-
-      const metaFields = data
-        .map(item => {
-          const isNewRecord = item._status === 'draft';
-          
-          if (isNewRecord) {
-            // For new records, include all fields
-            return {
-              id: `meta_${Date.now()}_${Math.random()}`,
-              type: item.type || '',
-              subtype: item.subtype || '',
-              name: item.name || '',
-              description: item.description || '',
-              order: Number(item.order) || 0,
-              alias: item.alias || '',
-              length: 0,
-              default: item.default || '',
-              nullable: Boolean(item.nullable),
-              format: '',
-              is_primary_grain: Boolean(item.is_primary_grain),
-              is_secondary_grain: Boolean(item.is_secondary_grain),
-              is_tertiary_grain: Boolean(item.is_tertiary_grain),
-              tags: '',
-              custom_props: [],
-              entity_id: selectedEntity,
-              ns: selectedEntityData.subjectarea.namespace.name,
-              sa: selectedEntityData.subjectarea.name,
-              en: selectedEntityData.name,
-              entity_core: {
-                ns: selectedEntityData.subjectarea.namespace.name,
-                sa: selectedEntityData.subjectarea.name,
-                en: selectedEntityData.name,
-                ns_type: 'staging',
-                ns_id: selectedNamespace,
-                sa_id: selectedEntityData.sa_id,
-                en_id: selectedEntity,
-              }
-            };
-          } else {
-            // For edited records, check for actual changes
-            const originalRow = tableData.find(row => row.id === item.id);
-            if (!originalRow) return null;
-            
-            let hasChanges = false;
-            if (
-              item.name !== originalRow.name ||
-              item.type !== originalRow.type ||
-              item.subtype !== originalRow.subtype ||
-              item.nullable !== originalRow.nullable ||
-              item.default !== originalRow.default ||
-              item.description !== originalRow.description ||
-              item.alias !== originalRow.alias ||
-              item.order !== originalRow.order ||
-              item.is_primary_grain !== originalRow.is_primary_grain ||
-              item.is_secondary_grain !== originalRow.is_secondary_grain ||
-              item.is_tertiary_grain !== originalRow.is_tertiary_grain
-            ) {
-              hasChanges = true;
-            }
-            
-            // Only return if there are actual changes
-            if (!hasChanges) return null;
-            
-            return {
-              id: item.id,
-              type: item.type || '',
-              subtype: item.subtype || '',
-              name: item.name || '',
-              description: item.description || '',
-              order: Number(item.order) || 0,
-              alias: item.alias || '',
-              length: 0,
-              default: item.default || '',
-              nullable: Boolean(item.nullable),
-              format: '',
-              is_primary_grain: Boolean(item.is_primary_grain),
-              is_secondary_grain: Boolean(item.is_secondary_grain),
-              is_tertiary_grain: Boolean(item.is_tertiary_grain),
-              tags: '',
-              custom_props: [],
-              entity_id: selectedEntity,
-              ns: selectedEntityData.subjectarea.namespace.name,
-              sa: selectedEntityData.subjectarea.name,
-              en: selectedEntityData.name,
-              entity_core: {
-                ns: selectedEntityData.subjectarea.namespace.name,
-                sa: selectedEntityData.subjectarea.name,
-                en: selectedEntityData.name,
-                ns_type: 'staging',
-                ns_id: selectedNamespace,
-                sa_id: selectedEntityData.sa_id,
-                en_id: selectedEntity,
-              }
-            };
-          }
-        })
-        .filter((item): item is NonNullable<typeof item> => item !== null);
-
-      // Only proceed if there are meta fields to save
       if (metaFields.length === 0) {
         toast({
           title: "No changes",
-          description: "No changes to save",
+          description: "No draft rows to save",
         });
         return;
       }
 
       await entityAPI.createWithMeta(entityData, metaFields);
-      
+
       // Clear draft rows after successful save
       setEditedData([]);
-      
+
       await refetch();
       toast({
         title: "Success",
-        description: "Changes saved successfully",
+        description: `${metaFields.length} meta field(s) saved successfully`,
       });
     } catch (error) {
       toast({
         title: "Error",
-        description: `Failed to save changes: ${error}`,
+        description: `Failed to save meta fields: ${error}`,
         variant: "destructive",
       });
     } finally {
@@ -460,10 +314,11 @@ export default function Meta() {
   /**
    * Check if meta exists for the selected entity
    */
-  const hasExistingMeta = tableData.length > 0;
+  const hasExistingMeta = draftMetaFields.length > 0;
 
   /**
    * Handle file upload success
+   * Populates draft rows when "Create Meta" and "Load Data" are unchecked
    */
   const handleUploadSuccess = (draftRows?: any) => {
     if (draftRows && draftRows.return_data) {
@@ -487,8 +342,8 @@ export default function Meta() {
           order: row.order || index,
           _status: 'draft',
         }));
-        // Combine existing data with draft rows and set as edited data
-        setEditedData([...formattedDraftRows, ...existingTableData]);
+        // Set as edited data (draft rows)
+        setEditedData(formattedDraftRows);
       }
     } else {
       // If data was persisted, refetch from server
@@ -497,19 +352,19 @@ export default function Meta() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="stack-lg">
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Meta Data Management</h1>
-        <p className="text-muted-foreground">
+      <div className="stack-xs">
+        <h1 className="text-heading-lg">Meta Data Management</h1>
+        <p className="text-muted">
           Explore field-level metadata for entities within your data landscape
         </p>
       </div>
 
       {/* Cascading Dropdowns */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
         {/* Namespace Dropdown - Grouped by Type */}
-        <div className="space-y-2">
+        <div className="stack-sm">
           <Label htmlFor="namespace">NameSpace</Label>
           <GroupedNamespaceSelect
             namespaces={namespacesData?.meta_namespace || []}
@@ -520,7 +375,7 @@ export default function Meta() {
         </div>
 
         {/* Subject Area Dropdown */}
-        <div className="space-y-2">
+        <div className="stack-sm">
           <Label htmlFor="subject-area">Subject Area</Label>
           <Select 
             onValueChange={handleSubjectAreaChange} 
@@ -541,9 +396,9 @@ export default function Meta() {
         </div>
 
         {/* Entity Dropdown */}
-        <div className="space-y-2">
+        <div className="stack-sm">
           <Label htmlFor="entity">Entity</Label>
-          <div className="flex gap-2">
+          <div className="flex-start gap-sm">
             <Select 
               onValueChange={handleEntityChange} 
               value={selectedEntity}
@@ -572,7 +427,7 @@ export default function Meta() {
                       onClick={() => setUploadModalOpen(true)}
                       disabled={!selectedEntity || hasExistingMeta}
                     >
-                      <Upload className="h-4 w-4" />
+                      <Upload className="icon-sm" />
                     </Button>
                   </div>
                 </TooltipTrigger>
@@ -605,33 +460,32 @@ export default function Meta() {
 
       {/* Entity Meta Table */}
       {selectedEntity && (
-        <div className="space-y-4">
-          <div className="border-t pt-6">
-            <h2 className="text-xl font-semibold text-foreground mb-2">
+        <div className="stack-md">
+          <div className="border-t pt-6 stack-sm">
+            <h2 className="text-heading-md">
               Entity Metadata: {selectedEntityName}
             </h2>
-            <p className="text-muted-foreground mb-4">
+            <p className="text-muted">
               Field-level metadata and business rules for the selected entity
             </p>
           </div>
 
           {metaLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="text-muted-foreground">Loading metadata...</div>
+            <div className="flex-center py-12">
+              <div className="text-muted">Loading metadata...</div>
             </div>
           ) : metaError ? (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex-center py-12">
               <div className="text-destructive">
                 Error loading metadata: {metaError.message}
               </div>
             </div>
-          ) : (
+          ) : editedData.length > 0 ? (
             <DataTable
               columns={metaColumns}
-              data={tableData}
-              onEdit={handleEdit}
+              data={[]}
               onDelete={handleDelete}
-              onSave={handleSave}
+              onSave={handleSaveDraftMeta}
               onRefresh={handleRefresh}
               entityType="Metadata"
               externalEditedData={editedData}
@@ -639,26 +493,30 @@ export default function Meta() {
               isDeleting={isDeleting}
               isSaving={isSaving}
             />
+          ) : (
+            <div className="flex-center py-12">
+              <p className="text-muted">No metadata found for this entity</p>
+            </div>
           )}
         </div>
       )}
 
       {/* Helper Messages */}
       {!selectedEntity && selectedSubjectArea && (
-        <div className="text-center py-8 text-muted-foreground">
-          Please select an entity to view its metadata
+        <div className="flex-center py-12">
+          <p className="text-muted">Please select an entity to view its metadata</p>
         </div>
       )}
 
       {!selectedSubjectArea && selectedNamespace && (
-        <div className="text-center py-8 text-muted-foreground">
-          Please select a subject area to continue
+        <div className="flex-center py-12">
+          <p className="text-muted">Please select a subject area to continue</p>
         </div>
       )}
 
       {!selectedNamespace && (
-        <div className="text-center py-8 text-muted-foreground">
-          Please select a namespace to begin exploring metadata
+        <div className="flex-center py-12">
+          <p className="text-muted">Please select a namespace to begin exploring metadata</p>
         </div>
       )}
     </div>
