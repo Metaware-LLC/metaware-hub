@@ -203,10 +203,10 @@ export function MappingTable({ glossaryEntity, sourceEntity, existingRuleset }: 
   const alreadySelectedIds = new Set(mappingRows.map((row) => row.glossaryMeta.id));
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="stack-md">
+      <div className="flex-between">
         <h3 className="text-lg font-semibold">Field Mapping</h3>
-        <div className="flex gap-2">
+        <div className="flex-start gap-sm">
           <Button onClick={() => setIsModalOpen(true)} variant="outline">
             Add Glossary Meta
           </Button>
@@ -216,7 +216,7 @@ export function MappingTable({ glossaryEntity, sourceEntity, existingRuleset }: 
           >
             {saving ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 icon-sm animate-spin" />
                 Saving...
               </>
             ) : (
@@ -250,19 +250,19 @@ export function MappingTable({ glossaryEntity, sourceEntity, existingRuleset }: 
               mappingRows.map((row) => (
                 <tr key={row.id} className="border-t hover:bg-muted/30">
                   <td className="p-4">
-                    <div className="flex items-center gap-2">
+                    <div className="flex-start gap-sm">
                       <span className="font-medium">{row.glossaryMeta.name}</span>
                       <Badge variant="secondary">{row.glossaryMeta.type}</Badge>
                     </div>
                   </td>
                   <td className="p-4">
                     {sourceMetaLoading ? (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                      <div className="flex-start gap-sm text-muted-foreground">
+                        <Loader2 className="icon-sm animate-spin" />
                         Loading...
                       </div>
                     ) : (
-                      <div className="flex gap-2">
+                      <div className="flex-start gap-sm">
                         <Input
                           value={row.sourceMetaAlias || ""}
                           onChange={(e) =>
@@ -274,11 +274,11 @@ export function MappingTable({ glossaryEntity, sourceEntity, existingRuleset }: 
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button variant="outline" size="icon" className="shrink-0">
-                              <ChevronDown className="h-4 w-4" />
+                              <ChevronDown className="icon-sm" />
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-64 p-2" align="end">
-                            <div className="space-y-1">
+                            <div className="stack-xs">
                               {sourceMetaFields.map((meta) => (
                                 <Button
                                   key={meta.id}
@@ -303,7 +303,7 @@ export function MappingTable({ glossaryEntity, sourceEntity, existingRuleset }: 
                       size="icon"
                       onClick={() => handleRemoveRow(row.id)}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="icon-sm" />
                     </Button>
                   </td>
                 </tr>

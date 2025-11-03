@@ -152,28 +152,28 @@ export function GenerateBlueprintModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[80vh]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            Generate Standardized Blueprint
-          </DialogTitle>
+        <DialogTitle className="flex-start gap-sm">
+          <Sparkles className="icon-md icon-primary" />
+          Generate Standardized Blueprint
+        </DialogTitle>
         </DialogHeader>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <div className="flex-center py-12">
+            <Loader2 className="icon-xl animate-spin text-muted-foreground" />
           </div>
         ) : (
           <>
             <ScrollArea className="h-[400px] pr-4">
-              <div className="space-y-4">
+              <div className="stack-md">
                 {subjectAreasWithEntities.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">
                     No staging entities found to generate conventions from.
                   </p>
                 ) : (
                   subjectAreasWithEntities.map((subjectArea: any) => (
-                    <div key={subjectArea.id} className="border rounded-lg p-4 space-y-3">
-                      <div className="flex items-center gap-3">
+                    <div key={subjectArea.id} className="bordered-container stack-sm">
+                      <div className="flex-start gap-3">
                         <Checkbox
                           checked={subjectArea.entities.every((e: any) =>
                             selectedEntityIds.includes(e.id)
@@ -182,15 +182,15 @@ export function GenerateBlueprintModal({
                         />
                         <div className="flex-1">
                           <h3 className="font-semibold">{subjectArea.name}</h3>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-muted">
                             {subjectArea.namespace?.name} • {subjectArea.entities.length} entities
                           </p>
                         </div>
                       </div>
 
-                      <div className="ml-7 space-y-2">
+                      <div className="ml-7 stack-sm">
                         {subjectArea.entities.map((entity: any) => (
-                          <div key={entity.id} className="flex items-center gap-3">
+                          <div key={entity.id} className="flex-start gap-3">
                             <Checkbox
                               checked={selectedEntityIds.includes(entity.id)}
                               onCheckedChange={() => handleToggleEntity(entity.id)}
@@ -215,7 +215,7 @@ export function GenerateBlueprintModal({
               >
                 {isGenerating ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Loader2 className="icon-sm mr-2 animate-spin" />
                     Generating...
                   </>
                 ) : (

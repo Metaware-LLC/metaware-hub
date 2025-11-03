@@ -38,91 +38,45 @@ export function SourceAssociationSelect({
 
   if (loading) {
     return (
-      <>
-        <style>{`
-          .source-loading {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-            color: hsl(var(--muted-foreground));
-          }
-
-          .source-loading-icon {
-            height: 1rem;
-            width: 1rem;
-            animation: spin 1s linear infinite;
-          }
-
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
-
-        <div className="source-loading">
-          <Loader2 className="source-loading-icon" />
-          Loading associations...
-        </div>
-      </>
+      <div className="flex-start gap-sm text-sm text-muted-foreground">
+        <Loader2 className="icon-sm animate-spin" />
+        Loading associations...
+      </div>
     );
   }
 
   if (sourceAssociations.length === 0) {
     return (
-      <>
-        <style>{`
-          .source-empty {
-            font-size: 0.875rem;
-            color: hsl(var(--muted-foreground));
-          }
-        `}</style>
-
-        <div className="source-empty">
-          No source associations found for this entity
-        </div>
-      </>
+      <div className="text-muted">
+        No source associations found for this entity
+      </div>
     );
   }
 
   return (
-    <>
-      <style>{`
-        .source-select-label {
-          font-weight: 500;
-        }
-
-        .source-select-separator {
-          color: hsl(var(--muted-foreground));
-          margin-left: 0.375rem;
-          margin-right: 0.375rem;
-        }
-      `}</style>
-
-      <Select
-        value={value}
-        onValueChange={(val) => {
-          const selected = sourceAssociations.find((e) => e.id === val);
-          if (selected) onSelect(selected);
-        }}
-      >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Select Association" />
-        </SelectTrigger>
-        <SelectContent>
-          {sourceAssociations.map((entity) => (
-            <SelectItem key={entity.id} value={entity.id}>
-              <span className="source-select-label">
-                {entity.subjectarea.namespace.name}
-              </span>
-              <span className="source-select-separator">/</span>
-              <span className="source-select-label">{entity.subjectarea.name}</span>
-              <span className="source-select-separator">/</span>
-              <span>{entity.name}</span>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </>
+    <Select
+      value={value}
+      onValueChange={(val) => {
+        const selected = sourceAssociations.find((e) => e.id === val);
+        if (selected) onSelect(selected);
+      }}
+    >
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder="Select Association" />
+      </SelectTrigger>
+      <SelectContent>
+        {sourceAssociations.map((entity) => (
+          <SelectItem key={entity.id} value={entity.id}>
+            <span className="font-medium">
+              {entity.subjectarea.namespace.name}
+            </span>
+            <span className="text-muted-foreground mx-1.5">/</span>
+            <span className="font-medium">{entity.subjectarea.name}</span>
+            <span className="text-muted-foreground mx-1.5">/</span>
+            <span>{entity.name}</span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

@@ -243,14 +243,14 @@ export const RelationshipGraph = ({ entityId, entityName }: RelationshipGraphPro
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex-center h-96">
+        <Loader2 className="icon-xl animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-[calc(100vh-250px)] gap-4">
+    <div className="flex h-[calc(100vh-250px)] gap-md">
       <div className="flex-1 border rounded-lg overflow-hidden">
         <ReactFlow
           nodes={nodes}
@@ -269,10 +269,10 @@ export const RelationshipGraph = ({ entityId, entityName }: RelationshipGraphPro
       {selectedNode && (
         <Card className="w-96 overflow-hidden">
           <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              {selectedNode.type === "staging" && <Database className="h-5 w-5" />}
-              {selectedNode.type === "glossary" && <Layers className="h-5 w-5" />}
-              {selectedNode.type === "model" && <Target className="h-5 w-5" />}
+            <div className="flex-start gap-sm">
+              {selectedNode.type === "staging" && <Database className="icon-md" />}
+              {selectedNode.type === "glossary" && <Layers className="icon-md" />}
+              {selectedNode.type === "model" && <Target className="icon-md" />}
               <CardTitle className="text-lg">{selectedNode.label}</CardTitle>
             </div>
             <Badge variant="secondary" className="w-fit">
@@ -281,15 +281,15 @@ export const RelationshipGraph = ({ entityId, entityName }: RelationshipGraphPro
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[calc(100vh-400px)]">
-              <div className="space-y-4">
+              <div className="stack-md">
                 <div>
                   <p className="text-sm font-medium mb-1">Description</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted">
                     {selectedNode.entity.description || "No description"}
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="grid grid-cols-2 gap-sm text-sm">
                   <div>
                     <p className="font-medium">Type</p>
                     <p className="text-muted-foreground">{selectedNode.entity.type}</p>
@@ -309,8 +309,8 @@ export const RelationshipGraph = ({ entityId, entityName }: RelationshipGraphPro
                 </div>
 
                 {metaLoading ? (
-                  <div className="flex items-center justify-center py-4">
-                    <Loader2 className="h-6 w-6 animate-spin" />
+                  <div className="flex-center py-4">
+                    <Loader2 className="icon-lg animate-spin" />
                   </div>
                 ) : metaData?.meta_meta && metaData.meta_meta.length > 0 ? (
                   <div>
@@ -329,7 +329,7 @@ export const RelationshipGraph = ({ entityId, entityName }: RelationshipGraphPro
                             <TableCell className="py-2 px-3 font-medium">{meta.name}</TableCell>
                             <TableCell className="py-2 px-3">{meta.type}</TableCell>
                             <TableCell className="py-2 px-3">
-                              <div className="flex gap-1">
+                              <div className="flex-start gap-1">
                                 {meta.is_primary_grain && <Badge variant="default" className="text-xs px-1.5 py-0">P</Badge>}
                                 {meta.is_secondary_grain && <Badge variant="secondary" className="text-xs px-1.5 py-0">S</Badge>}
                                 {meta.is_tertiary_grain && <Badge variant="outline" className="text-xs px-1.5 py-0">T</Badge>}
@@ -341,7 +341,7 @@ export const RelationshipGraph = ({ entityId, entityName }: RelationshipGraphPro
                     </Table>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No meta fields available</p>
+                  <p className="text-muted">No meta fields available</p>
                 )}
               </div>
             </ScrollArea>

@@ -97,8 +97,8 @@ export function GlossaryEntityDropdown({
           className="w-full justify-between"
         >
           {selectedEntity ? (
-            <span className="flex items-center gap-1.5 text-sm">
-              <Database className="h-4 w-4 shrink-0" />
+            <span className="flex-start gap-1.5 text-sm">
+              <Database className="icon-sm shrink-0" />
               <span className="font-medium">{selectedEntity.subjectarea.namespace.name}</span>
               <span className="text-muted-foreground">/</span>
               <span className="font-medium">{selectedEntity.subjectarea.name}</span>
@@ -108,18 +108,18 @@ export function GlossaryEntityDropdown({
           ) : (
             placeholder
           )}
-          <ChevronRight className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronRight className="ml-2 icon-sm shrink-0 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-[300px]" align="start">
         {loading ? (
-          <div className="p-4 space-y-2">
+          <div className="card-padding-sm stack-sm">
             <Skeleton className="h-8 w-full" />
             <Skeleton className="h-8 w-full" />
             <Skeleton className="h-8 w-full" />
           </div>
         ) : glossaryNamespaces.length === 0 ? (
-          <div className="p-4 text-sm text-muted-foreground text-center">
+          <div className="card-padding-sm text-muted text-center">
             No glossary namespaces found
           </div>
         ) : (
@@ -130,8 +130,8 @@ export function GlossaryEntityDropdown({
             
             return (
               <DropdownMenuSub key={namespace.id}>
-                <DropdownMenuSubTrigger className="flex items-center gap-2">
-                  <Database className="h-4 w-4 shrink-0" />
+                <DropdownMenuSubTrigger className="flex-start gap-sm">
+                  <Database className="icon-sm shrink-0" />
                   <span>{namespace.name}</span>
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
@@ -142,7 +142,7 @@ export function GlossaryEntityDropdown({
                     
                     return (
                       <DropdownMenuSub key={sa.id}>
-                        <DropdownMenuSubTrigger className="flex items-center gap-2">
+                        <DropdownMenuSubTrigger className="flex-start gap-sm">
                           <span>{sa.name}</span>
                         </DropdownMenuSubTrigger>
                         <DropdownMenuSubContent>
@@ -150,9 +150,9 @@ export function GlossaryEntityDropdown({
                             <DropdownMenuItem
                               key={entity.id}
                               onClick={() => handleSelect(entity)}
-                              className="flex items-center gap-2 cursor-pointer"
+                              className="flex-start gap-sm cursor-pointer"
                             >
-                              <Database className="h-4 w-4 shrink-0 text-muted-foreground" />
+                              <Database className="icon-sm shrink-0 icon-muted" />
                               <span>{entity.name}</span>
                             </DropdownMenuItem>
                           ))}
