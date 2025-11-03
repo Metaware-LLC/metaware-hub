@@ -329,13 +329,7 @@ export default function Glossary() {
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
                     <button 
-                      onClick={() => {
-                        setSelectedEntity(null);
-                        setSelectedSubjectAreaId(null);
-                        setSearchQuery("");
-                      }}
-                      className="breadcrumb-link"
-                    >
+                      onClick={() => { setSelectedEntity(null); setSelectedSubjectAreaId(null); setSearchQuery(""); }} className="breadcrumb-link" >
                       Business Glossary
                     </button>
                   </BreadcrumbLink>
@@ -360,49 +354,21 @@ export default function Glossary() {
             <div className="flex-start gap-sm">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 icon-sm icon-muted" />
-                <Input
-                  type="text"
-                  placeholder="Search entities..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
+                <Input type="text" placeholder="Search entities..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setImportModalOpen(true)}
-                title="Import configuration"
-              >
+              <Button variant="outline" size="icon" onClick={() => setImportModalOpen(true)} title="Import configuration" >
                 <Upload className="icon-sm" />
               </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedSubjectAreaId(null);
-                }}
-                title="Reset search and filters"
-              >
+              <Button variant="outline" size="icon" onClick={() => { setSearchQuery(""); setSelectedSubjectAreaId(null); }} title="Reset search and filters" >
                 <X className="icon-sm" />
               </Button>
             </div>
 
-            <ImportConfigModal
-              open={importModalOpen}
-              onOpenChange={setImportModalOpen}
-              onSuccess={() => {
+            <ImportConfigModal open={importModalOpen} onOpenChange={setImportModalOpen} onSuccess={() => {
                 // Optionally refresh data after import
-              }}
-            />
+              }} />
 
-            <EntityGrid
-              subjectAreaId={selectedSubjectAreaId || undefined}
-              namespaceType="glossary"
-              searchQuery={searchQuery}
-              onEntityClick={setSelectedEntity}
-            />
+            <EntityGrid subjectAreaId={selectedSubjectAreaId || undefined} namespaceType="glossary" searchQuery={searchQuery} onEntityClick={setSelectedEntity} />
           </div>
         ) : (
           <div className="page-container flex flex-col card-padding">
@@ -410,13 +376,7 @@ export default function Glossary() {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <button 
-                      onClick={() => {
-                        setSelectedEntity(null);
-                        setSelectedSubjectAreaId(null);
-                      }} 
-                      className="breadcrumb-link"
-                    >
+                    <button onClick={() => { setSelectedEntity(null); setSelectedSubjectAreaId(null); }} className="breadcrumb-link" >
                       {selectedEntity.subjectarea?.namespace?.name || 'Unknown'}
                     </button>
                   </BreadcrumbLink>
@@ -425,12 +385,7 @@ export default function Glossary() {
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
                     <button 
-                      onClick={() => {
-                        setSelectedSubjectAreaId(selectedEntity.sa_id);
-                        setSelectedEntity(null);
-                      }} 
-                      className="breadcrumb-link"
-                    >
+                      onClick={() => { setSelectedSubjectAreaId(selectedEntity.sa_id); setSelectedEntity(null); }} className="breadcrumb-link" >
                       {selectedEntity.subjectarea.name}
                     </button>
                   </BreadcrumbLink>
@@ -442,12 +397,7 @@ export default function Glossary() {
               </BreadcrumbList>
             </Breadcrumb>
             <div className="stack-sm mb-6">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedEntity(null)}
-                className="w-fit"
-              >
+              <Button variant="ghost" size="sm" onClick={() => setSelectedEntity(null)} className="w-fit" >
                 ← Back to list
               </Button>
               <div className="flex-1">
@@ -477,14 +427,8 @@ export default function Glossary() {
                   <div className="flex-1 overflow-hidden bordered-container">
                     <DataTable
                       data={[]}
-                      externalEditedData={draftMetaFields.map(field => ({
-                        ...field,
-                        id: field.id || `draft_${field.name}`,
-                        _status: 'draft' as const,
-                      }))}
-                      onEditedDataChange={(data) => {
-                        setDraftMetaFields(data.map(({ _status, ...rest }) => rest));
-                      }}
+                      externalEditedData={draftMetaFields.map(field => ({ ...field, id: field.id || `draft_${field.name}`, _status: 'draft' as const, }))}
+                      onEditedDataChange={(data) => { setDraftMetaFields(data.map(({ _status, ...rest }) => rest)); }}
                       columns={draftMetaColumns}
                       onAdd={() => {
                         const newField = {
@@ -512,9 +456,7 @@ export default function Glossary() {
                     <div className="text-center stack-md">
                       <Database className="icon-xl mx-auto icon-muted opacity-50" />
                       <p className="text-muted">No metadata found</p>
-                      <Button
-                        onClick={() => setBlueprintModalOpen(true)}
-                      >
+                      <Button onClick={() => setBlueprintModalOpen(true)} >
                         <Sparkles className="icon-sm mr-2" />
                         Generate Standardized Blueprint
                       </Button>
@@ -536,10 +478,7 @@ export default function Glossary() {
                         order: field.order || 0,
                       }))}
                       columns={metaTableColumns}
-                      onAdd={() => {
-                        // Open blueprint modal to add more meta
-                        setBlueprintModalOpen(true);
-                      }}
+                      onAdd={() => { setBlueprintModalOpen(true); }} // Open blueprint modal to add more meta 
                       onDelete={handleDeleteMeta}
                       isDeleting={isDeleting}
                     />
@@ -551,28 +490,14 @@ export default function Glossary() {
                 <div className="stack-lg card-padding">
                   <div className="stack-sm">
                     <label className="text-sm font-medium">Select Association</label>
-                    <SourceAssociationSelect
-                      glossaryEntity={selectedEntity}
-                      value={sourceEntity?.id}
-                      onSelect={setSourceEntity}
-                    />
+                    <SourceAssociationSelect glossaryEntity={selectedEntity} value={sourceEntity?.id} onSelect={setSourceEntity} />
                   </div>
-
-                  {sourceEntity && (
-                    <MappingTable
-                      glossaryEntity={selectedEntity}
-                      sourceEntity={sourceEntity}
-                      existingRuleset={existingRuleset || undefined}
-                    />
-                  )}
+                  { sourceEntity && ( <MappingTable glossaryEntity={selectedEntity} sourceEntity={sourceEntity} existingRuleset={existingRuleset || undefined} /> )}
                 </div>
               </TabsContent>
 
               <TabsContent value="relationships" className="mt-0 flex-1 overflow-hidden">
-                <RelationshipGraph
-                  entityId={selectedEntity.id}
-                  entityName={selectedEntity.name}
-                />
+                <RelationshipGraph entityId={selectedEntity.id} entityName={selectedEntity.name} />
               </TabsContent>
             </Tabs>
 
