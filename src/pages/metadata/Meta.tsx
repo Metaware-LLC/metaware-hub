@@ -124,12 +124,12 @@ export default function Meta() {
   ) || [];
 
   /**
-   * Transform GraphQL meta data to draft format (not persisted yet)
-   * This matches the Glossary meta behavior where server data is loaded as draft
+   * Transform GraphQL meta data to table format
+   * Server data is loaded as regular rows, not draft
    */
-  const draftMetaFields: TableData[] = metaData?.meta_meta.map((field, index) => {
+  const existingMetaFields: TableData[] = metaData?.meta_meta.map((field) => {
     return {
-      id: `draft_${field.id}_${index}`,
+      id: field.id,
       name: field.name,
       alias: field.alias || '',
       description: field.description || '',
@@ -141,19 +141,13 @@ export default function Meta() {
       default: field.default || '',
       nullable: field.nullable || false,
       order: field.order || 0,
-      _status: 'draft',
-      _originalId: field.id, // Store original ID for updates
     };
   }) || [];
 
-  // Populate editedData with draft fields when meta data changes or entity changes
+  // Reset editedData when entity changes
   useEffect(() => {
-    if (metaData && draftMetaFields.length > 0) {
-      setEditedData(draftMetaFields);
-    } else if (!metaData || metaData.meta_meta.length === 0) {
-      setEditedData([]);
-    }
-  }, [metaData, selectedEntity]);
+    setEditedData([]);
+  }, [selectedEntity]);
 
   /**
    * Handle namespace selection change
@@ -186,36 +180,26 @@ export default function Meta() {
 
 
   /**
-   * Handle deleting meta fields
-   * Works with both draft and persisted rows
+   * Handle deleting meta fields using /mwn/delete endpoint
    */
   const handleDelete = async (ids: string[]) => {
     setIsDeleting(true);
     try {
-      // Filter out draft rows (not yet persisted) and actual IDs to delete from server
-      const idsToDeleteFromServer = ids
-        .map(id => {
-          const row = editedData.find(r => r.id === id);
-          if (row && row._originalId) {
-            // This is a draft row with an original ID - delete the original
-            return row._originalId;
-          } else if (!id.startsWith('draft_')) {
-            // This is a persisted row ID
-            return id;
-          }
-          return null;
-        })
-        .filter((id): id is string => id !== null);
+      // Separate draft IDs (new, unsaved) from persisted IDs
+      const draftIds = ids.filter(id => id.startsWith('draft_'));
+      const persistedIds = ids.filter(id => !id.startsWith('draft_'));
 
-      // Delete from server if there are persisted rows to delete
-      if (idsToDeleteFromServer.length > 0) {
-        await metaAPI.delete(idsToDeleteFromServer);
+      // Delete persisted rows from server
+      if (persistedIds.length > 0) {
+        await metaAPI.delete(persistedIds);
       }
 
-      // Remove deleted rows from editedData
-      setEditedData(prev => prev.filter(row => !ids.includes(row.id)));
+      // Remove draft rows from editedData (they're only in memory)
+      if (draftIds.length > 0) {
+        setEditedData(prev => prev.filter(row => !draftIds.includes(row.id)));
+      }
 
-      // Refetch to get fresh data
+      // Refetch to get fresh data from server
       await refetch();
       
       toast({
@@ -234,8 +218,8 @@ export default function Meta() {
   };
 
   /**
-   * Handle saving draft meta fields (matches Glossary meta behavior)
-   * Processes all draft rows and persists them to the server
+   * Handle saving draft meta fields
+   * Only processes rows with draft status and persists them
    */
   const handleSaveDraftMeta = async (data: TableData[]) => {
     if (!selectedEntity) {
@@ -273,42 +257,10 @@ export default function Meta() {
         ns_type: 'staging',
       };
 
-      // Process all rows with draft status (includes edited rows from server)
-      const metaFields = data
-        .filter(item => item._status === 'draft')
-        .map(item => ({
-          id: item._originalId || crypto.randomUUID(),
-          type: item.type || '',
-          subtype: item.subtype || '',
-          name: item.name || '',
-          description: item.description || '',
-          order: Number(item.order) || 0,
-          alias: item.alias || '',
-          length: 0,
-          default: item.default || '',
-          nullable: Boolean(item.nullable),
-          format: '',
-          is_primary_grain: Boolean(item.is_primary_grain),
-          is_secondary_grain: Boolean(item.is_secondary_grain),
-          is_tertiary_grain: Boolean(item.is_tertiary_grain),
-          tags: '',
-          custom_props: [],
-          entity_id: selectedEntity,
-          ns: selectedEntityData.subjectarea.namespace.name,
-          sa: selectedEntityData.subjectarea.name,
-          en: selectedEntityData.name,
-          entity_core: {
-            ns: selectedEntityData.subjectarea.namespace.name,
-            sa: selectedEntityData.subjectarea.name,
-            en: selectedEntityData.name,
-            ns_type: 'staging',
-            ns_id: selectedNamespace,
-            sa_id: selectedEntityData.sa_id,
-            en_id: selectedEntity,
-          },
-        }));
-
-      if (metaFields.length === 0) {
+      // Process only draft rows (new or edited)
+      const draftRows = data.filter(item => item._status === 'draft');
+      
+      if (draftRows.length === 0) {
         toast({
           title: "No changes",
           description: "No changes to save",
@@ -316,9 +268,41 @@ export default function Meta() {
         return;
       }
 
+      const metaFields = draftRows.map(item => ({
+        id: item.id.startsWith('draft_') ? crypto.randomUUID() : item.id,
+        type: item.type || '',
+        subtype: item.subtype || '',
+        name: item.name || '',
+        description: item.description || '',
+        order: Number(item.order) || 0,
+        alias: item.alias || '',
+        length: 0,
+        default: item.default || '',
+        nullable: Boolean(item.nullable),
+        format: '',
+        is_primary_grain: Boolean(item.is_primary_grain),
+        is_secondary_grain: Boolean(item.is_secondary_grain),
+        is_tertiary_grain: Boolean(item.is_tertiary_grain),
+        tags: '',
+        custom_props: [],
+        entity_id: selectedEntity,
+        ns: selectedEntityData.subjectarea.namespace.name,
+        sa: selectedEntityData.subjectarea.name,
+        en: selectedEntityData.name,
+        entity_core: {
+          ns: selectedEntityData.subjectarea.namespace.name,
+          sa: selectedEntityData.subjectarea.name,
+          en: selectedEntityData.name,
+          ns_type: 'staging',
+          ns_id: selectedNamespace,
+          sa_id: selectedEntityData.sa_id,
+          en_id: selectedEntity,
+        },
+      }));
+
       await entityAPI.createWithMeta(entityData, metaFields);
 
-      // Clear edited data and refetch to get fresh data as draft
+      // Clear edited data and refetch
       setEditedData([]);
       await refetch();
       
@@ -346,7 +330,7 @@ export default function Meta() {
   /**
    * Check if meta exists for the selected entity
    */
-  const hasExistingMeta = draftMetaFields.length > 0;
+  const hasExistingMeta = existingMetaFields.length > 0;
 
   /**
    * Handle file upload success
@@ -512,10 +496,10 @@ export default function Meta() {
                 Error loading metadata: {metaError.message}
               </div>
             </div>
-          ) : editedData.length > 0 ? (
+          ) : (
             <DataTable
               columns={metaColumns}
-              data={[]}
+              data={existingMetaFields}
               onDelete={handleDelete}
               onSave={handleSaveDraftMeta}
               onRefresh={handleRefresh}
@@ -525,10 +509,6 @@ export default function Meta() {
               isDeleting={isDeleting}
               isSaving={isSaving}
             />
-          ) : (
-            <div className="flex-center py-12">
-              <p className="text-muted">No metadata found for this entity</p>
-            </div>
           )}
         </div>
       )}
