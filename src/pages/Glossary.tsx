@@ -468,7 +468,7 @@ export default function Glossary() {
                 <TabsTrigger value="relationships">Glossary Relationship</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="meta" className="mt-0 flex-1 overflow-hidden flex flex-col">
+              <TabsContent value="meta" className={`mt-0 flex-1 overflow-hidden flex flex-col ${activeTab !== 'meta' ? 'hidden' : ''}`}>
                 {metaLoading ? (
                   <div className="flex-center h-full">
                     <Loader2 className="icon-xl animate-spin text-muted-foreground" />
