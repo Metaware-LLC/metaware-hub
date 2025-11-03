@@ -286,7 +286,7 @@ export default function Glossary() {
       <div className="flex-1 overflow-hidden">
         {!selectedEntity ? (
           <div className="page-content">
-            <Breadcrumb>
+            <Breadcrumb className="mb-4">
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
@@ -312,9 +312,9 @@ export default function Glossary() {
                 )}
               </BreadcrumbList>
             </Breadcrumb>
-            <div>
+            <div className="stack-xs mb-6">
               <h1 className="text-heading-md">Business Glossary</h1>
-              <p className="text-muted-foreground">
+              <p className="text-muted">
                 Manage business terms and definitions
               </p>
             </div>
@@ -403,11 +403,12 @@ export default function Glossary() {
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
-            <div className="mb-4 flex-start gap-md">
+            <div className="stack-sm mb-6">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedEntity(null)}
+                className="w-fit"
               >
                 ← Back to list
               </Button>
@@ -435,69 +436,44 @@ export default function Glossary() {
                     <Loader2 className="icon-xl animate-spin text-muted-foreground" />
                   </div>
                 ) : draftMetaFields.length > 0 ? (
-                  <div className="flex flex-col h-full gap-md">
-                    <div className="flex-between">
-                      <div className="text-muted">
-                        Review and edit the generated metadata below. Click Save to persist changes.
-                      </div>
-                      <div className="flex-start gap-sm">
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setDraftMetaFields([]);
-                            setStandardizedMeta([]);
-                            setMappings([]);
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={handleSaveDraftMeta}
-                          disabled={isSavingDraft}
-                        >
-                          {isSavingDraft && <Loader2 className="icon-sm mr-2 animate-spin" />}
-                          Save Meta
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="flex-1 border rounded-lg overflow-hidden">
-                      <DataTable
-                        data={[]}
-                        externalEditedData={draftMetaFields.map(field => ({
-                          ...field,
-                          id: field.id || `draft_${field.name}`,
-                          _status: 'draft' as const,
-                        }))}
-                        onEditedDataChange={(data) => {
-                          setDraftMetaFields(data.map(({ _status, ...rest }) => rest));
-                        }}
-                        columns={draftMetaColumns}
-                        onAdd={() => {
-                          const newField = {
-                            id: `new_${Date.now()}`,
-                            name: '',
-                            alias: '',
-                            type: 'text',
-                            description: '',
-                            nullable: true,
-                            is_primary_grain: false,
-                            is_secondary_grain: false,
-                            is_tertiary_grain: false,
-                            order: draftMetaFields.length,
-                          };
-                          setDraftMetaFields([...draftMetaFields, newField]);
-                        }}
-                      />
-                    </div>
+                  <div className="flex-1 overflow-hidden bordered-container">
+                    <DataTable
+                      data={[]}
+                      externalEditedData={draftMetaFields.map(field => ({
+                        ...field,
+                        id: field.id || `draft_${field.name}`,
+                        _status: 'draft' as const,
+                      }))}
+                      onEditedDataChange={(data) => {
+                        setDraftMetaFields(data.map(({ _status, ...rest }) => rest));
+                      }}
+                      columns={draftMetaColumns}
+                      onAdd={() => {
+                        const newField = {
+                          id: `new_${Date.now()}`,
+                          name: '',
+                          alias: '',
+                          type: 'text',
+                          description: '',
+                          nullable: true,
+                          is_primary_grain: false,
+                          is_secondary_grain: false,
+                          is_tertiary_grain: false,
+                          order: draftMetaFields.length,
+                        };
+                        setDraftMetaFields([...draftMetaFields, newField]);
+                      }}
+                      onSave={handleSaveDraftMeta}
+                      isSaving={isSavingDraft}
+                    />
                   </div>
                 ) : metaFields.length === 0 ? (
                   <div className="flex-center h-full">
                     <div className="text-center stack-md">
-                      <Database className="h-12 w-12 mx-auto icon-muted opacity-50" />
-                      <p className="text-muted-foreground">No metadata found</p>
+                      <Database className="icon-xl mx-auto icon-muted opacity-50" />
+                      <p className="text-muted">No metadata found</p>
                       <Button
                         onClick={() => setBlueprintModalOpen(true)}
-                        className="mt-4"
                       >
                         <Sparkles className="icon-sm mr-2" />
                         Generate Standardized Blueprint
@@ -530,7 +506,7 @@ export default function Glossary() {
               </TabsContent>
 
               <TabsContent value="associations" className="mt-0 flex-1 overflow-auto">
-                <div>
+                <div className="stack-lg card-padding">
                   <div className="stack-sm">
                     <label className="text-sm font-medium">Select Association</label>
                     <SourceAssociationSelect
@@ -550,7 +526,7 @@ export default function Glossary() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="relationships" className="mt-0 flex-1">
+              <TabsContent value="relationships" className="mt-0 flex-1 overflow-hidden">
                 <RelationshipGraph
                   entityId={selectedEntity.id}
                   entityName={selectedEntity.name}

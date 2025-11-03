@@ -203,9 +203,9 @@ export function MappingTable({ glossaryEntity, sourceEntity, existingRuleset }: 
   const alreadySelectedIds = new Set(mappingRows.map((row) => row.glossaryMeta.id));
 
   return (
-    <div className="stack-md">
+    <div className="stack-md bordered-container card-padding">
       <div className="flex-between">
-        <h3 className="text-lg font-semibold">Field Mapping</h3>
+        <h3 className="text-heading-sm">Field Mapping</h3>
         <div className="flex-start gap-sm">
           <Button onClick={() => setIsModalOpen(true)} variant="outline">
             Add Glossary Meta
