@@ -550,7 +550,7 @@ export default function Glossary() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="relationships" className="mt-0 flex-1 overflow-hidden">
+              <TabsContent value="relationships" className="mt-0 flex-1">
                 <RelationshipGraph
                   entityId={selectedEntity.id}
                   entityName={selectedEntity.name}
