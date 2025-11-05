@@ -21,9 +21,15 @@ import {
   GET_META_FOR_ENTITY,
   type MetaField,
 } from "@/graphql/queries/meta";
+import {
+  GET_RULESETS_BY_ENTITY,
+  type RulesetWithSource,
+  type GetRulesetsByEntityResponse,
+} from "@/graphql/queries/ruleset";
 import { API_CONFIG } from "@/config/api";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
 
 export default function BuildModels() {
   const navigate = useNavigate();
@@ -33,56 +39,68 @@ export default function BuildModels() {
   const [metaFields, setMetaFields] = useState<MetaField[]>([]);
   const [selectedMetas, setSelectedMetas] = useState<Set<string>>(new Set<string>());
   const [existingModel, setExistingModel] = useState<ConceptualModel | null>(null);
+  const [rulesets, setRulesets] = useState<RulesetWithSource[]>([]);
   const [loading, setLoading] = useState(false);
   const [step1Response, setStep1Response] = useState<any>(null);
   const [step2Response, setStep2Response] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("step1");
 
-  const [fetchMeta, { loading: metaLoading }] = useLazyQuery(GET_META_FOR_ENTITY, {
-    onCompleted: (data) => {
-      if (data?.meta_meta) {
-        setMetaFields(data.meta_meta);
-        setSelectedMetas(new Set<string>());
-      }
-    },
-    onError: (error) => {
-      console.error("Error fetching meta:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch entity metadata",
-        variant: "destructive",
-      });
-    },
-  });
+  const [fetchMeta, { loading: metaLoading, data: metaData }] = useLazyQuery(GET_META_FOR_ENTITY);
 
-  const [fetchConceptualModel] = useLazyQuery(GET_CONCEPTUAL_MODEL, {
-    onCompleted: (data) => {
-      if (data?.conceptual_model && data.conceptual_model.length > 0) {
-        const model = data.conceptual_model[0];
-        setExistingModel(model);
-        
-        // Pre-select metas that are already in the model
-        const selectedNames = new Set<string>(
-          model.selected_metas.map((m: ConceptualModelMeta) => m.name)
-        );
-        setSelectedMetas(selectedNames);
-      } else {
-        setExistingModel(null);
-      }
-    },
-  });
+  useEffect(() => {
+    if (metaData?.meta_meta) {
+      setMetaFields(metaData.meta_meta);
+      setSelectedMetas(new Set<string>());
+    }
+  }, [metaData]);
+
+  const [fetchConceptualModel, { data: conceptualModelData }] = useLazyQuery(GET_CONCEPTUAL_MODEL);
+
+  useEffect(() => {
+    if (conceptualModelData?.conceptual_model && conceptualModelData.conceptual_model.length > 0) {
+      const model = conceptualModelData.conceptual_model[0];
+      setExistingModel(model);
+      
+      // Pre-select metas that are already in the model
+      const selectedNames = new Set<string>(
+        model.selected_metas.map((m: ConceptualModelMeta) => m.name)
+      );
+      setSelectedMetas(selectedNames);
+    } else if (conceptualModelData?.conceptual_model) {
+      setExistingModel(null);
+    }
+  }, [conceptualModelData]);
+
+  const [fetchRulesets, { data: rulesetsData }] = useLazyQuery<GetRulesetsByEntityResponse>(
+    GET_RULESETS_BY_ENTITY
+  );
+
+  useEffect(() => {
+    if (rulesetsData?.meta_ruleset) {
+      setRulesets(rulesetsData.meta_ruleset);
+    }
+  }, [rulesetsData]);
 
   const handleEntitySelect = (entity: Entity) => {
     setSelectedEntity(entity);
     setMetaFields([]);
     setSelectedMetas(new Set<string>());
     setExistingModel(null);
+    setRulesets([]);
 
     // Fetch meta fields for the selected entity
     fetchMeta({ variables: { enid: entity.id } });
 
     // Check if there's an existing conceptual model for this entity
     fetchConceptualModel({ variables: { glossaryEntityId: entity.id } });
+
+    // Fetch rulesets for source expressions
+    fetchRulesets({
+      variables: {
+        targetEnId: entity.id,
+        type: "glossary_association",
+      },
+    });
   };
 
   const handleMetaToggle = (alias: string) => {
@@ -116,98 +134,90 @@ export default function BuildModels() {
       return;
     }
 
+    if (rulesets.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "No source associations found. Please create mappings in the Glossary first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      const targetEntityCore = {
-        ns: `${selectedEntity.subjectarea.namespace.name}_publish`,
-        sa: selectedEntity.subjectarea.name,
-        en: selectedEntity.name,
-        ns_type: "model",
-        ns_id: selectedEntity.subjectarea.namespace.id,
-        sa_id: selectedEntity.sa_id,
-        en_id: selectedEntity.id,
-      };
+      // Get the first source entity from rulesets (or you could let user select)
+      const firstRuleset = rulesets[0];
+      const sourceEntity = firstRuleset.source?.source_entity;
 
-      const glossaryEntityCore = {
-        ns: selectedEntity.subjectarea.namespace.name,
-        sa: selectedEntity.subjectarea.name,
-        en: selectedEntity.name,
-        ns_type: "glossary",
-        ns_id: selectedEntity.subjectarea.namespace.id,
-        sa_id: selectedEntity.sa_id,
-        en_id: selectedEntity.id,
-      };
+      if (!sourceEntity) {
+        throw new Error("Source entity information not found in rulesets");
+      }
+
+      // Build a map of meta name to source expression from rulesets
+      const sourceExpressionMap = new Map<string, string>();
+      rulesets.forEach(ruleset => {
+        ruleset.rules.forEach(rule => {
+          if (rule.meta?.name) {
+            sourceExpressionMap.set(rule.meta.name, rule.rule_expression);
+          }
+        });
+      });
 
       const publishColumns = Array.from(selectedMetas).map(metaName => {
         const metaField = metaFields.find(f => f.alias === metaName);
         return {
           target: metaName,
           glossary: metaName,
-          meta_request: metaField ? {
-            id: metaField.id,
-            type: metaField.type,
-            subtype: metaField.subtype || ".",
-            name: metaField.name,
-            description: metaField.description || "",
-            order: metaField.order || 0,
-            alias: metaField.alias || metaName,
-            length: 0,
-            default: metaField.default || "",
-            nullable: metaField.nullable,
-            format: "",
-            is_primary_grain: metaField.is_primary_grain || false,
-            is_secondary_grain: metaField.is_secondary_grain || false,
-            is_tertiary_grain: metaField.is_tertiary_grain || false,
-            tags: "",
-            custom_props: [],
-            entity_id: selectedEntity.id,
-            ns: selectedEntity.subjectarea.namespace.name,
-            sa: selectedEntity.subjectarea.name,
-            en: selectedEntity.name,
-            entity_core: glossaryEntityCore
-          } : undefined
+          description: metaField?.description || ""
         };
       });
 
-      const rulesetRequest = {
-        name: `${selectedEntity.name}_publish_ruleset`,
-        type: "glossary_publish",
-        description: `Column selection and transforms for ${selectedEntity.name} publishing`,
-        rule_requests: Array.from(selectedMetas).map(metaName => ({
+      const ruleRequests = Array.from(selectedMetas).map(metaName => {
+        const sourceExpression = sourceExpressionMap.get(metaName) || metaName;
+        return {
           meta: metaName,
-          rule_expression: metaName,
+          rule_expression: sourceExpression,
           description: `Rule for ${metaName}`,
           name: `${metaName}_rule`,
           type: "glossary_publish",
           language: "sql",
           rule_status: "active",
           subtype: ".",
-        }))
-      };
+          ns_type: "model"
+        };
+      });
 
       const payload = {
-        target_en_core: targetEntityCore,
-        glossary_en_core: glossaryEntityCore,
-        publish_config_request: {
-          glossary_entity_fqn: `${glossaryEntityCore.ns}.${glossaryEntityCore.sa}.${glossaryEntityCore.en}`,
+        config_request: {
+          glossary_entity_fqn: `${selectedEntity.subjectarea.namespace.name}.${selectedEntity.subjectarea.name}.${selectedEntity.name}`,
           target_runtime: "duckdb",
           target_profile: projectCode,
-          target_namespace: targetEntityCore.ns,
-          target_schema: targetEntityCore.sa,
-          target_name: targetEntityCore.en,
-          target_fqn: `${targetEntityCore.ns}.${targetEntityCore.sa}.${targetEntityCore.en}`,
+          target_namespace: `${selectedEntity.subjectarea.namespace.name}_publish`,
+          target_schema: selectedEntity.subjectarea.name,
+          target_name: selectedEntity.name,
+          target_fqn: `${selectedEntity.subjectarea.namespace.name}_publish.${selectedEntity.subjectarea.name}.${selectedEntity.name}`,
           materialize_as: "table",
           status: "draft",
           version: 1
         },
         publish_columns: publishColumns,
-        ruleset_request: rulesetRequest,
+        entity_core: {
+          ns: `${selectedEntity.subjectarea.namespace.name}_publish`,
+          sa: selectedEntity.subjectarea.name,
+          en: selectedEntity.name,
+          ns_type: "model"
+        },
         source_request: {
           type: "DIRECT",
-          source_ns: selectedEntity.subjectarea.namespace.name,
-          source_sa: selectedEntity.subjectarea.name,
-          source_en: selectedEntity.name,
-          source_en_id: selectedEntity.id
+          source_ns: sourceEntity.subjectarea.namespace.name,
+          source_sa: sourceEntity.subjectarea.name,
+          source_en: sourceEntity.name
+        },
+        ruleset_request: {
+          name: `${selectedEntity.name}_publish_ruleset`,
+          type: "glossary_publish",
+          description: `Column selection and transforms for ${selectedEntity.name} publishing`,
+          rule_requests: ruleRequests
         }
       };
 
