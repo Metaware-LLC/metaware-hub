@@ -177,77 +177,9 @@ export default function Glossary() {
       const response = await entityAPI.createWithMeta(entityRequest, metaRequests) as { meta?: any[] };
       const savedMeta = response.meta || [];
 
-      // Enrich mappings with glossary_meta_id from saved meta
-      const enrichedMappings = mappings.map(mapping => {
-        const matchingMeta = savedMeta.find((meta: any) => meta.name === mapping.glossary_meta_name);
-        return {
-          ...mapping,
-          glossary_meta_id: matchingMeta?.id || "",
-        };
-      });
-
-      // Group mappings by source entity
-      const mappingsBySource = enrichedMappings.reduce<Record<string, any[]>>((acc, mapping) => {
-        const sourceEnId = mapping.source_en_id;
-        if (!acc[sourceEnId]) {
-          acc[sourceEnId] = [];
-        }
-        acc[sourceEnId].push(mapping);
-        return acc;
-      }, {});
-
-      // Create a ruleset for each source entity
-      for (const [sourceEnId, sourceMappings] of Object.entries(mappingsBySource)) {
-        const firstMapping = sourceMappings[0];
-        
-        const payload = {
-          entity_core: {
-            ns: selectedEntity.subjectarea?.namespace?.name || "",
-            sa: selectedEntity.subjectarea?.name || "",
-            en: selectedEntity.name,
-            ns_type: "glossary",
-            ns_id: selectedEntity.subjectarea?.namespace?.id || "",
-            sa_id: selectedEntity.sa_id,
-            en_id: selectedEntity.id,
-          },
-          ruleset_request: {
-            name: `${selectedEntity.subjectarea?.namespace?.name}_${selectedEntity.subjectarea?.name}_${selectedEntity.name}_to_${firstMapping.source_ns}_${firstMapping.source_sa}_${firstMapping.source_en_name}_ruleset`,
-            description: `${selectedEntity.subjectarea?.namespace?.name}_${selectedEntity.subjectarea?.name}_${selectedEntity.name}_to_${firstMapping.source_ns}_${firstMapping.source_sa}_${firstMapping.source_en_name}_ruleset`,
-            type: "glossary_association",
-            rule_requests: sourceMappings.map((mapping) => ({
-              meta: mapping.glossary_meta_name,
-              rule_expression: mapping.source_expression,
-              name: `${mapping.glossary_meta_name}_rule`,
-              description: `${mapping.glossary_meta_name}_rule`,
-              language: "sql",
-              rule_status: "active",
-              subtype: ".",
-              type: "glossary",
-            })),
-          },
-          source_request: {
-            type: "DIRECT",
-            source_ns: firstMapping.source_ns || "",
-            source_sa: firstMapping.source_sa || "",
-            source_en: firstMapping.source_en_name || "",
-          },
-          transform_request: {
-            id: "",
-            strategy: "sql",
-            type: "passive",
-            subtype: "standard",
-            name: "Direct mapping",
-            status: "Active",
-            transform_config: {},
-          },
-        };
-
-        await rulesetAPI.create(payload);
-      }
-
       toast({
         title: "Success",
-        description: "Metadata and mappings saved successfully",
+        description: "Metadata saved successfully",
       });
 
       // Clear draft state
