@@ -602,7 +602,6 @@ export const DataTable = ({
         .dt-sort-icon {
           height: 1rem;
           width: 1rem;
-          margin-left: 0.5rem;
         }
 
         .dt-sort-icon-inactive {
