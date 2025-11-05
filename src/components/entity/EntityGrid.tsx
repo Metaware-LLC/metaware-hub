@@ -19,7 +19,7 @@ export function EntityGrid({ subjectAreaId, namespaceType, searchQuery, onEntity
     if (!data?.meta_entity) return [];
 
     let entities = data.meta_entity.filter(
-      entity => entity.subjectarea.namespace.type.toLowerCase() === namespaceType.toLowerCase()
+      entity => entity.subjectarea?.namespace?.type?.toLowerCase() === namespaceType.toLowerCase()
     );
 
     if (subjectAreaId) {
@@ -31,7 +31,7 @@ export function EntityGrid({ subjectAreaId, namespaceType, searchQuery, onEntity
       entities = entities.filter(entity =>
         entity.name.toLowerCase().includes(query) ||
         entity.description?.toLowerCase().includes(query) ||
-        entity.subjectarea.name.toLowerCase().includes(query)
+        entity.subjectarea?.name?.toLowerCase().includes(query)
       );
     }
 
@@ -120,8 +120,8 @@ export function EntityGrid({ subjectAreaId, namespaceType, searchQuery, onEntity
               <h3 className="font-semibold text-sm mb-2 truncate" title={entity.name}>
                 {entity.name}
               </h3>
-              <p className="text-xs text-muted mb-2 truncate" title={entity.subjectarea.name}>
-                {entity.subjectarea.name}
+              <p className="text-xs text-muted mb-2 truncate" title={entity.subjectarea?.name}>
+                {entity.subjectarea?.name}
               </p>
               {entity.description && (
                 <p className="text-xs text-muted line-clamp-2" title={entity.description}>
