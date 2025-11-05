@@ -189,6 +189,7 @@ export default function Glossary() {
       setDraftMetaFields([]);
       setStandardizedMeta([]);
       setMappings([]);
+      setEditModeSnapshot([]);
       
       // Refetch meta to show the newly created meta
       if (selectedEntity) {
@@ -199,6 +200,70 @@ export default function Glossary() {
       setActiveTab("associations");
     } catch (error) {
       console.error("Error saving draft meta:", error);
+      toast({
+        title: "Save failed",
+        description: error instanceof Error ? error.message : "Failed to save metadata",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
+  const handleSaveExistingMeta = async (editedData: any[]) => {
+    if (!selectedEntity) return;
+
+    setIsSavingDraft(true);
+    try {
+      const { entityAPI } = await import("@/services/api");
+
+      const entityRequest = {
+        ns: selectedEntity.subjectarea?.namespace?.name || "",
+        sa: selectedEntity.subjectarea?.name || "",
+        en: selectedEntity.name,
+        name: selectedEntity.name,
+        type: "glossary",
+        ns_type: "glossary",
+        ns_id: selectedEntity.subjectarea?.namespace?.id || "",
+        sa_id: selectedEntity.sa_id,
+        en_id: selectedEntity.id,
+      };
+
+      const metaRequests = editedData.map((item: any) => ({
+        id: item.id,
+        name: item.name || "",
+        alias: item.alias || "",
+        description: item.description || "",
+        type: item.type || "text",
+        nullable: item.nullable !== undefined ? item.nullable : true,
+        unique: item.unique !== undefined ? item.unique : false,
+        primary: item.primary !== undefined ? item.primary : false,
+        autoincrement: item.autoincrement !== undefined ? item.autoincrement : false,
+        default_value: item.default_value || null,
+        reference: item.reference || null,
+        meta_status: "active",
+        order: item.order || 0,
+        is_primary_grain: item.is_primary_grain || false,
+        is_secondary_grain: item.is_secondary_grain || false,
+        is_tertiary_grain: item.is_tertiary_grain || false,
+        ns: selectedEntity.subjectarea?.namespace?.name || "",
+        sa: selectedEntity.subjectarea?.name || "",
+        en: selectedEntity.name,
+      }));
+
+      await entityAPI.createWithMeta(entityRequest, metaRequests);
+
+      toast({
+        title: "Success",
+        description: "Metadata saved successfully",
+      });
+      
+      // Refetch meta to show the updated data
+      if (selectedEntity) {
+        fetchMeta({ variables: { enid: selectedEntity.id } });
+      }
+    } catch (error) {
+      console.error("Error saving meta:", error);
       toast({
         title: "Save failed",
         description: error instanceof Error ? error.message : "Failed to save metadata",
@@ -435,8 +500,10 @@ export default function Glossary() {
                         order: field.order || 0,
                       }))}
                       columns={metaTableColumns}
+                      onSave={handleSaveExistingMeta}
                       onAdd={() => { setBlueprintModalOpen(true); }} // Open blueprint modal to add more meta 
                       onDelete={handleDeleteMeta}
+                      isSaving={isSavingDraft}
                       isDeleting={isDeleting}
                     />
                   </div>
