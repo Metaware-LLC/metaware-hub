@@ -493,7 +493,7 @@ export default function BuildModels() {
 
             <TabsContent value="step2" className="space-y-6">
               <div className="flex gap-3">
-                <Button onClick={handleLoadGlossaryPublish} disabled={!selectedEntity || loading}>
+                <Button onClick={handleLoadGlossaryPublish} disabled={!selectedEntity || loading} className="w-full mt-3">
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
