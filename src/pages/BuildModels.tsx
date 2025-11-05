@@ -281,12 +281,12 @@ export default function BuildModels() {
     try {
       const targetEntityCore = {
         ns: `${selectedEntity.subjectarea?.namespace?.name}_publish`,
-        sa: selectedEntity.subjectarea?.name,
-        en: selectedEntity.name,
+        sa: `${selectedEntity.subjectarea?.name}_publish`,
+        en: `${selectedEntity.name}_publish`,
         ns_type: "model",
-        ns_id: selectedEntity.subjectarea?.namespace?.id,
-        sa_id: selectedEntity.sa_id,
-        en_id: selectedEntity.id,
+        // ns_id: selectedEntity.subjectarea?.namespace?.id,
+        // sa_id: selectedEntity.sa_id,
+        // en_id: selectedEntity.id,
       };
 
       const payload = {
