@@ -267,29 +267,31 @@ export const DataTable = ({
 
   const handleEditMode = () => {
     if (editingRows.length > 0) {
-      // Exiting edit mode
-      setEditingRows([]);
+      // Exiting edit mode - notify parent first so it can reset state
       onEditModeChange?.(false);
+      setEditingRows([]);
       
-      // Keep draft rows but revert edited rows to their original values
-      const newData = editedData.map(row => {
-        if (row._status === 'edited') {
-          const original = data.find(d => d.id === row.id);
-          return original ? { ...original } : row;
-        }
-        return row;
-      });
-      setEditedData(newData);
+      // Only revert non-draft rows if no external handler
+      if (!onEditModeChange) {
+        const newData = editedData.map(row => {
+          if (row._status === 'edited') {
+            const original = data.find(d => d.id === row.id);
+            return original ? { ...original } : row;
+          }
+          return row;
+        });
+        setEditedData(newData);
+      }
     } else if (selectedRows.length > 0) {
       // Entering edit mode for selected rows
+      onEditModeChange?.(true);
       setEditingRows(prev => [...prev, ...selectedRows.filter(id => !prev.includes(id))]);
       if (editedData.length === 0) setEditedData([...data]);
-      onEditModeChange?.(true);
     } else {
       // Entering edit mode for all rows
+      onEditModeChange?.(true);
       setEditingRows(filteredData.map(row => row.id));
       if (editedData.length === 0) setEditedData([...data]);
-      onEditModeChange?.(true);
     }
   };
 
