@@ -257,10 +257,10 @@ export default function Meta() {
         ns_type: 'staging',
       };
 
-      // Process only draft rows (new or edited)
-      const draftRows = data.filter(item => item._status === 'draft');
+      // Process draft rows (new) and edited rows (modified existing)
+      const changedRows = data.filter(item => item._status === 'draft' || item._status === 'edited');
       
-      if (draftRows.length === 0) {
+      if (changedRows.length === 0) {
         toast({
           title: "No changes",
           description: "No changes to save",
@@ -268,7 +268,7 @@ export default function Meta() {
         return;
       }
 
-      const metaFields = draftRows.map(item => ({
+      const metaFields = changedRows.map(item => ({
         id: item.id.startsWith('draft_') ? crypto.randomUUID() : item.id,
         type: item.type || '',
         subtype: item.subtype || '',
