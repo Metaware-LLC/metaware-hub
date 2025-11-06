@@ -49,6 +49,7 @@ export function GlossaryEntityDropdown({
     if (!subjectAreasData?.meta_subjectarea) return {};
     const grouped: Record<string, SubjectArea[]> = {};
     subjectAreasData.meta_subjectarea.forEach((sa: SubjectArea) => {
+      if (!sa.namespace?.id) return; // Skip if namespace is null
       const nsId = sa.namespace.id;
       if (!grouped[nsId]) {
         grouped[nsId] = [];
@@ -63,6 +64,7 @@ export function GlossaryEntityDropdown({
     if (!entitiesData?.meta_entity) return {};
     const grouped: Record<string, Entity[]> = {};
     entitiesData.meta_entity.forEach((entity: Entity) => {
+      if (!entity.sa_id) return; // Skip if sa_id is null
       const saId = entity.sa_id;
       if (!grouped[saId]) {
         grouped[saId] = [];
