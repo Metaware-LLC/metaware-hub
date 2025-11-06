@@ -71,7 +71,7 @@ export default function StartHere() {
                   <CheckCircle2 className="icon-md text-success mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="font-medium">Navigate to Meta</p>
-                    <p className="text-muted">Select your entity, then click on <strong>meta file upload</strong>.</p>
+                    <p className="text-muted">Select your entity, then click on <strong>meta file upload</strong>. <Link to="/metadata/meta" className="text-primary hover:underline">Go to Meta →</Link></p>
                   </div>
                 </div>
                 <div className="flex-start gap-3">
@@ -85,14 +85,14 @@ export default function StartHere() {
                   <CheckCircle2 className="icon-md text-success mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="font-medium">View in Staging</p>
-                    <p className="text-muted">Once Meta and data have been loaded, the entities can be viewed under <strong>Staging</strong>.</p>
+                    <p className="text-muted">Once Meta and data have been loaded, the entities can be viewed under <Link to="/staging" className="text-primary hover:underline font-semibold">Staging →</Link></p>
                   </div>
                 </div>
                 <div className="flex-start gap-3">
                   <CheckCircle2 className="icon-md text-success mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="font-medium">Apply Data Quality Rules</p>
-                    <p className="text-muted">Data Quality rules can be applied on these new columns by clicking on the column name in the staging data table for that entity.</p>
+                    <p className="text-muted">Data Quality rules can be applied on these new columns by clicking on the column name in the <Link to="/staging" className="text-primary hover:underline">staging data table</Link> for that entity.</p>
                   </div>
                 </div>
               </div>
@@ -138,7 +138,7 @@ export default function StartHere() {
                   <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="font-medium">Create Glossary Entities</p>
-                    <p className="text-sm text-muted-foreground">Create glossary entities accordingly, then click on <strong>Generate Standardized Meta</strong> to automatically generate standardized meta values for the entity.</p>
+                    <p className="text-sm text-muted-foreground">Create glossary entities accordingly, then click on <strong>Generate Standardized Meta</strong> to automatically generate standardized meta values for the entity. <Link to="/glossary" className="text-primary hover:underline">Go to Glossary →</Link></p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -205,7 +205,7 @@ export default function StartHere() {
                   <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="font-medium">Navigate to Publish</p>
-                    <p className="text-sm text-muted-foreground">Go to <strong>Publish</strong>, then click on <strong>Build Models</strong>.</p>
+                    <p className="text-sm text-muted-foreground">Go to <Link to="/model" className="text-primary hover:underline font-semibold">Publish →</Link>, then click on <strong>Build Models</strong>.</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
