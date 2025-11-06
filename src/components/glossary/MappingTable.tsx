@@ -9,7 +9,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { GET_META_FOR_ENTITY, type MetaField } from "@/graphql/queries/meta";
 import { type Entity } from "@/graphql/queries/entity";
@@ -228,20 +228,21 @@ export function MappingTable({ glossaryEntity, sourceEntity, existingRuleset }: 
         </div>
       </div>
 
-      <ScrollArea className="max-h-[600px]">
-        <div className="border rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="text-left p-4 font-medium w-[45%]">
-                  Glossary Standardized Meta
-                </th>
-                <th className="text-left p-4 font-medium w-[45%]">
-                  Source Expression
-                </th>
-                <th className="text-left p-4 font-medium w-[10%]"></th>
-              </tr>
-            </thead>
+      <div className="border rounded-lg overflow-hidden">
+        <ScrollArea className="h-[calc(100vh-400px)] max-h-[600px]">
+          <div className="min-w-full">
+            <table className="w-full min-w-[800px]">
+              <thead className="bg-muted/50 sticky top-0 z-10">
+                <tr>
+                  <th className="text-left p-4 font-medium w-[45%]">
+                    Glossary Standardized Meta
+                  </th>
+                  <th className="text-left p-4 font-medium w-[45%]">
+                    Source Expression
+                  </th>
+                  <th className="text-left p-4 font-medium w-[10%]"></th>
+                </tr>
+              </thead>
             <tbody>
               {mappingRows.length === 0 ? (
                 <tr>
@@ -318,8 +319,10 @@ export function MappingTable({ glossaryEntity, sourceEntity, existingRuleset }: 
               )}
             </tbody>
           </table>
-        </div>
-      </ScrollArea>
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+      </div>
 
       <AddGlossaryMetaModal
         open={isModalOpen}
