@@ -147,12 +147,12 @@ export function MappingEditorModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh]">
+      <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Review Source Mappings</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="h-[500px]">
+        <ScrollArea className="flex-1 min-h-0 pr-4">
           <Table>
             <TableHeader>
               <TableRow>
@@ -185,7 +185,7 @@ export function MappingEditorModal({
           </Table>
         </ScrollArea>
 
-        <DialogFooter>
+        <DialogFooter className="mt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
