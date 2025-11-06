@@ -71,13 +71,3 @@ export {
   type GetMetaConceptualResponse,
   type GetMetaConceptualVariables,
 } from './conceptualmodel';
-
-// Entity Relation-related queries and types
-export {
-  GET_ENTITY_RELATIONS,
-  type EntityRelation,
-  type RelatedEntity,
-  type EntityMeta,
-  type GetEntityRelationsResponse,
-  type GetEntityRelationsVariables,
-} from './entityrelation';
