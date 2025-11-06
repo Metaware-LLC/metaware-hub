@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Database, BookOpen, Workflow, FileUp, FileText, GitBranch, History, Search, Link2, FileOutput, Boxes, Sparkles, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Database, BookOpen, Workflow, FileUp, FileText, GitBranch, History, Search, Link2, FileOutput, Boxes, Sparkles, CheckCircle2, Layers, FolderTree, Table2, Wand2, ArrowDown, Zap } from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
@@ -14,271 +14,401 @@ import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 
 export default function StartHere() {
-  const [openSteps, setOpenSteps] = useState<{ [key: number]: boolean }>({});
+  const [expandedStep, setExpandedStep] = useState<number | null>(null);
 
   const toggleStep = useCallback((stepNumber: number) => {
-    setOpenSteps(prev => ({ ...prev, [stepNumber]: !prev[stepNumber] }));
+    setExpandedStep(prev => prev === stepNumber ? null : stepNumber);
   }, []);
 
   return (
-    <div className="stack-lg">
-      <div className="stack-sm">
-        <h1 className="text-4xl font-bold text-foreground">Welcome to MetaWare</h1>
-        <p className="text-xl text-muted-foreground font-medium">
-          Your solution for standardizing business data
-        </p>
-        <p className="text-subheading max-w-3xl">
-          Follow these essential steps to transform your raw data into a powerful business intelligence foundation.
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-primary/10 via-tertiary/10 to-success/10 border-b">
+        <div className="absolute inset-0 bg-grid-white/10"></div>
+        <div className="relative max-w-7xl mx-auto px-6 py-16 text-center">
+          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6 animate-fade-in">
+            <Sparkles className="h-4 w-4" />
+            Start Your Journey
+          </div>
+          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent mb-4 animate-fade-in">
+            Welcome to MetaWare
+          </h1>
+          <p className="text-2xl text-muted-foreground font-medium mb-3 animate-fade-in">
+            Your solution for standardizing business data
+          </p>
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto animate-fade-in">
+            Transform raw data into powerful business intelligence in three intuitive steps
+          </p>
+        </div>
       </div>
 
-      <Separator className="my-6" />
-
-      {/* Step 1: Load and Connect Source Data */}
-      <Card className="border-l-4 border-l-primary">
-        <CardHeader>
-          <div className="flex-between">
-            <div className="flex-start gap-md">
-              <div className="flex-center w-12 h-12 rounded-full bg-primary/10 text-primary font-bold text-xl flex-shrink-0">
-                1
-              </div>
-              <div className="stack-sm">
-                <CardTitle className="text-heading-md">Load and Connect Source Data</CardTitle>
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        {/* Journey Steps */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+          {/* Step 1 */}
+          <div className="group relative animate-fade-in" style={{ animationDelay: "0.1s" }}>
+            <Card className="h-full border-2 border-primary/20 hover:border-primary/40 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-card to-primary/5">
+              <CardHeader className="pb-4">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground font-bold text-2xl shadow-lg">
+                    1
+                  </div>
+                  <Database className="h-8 w-8 text-primary opacity-50" />
+                </div>
+                <CardTitle className="text-2xl mb-2">Build Your Foundation</CardTitle>
                 <CardDescription className="text-base">
-                  Create appropriate Namespace, Subject Area & Entities to organize your data structure.
+                  Set up your data structure with namespaces, subject areas, and entities
                 </CardDescription>
-              </div>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  variant="ghost"
+                  onClick={() => toggleStep(1)}
+                  className="w-full justify-between mb-4 hover:bg-primary/10"
+                >
+                  <span className="font-medium">View Details</span>
+                  <ArrowDown className={cn(
+                    "h-4 w-4 transition-transform duration-300",
+                    expandedStep === 1 && "rotate-180"
+                  )} />
+                </Button>
+
+                {expandedStep === 1 && (
+                  <div className="space-y-4 animate-fade-in">
+                    <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                      <div className="flex items-start gap-3">
+                        <FolderTree className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold text-sm mb-1">Create Your Organization</p>
+                          <p className="text-sm text-muted-foreground">Start by defining <strong>Namespaces</strong> to organize your data landscape. Then add <strong>Subject Areas</strong> to group related data.</p>
+                          <Link to="/metadata/namespace" className="inline-flex items-center gap-1 text-primary text-sm font-medium mt-2 hover:underline">
+                            Go to Metadata <ArrowRight className="h-3 w-3" />
+                          </Link>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div className="flex items-start gap-3">
+                        <Table2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold text-sm mb-1">Define Your Entities & Types</p>
+                          <p className="text-sm text-muted-foreground mb-2">Create entities with specific types:</p>
+                          <div className="grid grid-cols-2 gap-2 ml-2">
+                            <Badge variant="secondary" className="justify-start">
+                              <Database className="h-3 w-3 mr-1" />
+                              Staging
+                            </Badge>
+                            <Badge variant="secondary" className="justify-start">
+                              <BookOpen className="h-3 w-3 mr-1" />
+                              Glossary
+                            </Badge>
+                            <Badge variant="secondary" className="justify-start">
+                              <Layers className="h-3 w-3 mr-1" />
+                              Model
+                            </Badge>
+                            <Badge variant="secondary" className="justify-start">
+                              <FileText className="h-3 w-3 mr-1" />
+                              Reference
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div className="flex items-start gap-3">
+                        <FileUp className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold text-sm mb-1">Upload & Load Your Data</p>
+                          <p className="text-sm text-muted-foreground">Navigate to <Link to="/metadata/meta" className="text-primary hover:underline">Meta</Link>, select your entity, and click <strong>meta file upload</strong>. Upload your file and select <strong>create meta and load data</strong>.</p>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold text-sm mb-1">View & Validate</p>
+                          <p className="text-sm text-muted-foreground">Once loaded, view your entities in <Link to="/staging" className="text-primary hover:underline font-semibold">Staging</Link>. Apply data quality rules by clicking column names in the staging data table.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Link to="/metadata/namespace">
+                      <Button className="w-full group">
+                        Get Started
+                        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+
+                {expandedStep !== 1 && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Zap className="h-4 w-4" />
+                    <span>Create structured data foundations</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* Arrow connector */}
+            <div className="hidden lg:block absolute top-1/2 -right-8 transform -translate-y-1/2 z-10">
+              <ArrowRight className="h-8 w-8 text-primary/40" />
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="stack-md">
-          <Collapsible open={openSteps[1]} onOpenChange={() => toggleStep(1)}>
-            <CollapsibleTrigger asChild>
-              <Button variant="outline" className="button-anim w-full flex-between hover:bg-muted">
-                <span className="flex-start gap-sm">
-                  <BookOpen className="icon-sm" />
-                  How to Load Source Data
-                </span>
-                <ArrowRight className={cn(
-                  "icon-sm transform-gpu will-change-transform transition-transform duration-300 ease-in-out",
-                  openSteps[1] && "rotate-90"
-                )} />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-4 stack-md">
-              <div className="space-y-3">
-                <div className="flex-start gap-3">
-                  <CheckCircle2 className="icon-md text-success mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">Navigate to Meta</p>
-                    <p className="text-muted">Select your entity, then click on <strong>meta file upload</strong>. <Link to="/metadata/meta" className="text-primary hover:underline">Go to Meta →</Link></p>
-                  </div>
-                </div>
-                <div className="flex-start gap-3">
-                  <CheckCircle2 className="icon-md text-success mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">Upload Your File</p>
-                    <p className="text-muted">Upload your file and select <strong>create meta and load data</strong>.</p>
-                  </div>
-                </div>
-                <div className="flex-start gap-3">
-                  <CheckCircle2 className="icon-md text-success mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">View in Staging</p>
-                    <p className="text-muted">Once Meta and data have been loaded, the entities can be viewed under <Link to="/staging" className="text-primary hover:underline font-semibold">Staging →</Link></p>
-                  </div>
-                </div>
-                <div className="flex-start gap-3">
-                  <CheckCircle2 className="icon-md text-success mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">Apply Data Quality Rules</p>
-                    <p className="text-muted">Data Quality rules can be applied on these new columns by clicking on the column name in the <Link to="/staging" className="text-primary hover:underline">staging data table</Link> for that entity.</p>
-                  </div>
-                </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </CardContent>
-      </Card>
 
-      {/* Step 2: Define Your Business Blueprint */}
-      <Card className="border-l-4 border-l-tertiary">
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-4">
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-tertiary/10 text-tertiary font-bold text-xl flex-shrink-0">
-                2
-              </div>
-              <div className="space-y-2">
-                <CardTitle className="text-2xl">Define Your Business Blueprint</CardTitle>
+          {/* Step 2 */}
+          <div className="group relative animate-fade-in" style={{ animationDelay: "0.2s" }}>
+            <Card className="h-full border-2 border-tertiary/20 hover:border-tertiary/40 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-card to-tertiary/5">
+              <CardHeader className="pb-4">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-tertiary to-tertiary/70 text-white font-bold text-2xl shadow-lg">
+                    2
+                  </div>
+                  <Wand2 className="h-8 w-8 text-tertiary opacity-50" />
+                </div>
+                <CardTitle className="text-2xl mb-2">Design Your Blueprint</CardTitle>
                 <CardDescription className="text-base">
-                  Create glossary entities and generate standardized metadata to establish your business vocabulary and mapping.
+                  Create your business glossary and map it to your data sources
                 </CardDescription>
-              </div>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  variant="ghost"
+                  onClick={() => toggleStep(2)}
+                  className="w-full justify-between mb-4 hover:bg-tertiary/10"
+                >
+                  <span className="font-medium">View Details</span>
+                  <ArrowDown className={cn(
+                    "h-4 w-4 transition-transform duration-300",
+                    expandedStep === 2 && "rotate-180"
+                  )} />
+                </Button>
+
+                {expandedStep === 2 && (
+                  <div className="space-y-4 animate-fade-in">
+                    <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                      <div className="flex items-start gap-3">
+                        <BookOpen className="h-5 w-5 text-tertiary mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold text-sm mb-1">Create Glossary Entities</p>
+                          <p className="text-sm text-muted-foreground">Navigate to <Link to="/glossary" className="text-primary hover:underline font-semibold">Glossary</Link> and create your glossary entities to define your business vocabulary.</p>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div className="flex items-start gap-3">
+                        <Sparkles className="h-5 w-5 text-tertiary mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold text-sm mb-1">Generate Standardized Blueprint</p>
+                          <p className="text-sm text-muted-foreground">Click on <strong>Generate Standardized Blueprint</strong> to automatically create standardized meta values. Edit and save according to your requirements.</p>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div className="flex items-start gap-3">
+                        <Link2 className="h-5 w-5 text-tertiary mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold text-sm mb-1">Map Source Associations</p>
+                          <p className="text-sm text-muted-foreground">Head to the <strong>source associations</strong> tab and map your standardized glossary meta values to raw staging entity columns.</p>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div className="flex items-start gap-3">
+                        <GitBranch className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold text-sm mb-1">Visualize Relationships</p>
+                          <p className="text-sm text-muted-foreground">View your data connections graphically in the <strong>Glossary Relationship Graph</strong>.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Link to="/glossary">
+                      <Button className="w-full group" variant="secondary">
+                        Open Glossary
+                        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+
+                {expandedStep !== 2 && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Zap className="h-4 w-4" />
+                    <span>Build business vocabulary & mapping</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* Arrow connector */}
+            <div className="hidden lg:block absolute top-1/2 -right-8 transform -translate-y-1/2 z-10">
+              <ArrowRight className="h-8 w-8 text-tertiary/40" />
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Collapsible open={openSteps[2]} onOpenChange={() => toggleStep(2)}>
-            <CollapsibleTrigger asChild>
-              <Button variant="outline" className="button-anim w-full justify-between hover:bg-muted">
-                <span className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  How to Build Your Business Blueprint
-                </span>
-                <ArrowRight className={cn(
-                  "h-4 w-4 transform-gpu will-change-transform transition-transform duration-300 ease-in-out",
-                  openSteps[2] && "rotate-90"
-                )} />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-4 space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">Create Glossary Entities</p>
-                    <p className="text-sm text-muted-foreground">Create glossary entities accordingly, then click on <strong>Generate Standardized Meta</strong> to automatically generate standardized meta values for the entity. <Link to="/glossary" className="text-primary hover:underline">Go to Glossary →</Link></p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">Edit and Save Meta</p>
-                    <p className="text-sm text-muted-foreground">These can be edited and saved according to user requirements.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">Map Source Associations</p>
-                    <p className="text-sm text-muted-foreground">Once the glossary meta has been saved, we move on to the <strong>source associations</strong> tab where we map the standardized glossary meta values to the raw staging entity columns.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">View Relationships</p>
-                    <p className="text-sm text-muted-foreground">Once the mapping has been done, we can view the connections graphically in <strong>Glossary Relationship Graph</strong>.</p>
-                  </div>
-                </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </CardContent>
-      </Card>
 
-      {/* Step 3: Publish Models & Extracts */}
-      <Card className="border-l-4 border-l-success">
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-4">
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-success/10 text-success font-bold text-xl flex-shrink-0">
-                3
-              </div>
-              <div className="space-y-2">
-                <CardTitle className="text-2xl">Publish Models & Extracts</CardTitle>
+          {/* Step 3 */}
+          <div className="group relative animate-fade-in" style={{ animationDelay: "0.3s" }}>
+            <Card className="h-full border-2 border-success/20 hover:border-success/40 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-card to-success/5">
+              <CardHeader className="pb-4">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-success to-success/70 text-white font-bold text-2xl shadow-lg">
+                    3
+                  </div>
+                  <Boxes className="h-8 w-8 text-success opacity-50" />
+                </div>
+                <CardTitle className="text-2xl mb-2">Publish & Deploy</CardTitle>
                 <CardDescription className="text-base">
-                  Finally, here we transform our business blueprints into awesome production ready outputs.
+                  Transform blueprints into production-ready data models
                 </CardDescription>
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Collapsible open={openSteps[3]} onOpenChange={() => toggleStep(3)}>
-            <CollapsibleTrigger asChild>
-              <Button variant="outline" className="button-anim w-full justify-between hover:bg-muted">
-                <span className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  How to Publish Models & Extracts
-                </span>
-                <ArrowRight className={cn(
-                  "h-4 w-4 transform-gpu will-change-transform transition-transform duration-300 ease-in-out",
-                  openSteps[3] && "rotate-90"
-                )} />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-4 space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">Navigate to Publish</p>
-                    <p className="text-sm text-muted-foreground">Go to <Link to="/model" className="text-primary hover:underline font-semibold">Publish →</Link>, then click on <strong>Build Models</strong>.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">Select Business Glossary</p>
-                    <p className="text-sm text-muted-foreground">There, select a Business Glossary (Blueprint) Meta Data from the cascading dropdown and set your project code - default model.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">Build Artifacts</p>
-                    <p className="text-sm text-muted-foreground">Select the meta for the model and click on <strong>Build Artifacts</strong>.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">Load Data</p>
-                    <p className="text-sm text-muted-foreground">On Success, move on to Step 2 - Load Data and Click on <strong>Load Data</strong> to see the Publish Model.</p>
-                  </div>
-                </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </CardContent>
-      </Card>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  variant="ghost"
+                  onClick={() => toggleStep(3)}
+                  className="w-full justify-between mb-4 hover:bg-success/10"
+                >
+                  <span className="font-medium">View Details</span>
+                  <ArrowDown className={cn(
+                    "h-4 w-4 transition-transform duration-300",
+                    expandedStep === 3 && "rotate-180"
+                  )} />
+                </Button>
 
-      {/* Quick Links Section */}
-      <Card className="bg-gradient-to-br from-primary/5 to-tertiary/5 border-primary/20">
-        <CardHeader>
-          <CardTitle className="text-xl">Quick Access</CardTitle>
-          <CardDescription>Jump to the most commonly used areas</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <Button variant="outline" className="justify-start h-auto py-3" asChild>
-              <a href="/staging">
-                <div className="flex flex-col items-start gap-1 w-full">
-                  <div className="flex items-center gap-2">
-                    <FileUp className="h-4 w-4" />
-                    <span className="font-medium">Staging Area</span>
+                {expandedStep === 3 && (
+                  <div className="space-y-4 animate-fade-in">
+                    <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                      <div className="flex items-start gap-3">
+                        <Boxes className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold text-sm mb-1">Navigate to Publish</p>
+                          <p className="text-sm text-muted-foreground">Go to <Link to="/model" className="text-primary hover:underline font-semibold">Publish</Link> and click on <strong>Build Models</strong>.</p>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div className="flex items-start gap-3">
+                        <FileText className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold text-sm mb-1">Select Your Blueprint</p>
+                          <p className="text-sm text-muted-foreground">Choose a Business Glossary (Blueprint) Meta Data from the dropdown and set your project code to "default model".</p>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div className="flex items-start gap-3">
+                        <Workflow className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold text-sm mb-1">Build Artifacts</p>
+                          <p className="text-sm text-muted-foreground">Select the meta for your model and click <strong>Build Artifacts</strong> to generate your production model.</p>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold text-sm mb-1">Load & View</p>
+                          <p className="text-sm text-muted-foreground">On success, move to Step 2 - Load Data and click <strong>Load Data</strong> to see your published model in action!</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Link to="/model">
+                      <Button className="w-full group" variant="default">
+                        Start Publishing
+                        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </Link>
                   </div>
-                  <span className="text-xs text-muted-foreground">Upload & process data</span>
-                </div>
-              </a>
-            </Button>
-            <Button variant="outline" className="justify-start h-auto py-3" asChild>
-              <a href="/glossary">
-                <div className="flex flex-col items-start gap-1 w-full">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4" />
-                    <span className="font-medium">Glossary</span>
+                )}
+
+                {expandedStep !== 3 && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Zap className="h-4 w-4" />
+                    <span>Deploy production-ready models</span>
                   </div>
-                  <span className="text-xs text-muted-foreground">Manage business terms</span>
-                </div>
-              </a>
-            </Button>
-            <Button variant="outline" className="justify-start h-auto py-3" asChild>
-              <a href="/build-models">
-                <div className="flex flex-col items-start gap-1 w-full">
-                  <div className="flex items-center gap-2">
-                    <Boxes className="h-4 w-4" />
-                    <span className="font-medium">Build Models</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">Create data models</span>
-                </div>
-              </a>
-            </Button>
+                )}
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Quick Access Section */}
+        <Card className="border-2 border-primary/20 bg-gradient-to-br from-card via-primary/5 to-tertiary/5 animate-fade-in" style={{ animationDelay: "0.4s" }}>
+          <CardHeader className="text-center">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mx-auto mb-4">
+              <Zap className="h-6 w-6 text-primary" />
+            </div>
+            <CardTitle className="text-2xl">Ready to Jump In?</CardTitle>
+            <CardDescription>Quick access to the most commonly used areas</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Link to="/staging" className="group">
+                <Card className="h-full border-2 border-muted hover:border-primary/40 hover:shadow-lg transition-all duration-300">
+                  <CardContent className="pt-6">
+                    <div className="flex flex-col items-center text-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                        <Database className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-1">Staging Area</p>
+                        <p className="text-xs text-muted-foreground">Upload & process your data</p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link to="/glossary" className="group">
+                <Card className="h-full border-2 border-muted hover:border-tertiary/40 hover:shadow-lg transition-all duration-300">
+                  <CardContent className="pt-6">
+                    <div className="flex flex-col items-center text-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-tertiary/10 flex items-center justify-center group-hover:bg-tertiary/20 transition-colors">
+                        <BookOpen className="h-6 w-6 text-tertiary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-1">Glossary</p>
+                        <p className="text-xs text-muted-foreground">Manage business terms</p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-tertiary group-hover:translate-x-1 transition-all" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link to="/model" className="group">
+                <Card className="h-full border-2 border-muted hover:border-success/40 hover:shadow-lg transition-all duration-300">
+                  <CardContent className="pt-6">
+                    <div className="flex flex-col items-center text-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center group-hover:bg-success/20 transition-colors">
+                        <Boxes className="h-6 w-6 text-success" />
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-1">Publish Models</p>
+                        <p className="text-xs text-muted-foreground">Create data models</p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-success group-hover:translate-x-1 transition-all" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
