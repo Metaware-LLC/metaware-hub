@@ -14,10 +14,42 @@ import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 
 export default function StartHere() {
-  const [expandedStep, setExpandedStep] = useState<number | null>(null);
+  const [expandedSteps, setExpandedSteps] = useState<Set<number>>(new Set());
 
   const toggleStep = useCallback((stepNumber: number) => {
-    setExpandedStep(prev => prev === stepNumber ? null : stepNumber);
+    setExpandedSteps(prev => {
+      const newExpanded = new Set(prev);
+      
+      if (newExpanded.has(stepNumber)) {
+        // Closing logic: close from this step onwards
+        if (stepNumber === 1) {
+          // Close all steps
+          return new Set();
+        } else if (stepNumber === 2) {
+          // Close steps 2 and 3
+          newExpanded.delete(2);
+          newExpanded.delete(3);
+        } else {
+          // Close only step 3
+          newExpanded.delete(3);
+        }
+      } else {
+        // Opening logic: must open in order
+        if (stepNumber === 1) {
+          newExpanded.add(1);
+        } else if (stepNumber === 2) {
+          if (newExpanded.has(1)) {
+            newExpanded.add(2);
+          }
+        } else if (stepNumber === 3) {
+          if (newExpanded.has(1) && newExpanded.has(2)) {
+            newExpanded.add(3);
+          }
+        }
+      }
+      
+      return newExpanded;
+    });
   }, []);
 
   return (
@@ -69,11 +101,11 @@ export default function StartHere() {
                   <span className="font-medium">View Details</span>
                   <ArrowDown className={cn(
                     "h-4 w-4 transition-transform duration-300",
-                    expandedStep === 1 && "rotate-180"
+                    expandedSteps.has(1) && "rotate-180"
                   )} />
                 </Button>
 
-                {expandedStep === 1 && (
+                {expandedSteps.has(1) && (
                   <div className="space-y-4 animate-fade-in">
                     <div className="bg-muted/50 rounded-lg p-4 space-y-3">
                       <div className="flex items-start gap-3">
@@ -145,7 +177,7 @@ export default function StartHere() {
                   </div>
                 )}
 
-                {expandedStep !== 1 && (
+                {!expandedSteps.has(1) && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Zap className="h-4 w-4" />
                     <span>Create structured data foundations</span>
@@ -184,11 +216,11 @@ export default function StartHere() {
                   <span className="font-medium">View Details</span>
                   <ArrowDown className={cn(
                     "h-4 w-4 transition-transform duration-300",
-                    expandedStep === 2 && "rotate-180"
+                    expandedSteps.has(2) && "rotate-180"
                   )} />
                 </Button>
 
-                {expandedStep === 2 && (
+                {expandedSteps.has(2) && (
                   <div className="space-y-4 animate-fade-in">
                     <div className="bg-muted/50 rounded-lg p-4 space-y-3">
                       <div className="flex items-start gap-3">
@@ -239,7 +271,7 @@ export default function StartHere() {
                   </div>
                 )}
 
-                {expandedStep !== 2 && (
+                {!expandedSteps.has(2) && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Zap className="h-4 w-4" />
                     <span>Build business vocabulary & mapping</span>
@@ -278,11 +310,11 @@ export default function StartHere() {
                   <span className="font-medium">View Details</span>
                   <ArrowDown className={cn(
                     "h-4 w-4 transition-transform duration-300",
-                    expandedStep === 3 && "rotate-180"
+                    expandedSteps.has(3) && "rotate-180"
                   )} />
                 </Button>
 
-                {expandedStep === 3 && (
+                {expandedSteps.has(3) && (
                   <div className="space-y-4 animate-fade-in">
                     <div className="bg-muted/50 rounded-lg p-4 space-y-3">
                       <div className="flex items-start gap-3">
@@ -333,7 +365,7 @@ export default function StartHere() {
                   </div>
                 )}
 
-                {expandedStep !== 3 && (
+                {!expandedSteps.has(3) && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Zap className="h-4 w-4" />
                     <span>Deploy production-ready models</span>
