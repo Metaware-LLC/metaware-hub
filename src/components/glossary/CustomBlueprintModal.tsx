@@ -23,7 +23,7 @@ export function CustomBlueprintModal({
   onSuccess,
 }: CustomBlueprintModalProps) {
   const [topic, setTopic] = useState("");
-  const [numFields, setNumFields] = useState(10);
+  const [numFields, setNumFields] = useState<number | undefined>(undefined);
   const [exampleData, setExampleData] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
@@ -46,7 +46,7 @@ export function CustomBlueprintModal({
       
       const response = await glossaryAPI.generateCustomBlueprint({
         topic: topic.trim(),
-        num_fields: numFields,
+        ...(numFields !== undefined && { num_fields: numFields }),
         example_data: exampleData.trim(),
         target_ns: targetNs,
         target_sa: targetSa,
@@ -80,7 +80,7 @@ export function CustomBlueprintModal({
       
       // Reset form
       setTopic("");
-      setNumFields(10);
+      setNumFields(undefined);
       setExampleData("");
     } catch (error) {
       console.error("Error generating custom blueprint:", error);
@@ -97,7 +97,7 @@ export function CustomBlueprintModal({
   const handleClose = () => {
     onOpenChange(false);
     setTopic("");
-    setNumFields(10);
+    setNumFields(undefined);
     setExampleData("");
   };
 
@@ -132,8 +132,9 @@ export function CustomBlueprintModal({
                 type="number"
                 min={1}
                 max={50}
-                value={numFields}
-                onChange={(e) => setNumFields(parseInt(e.target.value) || 10)}
+                placeholder="Auto"
+                value={numFields ?? ""}
+                onChange={(e) => setNumFields(e.target.value ? parseInt(e.target.value) : undefined)}
               />
             </div>
           </div>
