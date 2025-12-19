@@ -104,9 +104,9 @@ export const RelationshipGraph = ({ entityId, entityName }: RelationshipGraphPro
       data: {
         label: entityName,
         type: "glossary",
-        entity: { 
-          id: entityId, 
-          name: entityName, 
+        entity: {
+          id: entityId,
+          name: entityName,
           type: "glossary",
           description: "Glossary Entity",
           is_delta: false,
@@ -250,7 +250,7 @@ export const RelationshipGraph = ({ entityId, entityName }: RelationshipGraphPro
   }
 
   return (
-    <div className="flex h-[calc(100vh-250px)] gap-md">
+    <div className="flex h-[calc(100vh-300px)] gap-md">
       <div className="flex-1 border rounded-lg overflow-hidden">
         <ReactFlow
           nodes={nodes}
@@ -280,41 +280,41 @@ export const RelationshipGraph = ({ entityId, entityName }: RelationshipGraphPro
             </Badge>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[calc(100vh-400px)]">
-              <div className="stack-md">
+            <div className="stack-md">
+              <div>
+                <p className="text-sm font-medium mb-1">Description</p>
+                <p className="text-muted">
+                  {selectedNode.entity.description || "No description"}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-sm text-sm">
                 <div>
-                  <p className="text-sm font-medium mb-1">Description</p>
-                  <p className="text-muted">
-                    {selectedNode.entity.description || "No description"}
-                  </p>
+                  <p className="font-medium">Type</p>
+                  <p className="text-muted-foreground">{selectedNode.entity.type}</p>
                 </div>
-
-                <div className="grid grid-cols-2 gap-sm text-sm">
-                  <div>
-                    <p className="font-medium">Type</p>
-                    <p className="text-muted-foreground">{selectedNode.entity.type}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium">Subtype</p>
-                    <p className="text-muted-foreground">{selectedNode.entity.subtype || "N/A"}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium">Primary Grain</p>
-                    <p className="text-muted-foreground">{selectedNode.entity.primary_grain || "N/A"}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium">Runtime</p>
-                    <p className="text-muted-foreground">{selectedNode.entity.runtime || "N/A"}</p>
-                  </div>
+                <div>
+                  <p className="font-medium">Subtype</p>
+                  <p className="text-muted-foreground">{selectedNode.entity.subtype || "N/A"}</p>
                 </div>
+                <div>
+                  <p className="font-medium">Primary Grain</p>
+                  <p className="text-muted-foreground">{selectedNode.entity.primary_grain || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="font-medium">Runtime</p>
+                  <p className="text-muted-foreground">{selectedNode.entity.runtime || "N/A"}</p>
+                </div>
+              </div>
 
-                {metaLoading ? (
-                  <div className="flex-center py-4">
-                    <Loader2 className="icon-lg animate-spin" />
-                  </div>
-                ) : metaData?.meta_meta && metaData.meta_meta.length > 0 ? (
-                  <div>
-                    <p className="text-sm font-medium mb-2">Meta Fields</p>
+              {metaLoading ? (
+                <div className="flex-center py-4">
+                  <Loader2 className="icon-lg animate-spin" />
+                </div>
+              ) : metaData?.meta_meta && metaData.meta_meta.length > 0 ? (
+                <div>
+                  <p className="text-sm font-medium mb-2">Meta Fields</p>
+                  <ScrollArea>
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -339,12 +339,12 @@ export const RelationshipGraph = ({ entityId, entityName }: RelationshipGraphPro
                         ))}
                       </TableBody>
                     </Table>
-                  </div>
-                ) : (
-                  <p className="text-muted">No meta fields available</p>
-                )}
-              </div>
-            </ScrollArea>
+                  </ScrollArea>
+                </div>
+              ) : (
+                <p className="text-muted">No meta fields available</p>
+              )}
+            </div>
           </CardContent>
         </Card>
       )}

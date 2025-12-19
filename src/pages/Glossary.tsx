@@ -23,6 +23,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbL
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { rulesetAPI, metaAPI } from "@/services/api";
+import { GlossaryAssociations } from "@/components/glossary/GlossaryAssociations";
 
 export default function Glossary() {
   const [selectedSubjectAreaId, setSelectedSubjectAreaId] = useState<string | null>(null);
@@ -43,7 +44,7 @@ export default function Glossary() {
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
-  
+
   const { data: subjectAreasData } = useQuery<GetSubjectAreasResponse>(GET_SUBJECTAREAS);
   const selectedSubjectArea = subjectAreasData?.meta_subjectarea.find(sa => sa.id === selectedSubjectAreaId);
 
@@ -192,7 +193,7 @@ export default function Glossary() {
       setStandardizedMeta([]);
       setMappings([]);
       setEditModeSnapshot([]);
-      
+
       // Refetch meta to show the newly created meta
       if (selectedEntity) {
         fetchMeta({ variables: { enid: selectedEntity.id } });
@@ -278,7 +279,7 @@ export default function Glossary() {
         title: "Success",
         description: "Metadata saved successfully",
       });
-      
+
       // Refetch meta to show the updated data
       if (selectedEntity) {
         fetchMeta({ variables: { enid: selectedEntity.id } });
@@ -351,7 +352,7 @@ export default function Glossary() {
         onSubjectAreaSelect={setSelectedSubjectAreaId}
         selectedSubjectAreaId={selectedSubjectAreaId || undefined}
       />
-      
+
       <div className="flex-1 overflow-hidden">
         {!selectedEntity ? (
           <div className="page-content">
@@ -359,7 +360,7 @@ export default function Glossary() {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <button 
+                    <button
                       onClick={() => { setSelectedEntity(null); setSelectedSubjectAreaId(null); setSearchQuery(""); }} className="breadcrumb-link" >
                       Business Glossary
                     </button>
@@ -396,8 +397,8 @@ export default function Glossary() {
             </div>
 
             <ImportConfigModal open={importModalOpen} onOpenChange={setImportModalOpen} onSuccess={() => {
-                // Optionally refresh data after import
-              }} />
+              // Optionally refresh data after import
+            }} />
 
             <EntityGrid subjectAreaId={selectedSubjectAreaId || undefined} namespaceType="glossary" searchQuery={searchQuery} onEntityClick={setSelectedEntity} />
           </div>
@@ -415,7 +416,7 @@ export default function Glossary() {
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <button 
+                    <button
                       onClick={() => { setSelectedSubjectAreaId(selectedEntity.sa_id); setSelectedEntity(null); }} className="breadcrumb-link" >
                       {selectedEntity.subjectarea.name}
                     </button>
@@ -427,25 +428,30 @@ export default function Glossary() {
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
-            <div className="stack-sm mb-6">
-              <Button variant="ghost" size="sm" onClick={() => setSelectedEntity(null)} className="w-fit" >
+            <div className="mb-4 flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedEntity(null)}
+              >
                 ← Back to list
               </Button>
               <div className="flex-1">
-                <h2 className="text-heading-sm flex-start gap-sm">
-                  <Database className="icon-md icon-primary" />
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <Database className="h-5 w-5 text-primary" />
                   {selectedEntity.name}
                 </h2>
-                <p className="text-muted">
-                  {selectedEntity.subjectarea?.namespace?.name || 'Unknown'} / {selectedEntity.subjectarea?.name || 'Unknown'}
+                <p className="text-sm text-muted-foreground">
+                  {selectedEntity.subjectarea?.namespace?.name || 'Unknown'} . {selectedEntity.subjectarea?.name || 'Unknown'}
                 </p>
               </div>
             </div>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-scroll">
               <TabsList>
                 <TabsTrigger value="meta">Meta</TabsTrigger>
                 <TabsTrigger value="associations">Source Associations</TabsTrigger>
+                <TabsTrigger value="glossary_associations">Glossary Associations</TabsTrigger>
                 <TabsTrigger value="relationships">Glossary Relationship</TabsTrigger>
               </TabsList>
 
@@ -543,12 +549,18 @@ export default function Glossary() {
                     <label className="text-sm font-medium">Select Association</label>
                     <SourceAssociationSelect glossaryEntity={selectedEntity} value={sourceEntity?.id} onSelect={setSourceEntity} />
                   </div>
-                  { sourceEntity && ( <MappingTable glossaryEntity={selectedEntity} sourceEntity={sourceEntity} existingRuleset={existingRuleset || undefined} /> )}
+                  {sourceEntity && (<MappingTable glossaryEntity={selectedEntity} sourceEntity={sourceEntity} existingRuleset={existingRuleset || undefined} />)}
                 </div>
               </TabsContent>
 
-              <TabsContent value="relationships" className="mt-0 flex-1 overflow-hidden">
-                <RelationshipGraph entityId={selectedEntity.id} entityName={selectedEntity.name} />
+              <TabsContent value="glossary_associations" className="mt-0 flex-1 overflow-hidden">
+                <GlossaryAssociations glossaryEntity={selectedEntity} metaFields={metaFields} />
+              </TabsContent>
+
+              <TabsContent value="relationships" className={`flex-1 flex flex-col overflow-scroll ${activeTab !== 'relationships' ? 'hidden' : ''}`}>
+                {activeTab === 'relationships' && (
+                  <RelationshipGraph entityId={selectedEntity.id} entityName={selectedEntity.name} />
+                )}
               </TabsContent>
             </Tabs>
 

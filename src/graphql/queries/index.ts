@@ -71,3 +71,11 @@ export {
   type GetMetaConceptualResponse,
   type GetMetaConceptualVariables,
 } from './conceptualmodel';
+
+// Glossary Relation-related queries and types
+export {
+  GET_GLOSSARY_RELATIONS,
+  type GlossaryRelation,
+  type GetGlossaryRelationsResponse,
+  type GetGlossaryRelationsVariables,
+} from './glossaryrelation';
