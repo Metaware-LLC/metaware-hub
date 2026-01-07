@@ -89,13 +89,13 @@ export function MappingTable({ glossaryEntity, sourceEntity, existingRuleset }: 
     // Remove rows for unchecked items
     setMappingRows((prev) => {
       const filtered = prev.filter((row) => !removedIds.includes(row.glossaryMeta.id));
-      
+
       // Add new rows for newly selected items
       const newRows: MappingRow[] = selectedMetas.map((meta) => ({
         id: crypto.randomUUID(),
         glossaryMeta: meta,
       }));
-      
+
       return [...filtered, ...newRows];
     });
   };
@@ -243,82 +243,82 @@ export function MappingTable({ glossaryEntity, sourceEntity, existingRuleset }: 
                   <th className="text-left p-4 font-medium w-[10%]"></th>
                 </tr>
               </thead>
-            <tbody>
-              {mappingRows.length === 0 ? (
-                <tr>
-                  <td colSpan={3} className="p-8 text-center text-muted-foreground">
-                    No mappings added. Click "Add Glossary Meta" to get started.
-                  </td>
-                </tr>
-              ) : (
-                mappingRows.map((row) => (
-                  <tr key={row.id} className="border-t hover:bg-muted/30">
-                    <td className="p-4">
-                      <div className="flex-start gap-sm">
-                        <span className="font-medium">{row.glossaryMeta.name}</span>
-                        <Badge variant="secondary">{row.glossaryMeta.type}</Badge>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      {sourceMetaLoading ? (
-                        <div className="flex-start gap-sm text-muted-foreground">
-                          <Loader2 className="icon-sm animate-spin" />
-                          Loading...
-                        </div>
-                      ) : (
-                        <div className="flex-start gap-sm">
-                          <Input
-                            value={row.sourceMetaAlias || ""}
-                            onChange={(e) =>
-                              handleSourceMetaChange(row.id, e.target.value)
-                            }
-                            placeholder="Type expression or select"
-                            className="flex-1"
-                          />
-                        <Popover 
-                          open={openPopoverId === row.id} 
-                          onOpenChange={(open) => setOpenPopoverId(open ? row.id : null)}
-                        >
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" size="icon" className="shrink-0">
-                              <ChevronDown className="icon-sm" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-64 p-2" align="end">
-                            <div className="stack-xs">
-                              {sourceMetaFields.map((meta) => (
-                                <Button
-                                  key={meta.id}
-                                  variant="ghost"
-                                  className="w-full justify-start"
-                                  onClick={() => {
-                                    handleSourceMetaChange(row.id, meta.alias);
-                                    setOpenPopoverId(null);
-                                  }}
-                                >
-                                  {meta.alias}
-                                </Button>
-                              ))}
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                        </div>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemoveRow(row.id)}
-                      >
-                        <Trash2 className="icon-sm" />
-                      </Button>
+              <tbody>
+                {mappingRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="p-8 text-center text-muted-foreground">
+                      No mappings added. Click "Add Glossary Meta" to get started.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  mappingRows.map((row) => (
+                    <tr key={row.id} className="border-t hover:bg-muted/30">
+                      <td className="p-4">
+                        <div className="flex-start gap-sm">
+                          <span className="font-medium">{row.glossaryMeta.name}</span>
+                          <Badge variant="secondary">{row.glossaryMeta.type}</Badge>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        {sourceMetaLoading ? (
+                          <div className="flex-start gap-sm text-muted-foreground">
+                            <Loader2 className="icon-sm animate-spin" />
+                            Loading...
+                          </div>
+                        ) : (
+                          <div className="flex-start gap-sm">
+                            <Input
+                              value={row.sourceMetaAlias || ""}
+                              onChange={(e) =>
+                                handleSourceMetaChange(row.id, e.target.value)
+                              }
+                              placeholder="Type expression or select"
+                              className="flex-1"
+                            />
+                            <Popover
+                              open={openPopoverId === row.id}
+                              onOpenChange={(open) => setOpenPopoverId(open ? row.id : null)}
+                            >
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" size="icon" className="shrink-0">
+                                  <ChevronDown className="icon-sm" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-64 p-2" align="end">
+                                <div className="stack-xs">
+                                  {sourceMetaFields.map((meta) => (
+                                    <Button
+                                      key={meta.id}
+                                      variant="ghost"
+                                      className="w-full justify-start"
+                                      onClick={() => {
+                                        handleSourceMetaChange(row.id, meta.alias);
+                                        setOpenPopoverId(null);
+                                      }}
+                                    >
+                                      {meta.alias}
+                                    </Button>
+                                  ))}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemoveRow(row.id)}
+                        >
+                          <Trash2 className="icon-sm" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>

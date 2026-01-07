@@ -6,18 +6,19 @@ import { DataTable } from "@/components/table/DataTable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, X, Database, Loader2, Upload, Sparkles, Wand2 } from "lucide-react";
+import { Search, X, Database, Loader2, Upload, Sparkles, Wand2, GitGraph, ArrowLeft } from "lucide-react";
 import { GET_META_FOR_ENTITY, type MetaField } from "@/graphql/queries/meta";
 import { GET_RULESETS_BY_ENTITY, type RulesetWithSource } from "@/graphql/queries/ruleset";
 import { GET_SUBJECTAREAS, type GetSubjectAreasResponse } from "@/graphql/queries";
 import { SourceAssociationSelect } from "@/components/glossary/SourceAssociationSelect";
-import { MappingTable } from "@/components/glossary/MappingTable";
 import { RelationshipGraph } from "@/components/glossary/RelationshipGraph";
+import { MappingTable } from "@/components/glossary/MappingTable";
 import { ImportConfigModal } from "@/components/glossary/ImportConfigModal";
 import { GenerateBlueprintModal } from "@/components/glossary/GenerateBlueprintModal";
 import { CustomBlueprintModal } from "@/components/glossary/CustomBlueprintModal";
 import { StandardizedMetaEditor } from "@/components/glossary/StandardizedMetaEditor";
 import { MappingEditorModal } from "@/components/glossary/MappingEditorModal";
+import { EntityERDGraph } from "@/components/glossary/EntityERDGraph";
 import { type Entity } from "@/graphql/queries/entity";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
@@ -43,6 +44,7 @@ export default function Glossary() {
   const [editModeSnapshot, setEditModeSnapshot] = useState<any[]>([]);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDiagram, setShowDiagram] = useState(false);
   const { toast } = useToast();
 
   const { data: subjectAreasData } = useQuery<GetSubjectAreasResponse>(GET_SUBJECTAREAS);
@@ -452,7 +454,6 @@ export default function Glossary() {
                 <TabsTrigger value="meta">Meta</TabsTrigger>
                 <TabsTrigger value="associations">Source Associations</TabsTrigger>
                 <TabsTrigger value="glossary_associations">Glossary Associations</TabsTrigger>
-                <TabsTrigger value="relationships">Glossary Relationship</TabsTrigger>
               </TabsList>
 
               <TabsContent value="meta" className={`mt-0 flex-1 overflow-hidden flex flex-col ${activeTab !== 'meta' ? 'hidden' : ''}`}>
@@ -544,12 +545,43 @@ export default function Glossary() {
               </TabsContent>
 
               <TabsContent value="associations" className="mt-0 flex-1 overflow-auto">
-                <div className="stack-lg card-padding">
-                  <div className="stack-sm">
-                    <label className="text-sm font-medium">Select Association</label>
-                    <SourceAssociationSelect glossaryEntity={selectedEntity} value={sourceEntity?.id} onSelect={setSourceEntity} />
-                  </div>
-                  {sourceEntity && (<MappingTable glossaryEntity={selectedEntity} sourceEntity={sourceEntity} existingRuleset={existingRuleset || undefined} />)}
+                <div className="stack-lg card-padding h-full min-h-0 flex flex-col">
+                  {showDiagram ? (
+                    <div className="h-full flex flex-col">
+                      <div className="flex-none mb-4">
+                        <Button
+                          variant="ghost"
+                          onClick={() => setShowDiagram(false)}
+                          className="text-muted-foreground hover:text-foreground pl-0"
+                        >
+                          <ArrowLeft className="w-4 h-4 mr-2" />
+                          Back to Associations
+                        </Button>
+                      </div>
+                      <div className="flex-1 border rounded-lg overflow-hidden relative min-h-0">
+                        <EntityERDGraph entityId={selectedEntity.id} entityName={selectedEntity.name} />
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex-none space-y-4">
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1">
+                            <SourceAssociationSelect glossaryEntity={selectedEntity} value={sourceEntity?.id} onSelect={setSourceEntity} />
+                          </div>
+                          <Button
+                            onClick={() => setShowDiagram(true)}
+                            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md border-0 transition-all duration-300"
+                          >
+                            <GitGraph className="w-4 h-4 mr-2" />
+                            View Relationship Diagram
+                          </Button>
+                        </div>
+                      </div>
+
+                      {sourceEntity && (<MappingTable glossaryEntity={selectedEntity} sourceEntity={sourceEntity} existingRuleset={existingRuleset || undefined} />)}
+                    </>
+                  )}
                 </div>
               </TabsContent>
 
@@ -557,11 +589,7 @@ export default function Glossary() {
                 <GlossaryAssociations glossaryEntity={selectedEntity} metaFields={metaFields} />
               </TabsContent>
 
-              <TabsContent value="relationships" className={`flex-1 flex flex-col overflow-scroll ${activeTab !== 'relationships' ? 'hidden' : ''}`}>
-                {activeTab === 'relationships' && (
-                  <RelationshipGraph entityId={selectedEntity.id} entityName={selectedEntity.name} />
-                )}
-              </TabsContent>
+
             </Tabs>
 
             <GenerateBlueprintModal
@@ -581,6 +609,6 @@ export default function Glossary() {
           </div>
         )}
       </div>
-    </div>
+    </div >
   );
 }
