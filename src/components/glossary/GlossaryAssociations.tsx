@@ -84,14 +84,16 @@ const relationTypes = [
 interface GlossaryAssociationsProps {
     glossaryEntity: Entity;
     metaFields: MetaField[];
+    showGraph: boolean;
+    onShowGraphChange: (show: boolean) => void;
 }
 
-export function GlossaryAssociations({ glossaryEntity, metaFields }: GlossaryAssociationsProps) {
+export function GlossaryAssociations({ glossaryEntity, metaFields, showGraph, onShowGraphChange }: GlossaryAssociationsProps) {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedGlossary, setSelectedGlossary] = useState<string | null>(null);
     const [isAddRelationOpen, setIsAddRelationOpen] = useState(false);
     const [newRelationType, setNewRelationType] = useState("");
-    const [showGraph, setShowGraph] = useState(false);
+    // showGraph state moved to parent
 
     // State for the cascading select
     const [newRelatedEntity, setNewRelatedEntity] = useState<Entity | null>(null);
@@ -270,7 +272,7 @@ export function GlossaryAssociations({ glossaryEntity, metaFields }: GlossaryAss
                     glossaryEntity={glossaryEntity}
                     metaFields={metaFields}
                     relations={relations}
-                    onBack={() => setShowGraph(false)}
+                    onBack={() => onShowGraphChange(false)}
                 />
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full min-h-0">
@@ -308,7 +310,7 @@ export function GlossaryAssociations({ glossaryEntity, metaFields }: GlossaryAss
                                             </div>
                                         </PopoverContent>
                                     </Popover>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8" title="View Graph" onClick={() => setShowGraph(true)}>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" title="View Graph" onClick={() => onShowGraphChange(true)}>
                                         <Network className="h-4 w-4" />
                                     </Button>
                                 </div>

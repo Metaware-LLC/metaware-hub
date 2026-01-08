@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLazyQuery, useQuery } from "@apollo/client";
 import { SubSidebar } from "@/components/layout/SubSidebar";
 import { EntityGrid } from "@/components/entity/EntityGrid";
@@ -25,6 +25,7 @@ import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { rulesetAPI, metaAPI } from "@/services/api";
 import { GlossaryAssociations } from "@/components/glossary/GlossaryAssociations";
+import { useLayout } from "@/context/LayoutContext";
 
 export default function Glossary() {
   const [selectedSubjectAreaId, setSelectedSubjectAreaId] = useState<string | null>(null);
@@ -44,8 +45,67 @@ export default function Glossary() {
   const [editModeSnapshot, setEditModeSnapshot] = useState<any[]>([]);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showDiagram, setShowDiagram] = useState(false);
+
+  // Graph States
+  // Graph States
+  const [showDiagram, setShowDiagram] = useState(false); // ERD Graph
+  const [showGlossaryGraph, setShowGlossaryGraph] = useState(false); // Glossary Model Graph
+
   const { toast } = useToast();
+
+  // Layout Controls
+  const {
+    sidebarWidth,
+    isSidebarCollapsed,
+    setSidebarCollapsed,
+    isSubSidebarCollapsed,
+    setSubSidebarCollapsed,
+    setHasSubSidebar
+  } = useLayout();
+
+  // Register SubSidebar
+  useEffect(() => {
+    setHasSubSidebar(true);
+    return () => setHasSubSidebar(false);
+  }, [setHasSubSidebar]);
+
+  // Ref to track if we're in "Graph Mode" and what the previous state was
+  const wasGraphOpenRef = useRef(false);
+  const prevSidebarStateRef = useRef({ main: false, sub: false });
+
+  const isAnyGraphOpen = showDiagram || showGlossaryGraph;
+
+  // Auto-collapse logic
+  useEffect(() => {
+    if (isAnyGraphOpen && !wasGraphOpenRef.current) {
+      // Transitioning TO Graph Mode
+      // Save current state BEFORE collapsing
+      prevSidebarStateRef.current = {
+        main: isSidebarCollapsed,
+        sub: isSubSidebarCollapsed
+      };
+      wasGraphOpenRef.current = true;
+
+      // Force collapse
+      setSidebarCollapsed(true);
+      setSubSidebarCollapsed(true);
+    } else if (!isAnyGraphOpen && wasGraphOpenRef.current) {
+      // Transitioning FROM Graph Mode
+      // Restore previous state
+      setSidebarCollapsed(prevSidebarStateRef.current.main);
+      setSubSidebarCollapsed(prevSidebarStateRef.current.sub);
+
+      wasGraphOpenRef.current = false;
+    }
+  }, [isAnyGraphOpen, isSidebarCollapsed, isSubSidebarCollapsed, setSidebarCollapsed, setSubSidebarCollapsed]);
+
+  // Reset graphs when going back to list
+  useEffect(() => {
+    if (!selectedEntity) {
+      setShowDiagram(false);
+      setShowGlossaryGraph(false);
+    }
+  }, [selectedEntity]);
 
   const { data: subjectAreasData } = useQuery<GetSubjectAreasResponse>(GET_SUBJECTAREAS);
   const selectedSubjectArea = subjectAreasData?.meta_subjectarea.find(sa => sa.id === selectedSubjectAreaId);
@@ -348,7 +408,10 @@ export default function Glossary() {
   ] : [];
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] fixed left-64 right-0 top-14">
+    <div
+      className="flex h-[calc(100vh-3.5rem)] fixed right-0 top-14 transition-[left] duration-300 ease-in-out"
+      style={{ left: sidebarWidth }}
+    >
       <SubSidebar
         namespaceType="glossary"
         onSubjectAreaSelect={setSelectedSubjectAreaId}
@@ -586,7 +649,12 @@ export default function Glossary() {
               </TabsContent>
 
               <TabsContent value="glossary_associations" className="mt-0 flex-1 overflow-hidden">
-                <GlossaryAssociations glossaryEntity={selectedEntity} metaFields={metaFields} />
+                <GlossaryAssociations
+                  glossaryEntity={selectedEntity}
+                  metaFields={metaFields}
+                  showGraph={showGlossaryGraph}
+                  onShowGraphChange={setShowGlossaryGraph}
+                />
               </TabsContent>
 
 

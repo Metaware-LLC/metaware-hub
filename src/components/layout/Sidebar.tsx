@@ -9,10 +9,12 @@ import {
   BookOpen,
   Shield,
   ChevronRight,
+  ChevronLeft,
   Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useLayout } from "@/context/LayoutContext";
 
 interface NavItem {
   title: string;
@@ -22,21 +24,9 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  {
-    title: "Start Here",
-    href: "/start-here",
-    icon: Home,
-  },
-  {
-    title: "Dashboard",
-    href: "/dashboard",
-    icon: BarChart3,
-  },
-  {
-    title: "Prepare Files",
-    href: "/prepare-files",
-    icon: Upload,
-  },
+  { title: "Start Here", href: "/start-here", icon: Home },
+  { title: "Dashboard", href: "/dashboard", icon: BarChart3 },
+  { title: "Prepare Files", href: "/prepare-files", icon: Upload },
   {
     title: "Metadata",
     href: "/metadata",
@@ -48,33 +38,30 @@ const navItems: NavItem[] = [
       { title: "Meta", href: "/metadata/meta" },
     ],
   },
-  {
-    title: "Staging",
-    href: "/staging",
-    icon: Archive,
-  },
-  {
-    title: "Glossary",
-    href: "/glossary",
-    icon: BookOpen,
-  },
-  {
-    title: "Publish",
-    href: "/model",
-    icon: Layers,
-  },
-  {
-    title: "Admin",
-    href: "/admin",
-    icon: Shield,
-  },
+  { title: "Staging", href: "/staging", icon: Archive },
+  { title: "Glossary", href: "/glossary", icon: BookOpen },
+  { title: "Publish", href: "/model", icon: Layers },
+  { title: "Admin", href: "/admin", icon: Shield },
 ];
 
 export const Sidebar = () => {
   const [expandedItems, setExpandedItems] = useState<string[]>(['Metadata']);
+  const {
+    isSidebarCollapsed,
+    toggleSidebar,
+    sidebarWidth,
+    hasSubSidebar,
+    isSubSidebarCollapsed,
+    toggleSubSidebar
+  } = useLayout();
   const location = useLocation();
 
   const toggleExpanded = (title: string) => {
+    if (isSidebarCollapsed) {
+      // If collapsed, clicking parent should probably just expand the sidebar or do nothing.
+      // For better UX, let's expand sidebar if user interacts with a parent
+      toggleSidebar();
+    }
     setExpandedItems(prev =>
       prev.includes(title)
         ? prev.filter(item => item !== title)
@@ -94,10 +81,13 @@ export const Sidebar = () => {
           left: 0;
           top: 3.5rem;
           bottom: 0;
-          width: 16rem;
+          width: ${sidebarWidth};
           border-right: 1px solid hsl(var(--sidebar-border));
           background-color: hsl(var(--sidebar-background));
           z-index: 30;
+          transition: width 300ms ease-in-out;
+          display: flex;
+          flex-direction: column;
         }
 
         .sidebar-nav {
@@ -105,13 +95,24 @@ export const Sidebar = () => {
           display: flex;
           flex-direction: column;
           gap: 0.5rem;
+          flex: 1;
+          overflow-x: hidden;
+        }
+
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid hsl(var(--border));
+            display: flex;
+            justify-content: ${isSidebarCollapsed ? 'center' : 'flex-end'};
+            gap: 0.5rem;
         }
 
         .sidebar-parent-button {
           width: 100%;
-          justify-content: flex-start;
+          justify-content: ${isSidebarCollapsed ? 'center' : 'flex-start'};
           gap: 0.75rem;
           height: 2.5rem;
+          padding: ${isSidebarCollapsed ? '0' : '0.5rem 0.75rem'};
         }
 
         .sidebar-parent-button-active {
@@ -120,17 +121,25 @@ export const Sidebar = () => {
         }
 
         .sidebar-parent-icon {
-          height: 1rem;
-          width: 1rem;
+          height: 1.25rem;
+          width: 1.25rem;
+          flex-shrink: 0;
         }
 
         .sidebar-parent-text {
           flex: 1;
           text-align: left;
+          white-space: nowrap;
+          overflow: hidden;
+          opacity: ${isSidebarCollapsed ? 0 : 1};
+          width: ${isSidebarCollapsed ? 0 : 'auto'};
+          transition: opacity 200ms;
         }
 
         .sidebar-chevron {
           transition: transform 200ms;
+          opacity: ${isSidebarCollapsed ? 0 : 1};
+          width: ${isSidebarCollapsed ? 0 : 'auto'};
         }
 
         .sidebar-chevron-expanded {
@@ -138,7 +147,7 @@ export const Sidebar = () => {
         }
 
         .sidebar-children-container {
-          margin-left: 1.5rem;
+          margin-left: ${isSidebarCollapsed ? '0' : '1.5rem'};
           margin-top: 0.25rem;
           display: flex;
           flex-direction: column;
@@ -163,6 +172,8 @@ export const Sidebar = () => {
           border-radius: 0.375rem;
           font-size: 0.875rem;
           transition: all 200ms;
+          white-space: nowrap;
+          overflow: hidden;
         }
 
         .sidebar-child-link:hover {
@@ -179,11 +190,13 @@ export const Sidebar = () => {
         .sidebar-link {
           display: flex;
           align-items: center;
+          justify-content: ${isSidebarCollapsed ? 'center' : 'flex-start'};
           gap: 0.75rem;
           padding: 0.5rem 0.75rem;
           border-radius: 0.375rem;
           font-size: 0.875rem;
           transition: colors 200ms;
+          height: 2.5rem;
         }
 
         .sidebar-link:hover {
@@ -197,8 +210,9 @@ export const Sidebar = () => {
         }
 
         .sidebar-link-icon {
-          height: 1rem;
-          width: 1rem;
+          height: 1.25rem;
+          width: 1.25rem;
+          flex-shrink: 0;
         }
       `}</style>
 
@@ -215,38 +229,46 @@ export const Sidebar = () => {
                       isActive(item.href) && "sidebar-parent-button-active"
                     )}
                     onClick={() => toggleExpanded(item.title)}
+                    title={isSidebarCollapsed ? item.title : undefined}
                   >
                     <item.icon className="sidebar-parent-icon" />
-                    <span className="sidebar-parent-text">{item.title}</span>
-                    <div className={cn(
-                      "sidebar-chevron",
-                      expandedItems.includes(item.title) && "sidebar-chevron-expanded"
-                    )}>
-                      <ChevronRight className="sidebar-parent-icon" />
-                    </div>
+                    {!isSidebarCollapsed && (
+                      <>
+                        <span className="sidebar-parent-text">{item.title}</span>
+                        <div className={cn(
+                          "sidebar-chevron",
+                          expandedItems.includes(item.title) && "sidebar-chevron-expanded"
+                        )}>
+                          <ChevronRight className="h-4 w-4" />
+                        </div>
+                      </>
+                    )}
                   </Button>
-                  
-                  <div className={cn(
-                    "sidebar-children-container",
-                    expandedItems.includes(item.title) 
-                      ? "sidebar-children-expanded" 
-                      : "sidebar-children-collapsed"
-                  )}>
-                    {item.children.map((child) => (
-                      <NavLink
-                        key={child.href}
-                        to={child.href}
-                        className={({ isActive }) =>
-                          cn(
-                            "sidebar-child-link",
-                            isActive && "sidebar-child-link-active"
-                          )
-                        }
-                      >
-                        {child.title}
-                      </NavLink>
-                    ))}
-                  </div>
+
+                  {/* Hide children in collapsed mode unless we want popovers, but for now just hide */}
+                  {!isSidebarCollapsed && (
+                    <div className={cn(
+                      "sidebar-children-container",
+                      expandedItems.includes(item.title)
+                        ? "sidebar-children-expanded"
+                        : "sidebar-children-collapsed"
+                    )}>
+                      {item.children.map((child) => (
+                        <NavLink
+                          key={child.href}
+                          to={child.href}
+                          className={({ isActive }) =>
+                            cn(
+                              "sidebar-child-link",
+                              isActive && "sidebar-child-link-active"
+                            )
+                          }
+                        >
+                          {child.title}
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <NavLink
@@ -257,14 +279,38 @@ export const Sidebar = () => {
                       isActive && "sidebar-link-active"
                     )
                   }
+                  title={isSidebarCollapsed ? item.title : undefined}
                 >
                   <item.icon className="sidebar-link-icon" />
-                  {item.title}
+                  {!isSidebarCollapsed && item.title}
                 </NavLink>
               )}
             </div>
           ))}
         </nav>
+
+        <div className="sidebar-footer">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            className="h-8 w-8"
+            title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            {isSidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </Button>
+          {hasSubSidebar && isSubSidebarCollapsed && (
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={toggleSubSidebar}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              title="Expand Sub-Sidebar"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </aside>
     </>
   );
