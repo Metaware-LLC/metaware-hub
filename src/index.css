@@ -518,6 +518,41 @@
     }
   }
 
+
+  /* Global Minimal Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 99px;
+    transition: background-color 0.2s;
+  }
+
+  *:hover::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.2);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.4) !important;
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  *:hover {
+    scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
+  }
+
   /* Disable hover transforms on touch devices */
   @media (hover: none) {
     .button-anim:hover,

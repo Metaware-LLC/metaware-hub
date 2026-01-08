@@ -11,6 +11,7 @@ import ReactFlow, {
     ConnectionLineType,
     NodeTypes,
     ReactFlowInstance,
+    MiniMap,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { GET_ENTITY_RELATIONS } from "@/graphql/queries/entityrelation";
@@ -48,6 +49,7 @@ interface ERDNodeData {
     entity?: any;
     isCollapsed?: boolean;
     onToggleCollapse?: () => void;
+    manual?: boolean; // Track if node was manually moved
 }
 
 // Helper to calculate layout based on node content height
@@ -55,20 +57,38 @@ const recalculateLayout = (nodes: Node<ERDNodeData>[]): Node<ERDNodeData>[] => {
     const GAP = 40;
     const HEADER_HEIGHT = 60;
     const ROW_HEIGHT = 36;
-    const MAX_CONTENT_HEIGHT = 300; // Matches max-h-[300px] in ERDNode
+    const MAX_CONTENT_HEIGHT = 300;
 
-    // Group by column
+    // Helper to estimate node height
+    const getEstimatedHeight = (node: Node<ERDNodeData>) => {
+        let h = HEADER_HEIGHT;
+        if (!node.data.isCollapsed) {
+            const rows = node.data.metaFields?.length || 0;
+            const contentHeight = Math.min(rows * ROW_HEIGHT, MAX_CONTENT_HEIGHT);
+            h += contentHeight + 20;
+        }
+        return h;
+    };
+
+    // 1. Separate Manual vs Auto nodes
+    const manualNodes = nodes.filter(n => n.data.manual).map(n => {
+        // Update height for manual nodes too
+        return { ...n, height: getEstimatedHeight(n), width: 256 };
+    });
+    const autoNodes = nodes.filter(n => !n.data.manual);
+
+    // 2. Layout Auto Nodes in Columns (Standard)
     const stagingNodes: Node<ERDNodeData>[] = [];
     const glossaryNodes: Node<ERDNodeData>[] = [];
     const modelNodes: Node<ERDNodeData>[] = [];
 
-    nodes.forEach(node => {
+    autoNodes.forEach(node => {
         if (node.data.type === "staging") stagingNodes.push(node);
         else if (node.data.type === "glossary") glossaryNodes.push(node);
         else if (node.data.type === "model") modelNodes.push(node);
     });
 
-    // Sort by existing Y to maintain relative order
+    // Sort by Y to keep relative order
     const sorter = (a: Node, b: Node) => a.position.y - b.position.y;
     stagingNodes.sort(sorter);
     glossaryNodes.sort(sorter);
@@ -77,17 +97,10 @@ const recalculateLayout = (nodes: Node<ERDNodeData>[]): Node<ERDNodeData>[] => {
     const layoutColumn = (columnNodes: Node<ERDNodeData>[], startX: number) => {
         let currentY = 50;
         columnNodes.forEach(node => {
-            // Update positions
             node.position = { x: startX, y: currentY };
-
-            // Calculate height for next node's position
-            let estimatedHeight = HEADER_HEIGHT;
-            if (!node.data.isCollapsed) {
-                const rows = node.data.metaFields?.length || 0;
-                // Height = Header + min(Rows * RowHeight, MaxHeight) + Padding
-                const contentHeight = Math.min(rows * ROW_HEIGHT, MAX_CONTENT_HEIGHT);
-                estimatedHeight += contentHeight + 20; // +20 for padding/borders
-            }
+            const estimatedHeight = getEstimatedHeight(node);
+            node.height = estimatedHeight;
+            node.width = 256;
 
             currentY += estimatedHeight + GAP;
         });
@@ -97,7 +110,36 @@ const recalculateLayout = (nodes: Node<ERDNodeData>[]): Node<ERDNodeData>[] => {
     layoutColumn(glossaryNodes, 400);
     layoutColumn(modelNodes, 850);
 
-    return [...stagingNodes, ...glossaryNodes, ...modelNodes];
+    // 3. Combine All
+    let allNodes = [...manualNodes, ...stagingNodes, ...glossaryNodes, ...modelNodes];
+
+    // 4. Collision Pass - Prevent Overlaps
+    // Simple iterative solver: Check every pair, if overlap, move lower one down.
+    // Repeat a few times to propagate changes.
+    for (let i = 0; i < 3; i++) {
+        allNodes.sort((a, b) => a.position.y - b.position.y); // sort by Y
+
+        for (let j = 0; j < allNodes.length; j++) {
+            const nodeA = allNodes[j];
+            const nodeABottom = nodeA.position.y + (nodeA.height || 100);
+
+            for (let k = j + 1; k < allNodes.length; k++) {
+                const nodeB = allNodes[k];
+
+                // Check X overlap (columns)
+                const xOverlap = Math.abs(nodeA.position.x - nodeB.position.x) < 280; // 256 width + gap
+                if (!xOverlap) continue;
+
+                // Check Y overlap
+                if (nodeB.position.y < nodeABottom + GAP) {
+                    // Collision detected! Push Node B down
+                    nodeB.position.y = nodeABottom + GAP;
+                }
+            }
+        }
+    }
+
+    return allNodes;
 };
 
 
@@ -112,6 +154,30 @@ export const EntityERDGraph = ({ entityId, entityName }: EntityERDGraphProps) =>
     const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
         setSelectedNodeData(node.data as ERDNodeData);
     }, []);
+
+    const onNodeDragStop = useCallback((event: React.MouseEvent, node: Node) => {
+        setNodes((nds) => {
+            const updated = nds.map((n) => {
+                if (n.id === node.id) {
+                    return {
+                        ...n,
+                        position: node.position, // Keep drag position
+                        data: { ...n.data, manual: true } // Mark as manual
+                    };
+                }
+                return n;
+            });
+
+            // PERSISTENCE: Save new position
+            const savedPositionsKey = `METAHUB_ERD_POS_${entityId}`;
+            const currentSaved = JSON.parse(localStorage.getItem(savedPositionsKey) || "{}");
+            currentSaved[node.id] = node.position;
+            localStorage.setItem(savedPositionsKey, JSON.stringify(currentSaved));
+
+            // Re-run layout to fix potential overlaps created by drag
+            return recalculateLayout(updated);
+        });
+    }, [setNodes, entityId]);
 
     const onPaneClick = useCallback(() => {
         setSelectedNodeData(null);
@@ -191,22 +257,40 @@ export const EntityERDGraph = ({ entityId, entityName }: EntityERDGraphProps) =>
 
         const nodeMap = new Map<string, boolean>();
 
+        // PERSISTENCE: Check local storage
+        const savedPositionsKey = `METAHUB_ERD_POS_${entityId}`;
+        const savedPositions = JSON.parse(localStorage.getItem(savedPositionsKey) || "{}");
+
         // Helper to generate initial nodes
         const generateNodes = () => {
             const newNodes: Node<ERDNodeData>[] = [];
             const newEdges: Edge[] = [];
+
+            // Helper to create node with persistence check
+            const createNode = (id: string, type: "glossary" | "staging" | "model", position: { x: number, y: number }, data: any) => {
+                const savedPos = savedPositions[id];
+                return {
+                    id,
+                    type: "erd",
+                    position: savedPos || position,
+                    style: { width: 256 },
+                    data: {
+                        ...data,
+                        manual: !!savedPos // If saved pos exists, mark as manual
+                    }
+                };
+            };
 
             // --- Glossary Node (Center) ---
             const glossaryNodeId = `glossary-${entityId}`;
             const glossaryEntityData = { id: entityId, name: entityName, type: "glossary", description: "Glossary Term" };
             const glossaryMetas = glossaryMetaData?.meta_meta;
 
-            newNodes.push({
-                id: glossaryNodeId,
-                type: "erd",
-                position: { x: 400, y: 300 }, // Initial, will be re-layouted
-                style: { width: 256 },
-                data: {
+            newNodes.push(createNode(
+                glossaryNodeId,
+                "glossary",
+                { x: 400, y: 300 },
+                {
                     label: entityName,
                     type: "glossary",
                     metaFields: glossaryMetas,
@@ -214,8 +298,8 @@ export const EntityERDGraph = ({ entityId, entityName }: EntityERDGraphProps) =>
                     entity: glossaryEntityData,
                     isCollapsed: true,
                     onToggleCollapse: () => toggleNodeCollapse(glossaryNodeId)
-                },
-            });
+                }
+            ));
             nodeMap.set(glossaryNodeId, true);
 
             // --- Related Nodes ---
@@ -228,12 +312,11 @@ export const EntityERDGraph = ({ entityId, entityName }: EntityERDGraphProps) =>
                     if (relation.relation_type === "GLOSSARY-SOURCE") {
                         const sourceId = `staging-${entity.id}`;
                         if (!nodeMap.has(sourceId)) {
-                            newNodes.push({
-                                id: sourceId,
-                                type: "erd",
-                                position: { x: 50, y: 50 },
-                                style: { width: 256 },
-                                data: {
+                            newNodes.push(createNode(
+                                sourceId,
+                                "staging",
+                                { x: 50, y: 50 },
+                                {
                                     label: entity.name,
                                     type: "staging",
                                     metaFields: embeddedMetas,
@@ -241,8 +324,8 @@ export const EntityERDGraph = ({ entityId, entityName }: EntityERDGraphProps) =>
                                     entity: entity,
                                     isCollapsed: true,
                                     onToggleCollapse: () => toggleNodeCollapse(sourceId)
-                                },
-                            });
+                                }
+                            ));
                             nodeMap.set(sourceId, true);
                         }
                         newEdges.push({
@@ -257,12 +340,11 @@ export const EntityERDGraph = ({ entityId, entityName }: EntityERDGraphProps) =>
                     } else if (relation.relation_type === "GLOSSARY-MODEL") {
                         const modelId = `model-${entity.id}`;
                         if (!nodeMap.has(modelId)) {
-                            newNodes.push({
-                                id: modelId,
-                                type: "erd",
-                                position: { x: 850, y: 50 },
-                                style: { width: 256 },
-                                data: {
+                            newNodes.push(createNode(
+                                modelId,
+                                "model",
+                                { x: 850, y: 50 },
+                                {
                                     label: entity.name,
                                     type: "model",
                                     metaFields: embeddedMetas,
@@ -270,8 +352,8 @@ export const EntityERDGraph = ({ entityId, entityName }: EntityERDGraphProps) =>
                                     entity: entity,
                                     isCollapsed: true,
                                     onToggleCollapse: () => toggleNodeCollapse(modelId)
-                                },
-                            });
+                                }
+                            ));
                             nodeMap.set(modelId, true);
                         }
                         newEdges.push({
@@ -339,7 +421,7 @@ export const EntityERDGraph = ({ entityId, entityName }: EntityERDGraphProps) =>
 
     return (
         <div className="h-full flex gap-4 relative group">
-            <div className="flex-1 border rounded-lg overflow-hidden bg-muted/5 relative">
+            <div className="flex-1 border rounded-lg overflow-hidden bg-muted/5 relative min-h-[500px]">
                 {/* Global Controls */}
                 <div className="absolute top-4 right-4 z-10 flex gap-2 bg-background/80 backdrop-blur p-1 rounded-md border shadow-sm">
                     <Button variant="ghost" size="sm" onClick={expandAll} className="h-8 px-2 text-xs" title="Expand All">
@@ -363,6 +445,7 @@ export const EntityERDGraph = ({ entityId, entityName }: EntityERDGraphProps) =>
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
                     onNodeClick={onNodeClick}
+                    onNodeDragStop={onNodeDragStop}
                     onPaneClick={onPaneClick}
                     onInit={setReactFlowInstance} // Capture instance
                     connectionLineType={ConnectionLineType.SmoothStep}
@@ -370,6 +453,12 @@ export const EntityERDGraph = ({ entityId, entityName }: EntityERDGraphProps) =>
                 >
                     <Background gap={16} size={1} />
                     <Controls />
+                    <MiniMap
+                        nodeColor={(node) => {
+                            return node.type === 'erd' ? '#e2e8f0' : '#f1f5f9';
+                        }}
+                        className="bg-card border"
+                    />
                 </ReactFlow>
             </div>
 

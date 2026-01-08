@@ -59,7 +59,13 @@ export const ERDNode = memo(({ data, selected }: { data: ERDNodeData; selected?:
 
             <Card className={`w-full min-h-full shadow-md ${getColor()} overflow-hidden transition-all duration-300`}>
                 <div className={`px-3 py-2 flex items-center gap-2 ${getHeaderColor()} relative`}>
-                    {/* Handles for connections */}
+                    {/* Handles for connections - Top/Bottom added for variety */}
+                    <Handle
+                        type="target"
+                        position={Position.Top}
+                        className="!bg-muted-foreground !border-background w-2 h-2"
+                        style={{ top: -4, left: '50%' }}
+                    />
                     <Handle
                         type="target"
                         position={Position.Left}
@@ -94,6 +100,12 @@ export const ERDNode = memo(({ data, selected }: { data: ERDNodeData; selected?:
                         position={Position.Right}
                         className="!bg-muted-foreground !border-background w-2.5 h-2.5"
                         style={{ right: -5, top: '50%' }}
+                    />
+                    <Handle
+                        type="source"
+                        position={Position.Bottom}
+                        className="!bg-muted-foreground !border-background w-2 h-2"
+                        style={{ bottom: -4, left: '50%' }}
                     />
                 </div>
 
