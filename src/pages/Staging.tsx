@@ -13,6 +13,7 @@ import { RuleEditor } from "@/components/rules/RuleEditor";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
 import { GET_SUBJECTAREAS, GET_ENTITIES, type GetSubjectAreasResponse, type GetEntitiesResponse } from "@/graphql/queries";
+import { useLayout } from "@/context/LayoutContext";
 
 export default function Staging() {
   const [searchParams] = useSearchParams();
@@ -25,10 +26,19 @@ export default function Staging() {
   const [ruleEditorOpen, setRuleEditorOpen] = useState(false);
   const [selectedColumn, setSelectedColumn] = useState<string>("");
   const [tableNotFound, setTableNotFound] = useState(false);
-  
+
   const { data: subjectAreasData } = useQuery<GetSubjectAreasResponse>(GET_SUBJECTAREAS);
   const { data: entitiesData } = useQuery<GetEntitiesResponse>(GET_ENTITIES);
+
+  // Layout Controls
+  const { sidebarWidth, setHasSubSidebar } = useLayout();
   const selectedSubjectArea = subjectAreasData?.meta_subjectarea.find(sa => sa.id === selectedSubjectAreaId);
+
+  // Register SubSidebar
+  useEffect(() => {
+    setHasSubSidebar(true);
+    return () => setHasSubSidebar(false);
+  }, [setHasSubSidebar]);
 
   // Connect to database on mount
   useEffect(() => {
@@ -40,18 +50,18 @@ export default function Staging() {
     const entityName = searchParams.get('en');
     const subjectAreaName = searchParams.get('sa');
     const namespaceName = searchParams.get('ns');
-    
+
     if (entityName && subjectAreaName && namespaceName && entitiesData) {
       // Find the entity that matches all parameters
       const matchingEntity = entitiesData.meta_entity.find(
-        entity => 
+        entity =>
           entity.subjectarea &&
           entity.subjectarea.namespace &&
           entity.name === entityName &&
           entity.subjectarea.name === subjectAreaName &&
           entity.subjectarea.namespace.name === namespaceName
       );
-      
+
       if (matchingEntity) {
         setSelectedSubjectAreaId(matchingEntity.sa_id);
         setSelectedEntity(matchingEntity);
@@ -85,23 +95,23 @@ export default function Staging() {
       const entityName = selectedEntity.name;
 
       const result = await queryMDTable(connection, namespace, subjectarea, entityName);
-      
+
       // Add unique IDs to rows if they don't have them
       const rowsWithIds = result.rows.map((row, index) => ({
         ...row,
         id: row.id || `row_${index}`
       }));
-      
+
       setData({ ...result, rows: rowsWithIds });
     } catch (error) {
       console.error("Error fetching entity data:", error);
-      
+
       // Check if the error is due to table not existing
       const errorMessage = error instanceof Error ? error.message : String(error);
       if (errorMessage.includes('Table with name') && errorMessage.includes('does not exist')) {
         setTableNotFound(true);
       }
-      
+
       setData({ columns: [], rows: [] });
     } finally {
       setLoading(false);
@@ -130,13 +140,16 @@ export default function Staging() {
   } : null;
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] fixed left-64 right-0 top-14">
+    <div
+      className="flex h-[calc(100vh-3.5rem)] fixed right-0 top-14 transition-[left] duration-300 ease-in-out"
+      style={{ left: sidebarWidth }}
+    >
       <SubSidebar
         namespaceType="staging"
         onSubjectAreaSelect={setSelectedSubjectAreaId}
         selectedSubjectAreaId={selectedSubjectAreaId || undefined}
       />
-      
+
       <div className="flex-1 overflow-hidden">
         {!selectedEntity ? (
           <div className="p-6 space-y-6 h-full overflow-y-auto">
@@ -144,7 +157,7 @@ export default function Staging() {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <button 
+                    <button
                       onClick={() => {
                         setSelectedEntity(null);
                         setSelectedSubjectAreaId(null);
@@ -224,11 +237,11 @@ export default function Staging() {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <button 
+                    <button
                       onClick={() => {
                         setSelectedEntity(null);
                         setSelectedSubjectAreaId(null);
-                      }} 
+                      }}
                       className="hover:text-foreground transition-colors"
                     >
                       {selectedEntity.subjectarea?.namespace?.name || 'Unknown'}
@@ -238,11 +251,11 @@ export default function Staging() {
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <button 
+                    <button
                       onClick={() => {
                         setSelectedSubjectAreaId(selectedEntity.sa_id);
                         setSelectedEntity(null);
-                      }} 
+                      }}
                       className="hover:text-foreground transition-colors"
                     >
                       {selectedEntity.subjectarea.name}
@@ -273,7 +286,7 @@ export default function Staging() {
                 </p>
               </div>
             </div>
-            
+
             {data.rows.length === 0 ? (
               <div className="flex items-center justify-center flex-1">
                 <div className="text-center space-y-3 max-w-md">
@@ -283,7 +296,7 @@ export default function Staging() {
                       {tableNotFound ? 'No Data Loaded' : 'No Data Found'}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {tableNotFound 
+                      {tableNotFound
                         ? 'This entity exists but has no data loaded yet. Make sure to check "Load Data" when uploading the meta file to load data into the staging table.'
                         : 'No data is available for this entity.'}
                     </p>

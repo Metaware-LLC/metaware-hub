@@ -12,6 +12,7 @@ import { Search, X, Database, Loader2, Hammer } from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
 import { GET_SUBJECTAREAS, type GetSubjectAreasResponse } from "@/graphql/queries";
+import { useLayout } from "@/context/LayoutContext";
 
 export default function Model() {
   const navigate = useNavigate();
@@ -22,9 +23,18 @@ export default function Model() {
   const { connection, connect, ready } = useMDConnectionContext();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<{ columns: string[]; rows: any[] }>({ columns: [], rows: [] });
-  
+
   const { data: subjectAreasData } = useQuery<GetSubjectAreasResponse>(GET_SUBJECTAREAS);
+
+  // Layout Controls
+  const { sidebarWidth, setHasSubSidebar } = useLayout();
   const selectedSubjectArea = subjectAreasData?.meta_subjectarea.find(sa => sa.id === selectedSubjectAreaId);
+
+  // Register SubSidebar
+  useEffect(() => {
+    setHasSubSidebar(true);
+    return () => setHasSubSidebar(false);
+  }, [setHasSubSidebar]);
 
   // Connect to database on mount
   useEffect(() => {
@@ -61,13 +71,13 @@ export default function Model() {
       const entityName = selectedEntity.name;
 
       const result = await queryMDTable(connection, namespace, subjectarea, entityName);
-      
+
       // Add unique IDs to rows if they don't have them
       const rowsWithIds = result.rows.map((row, index) => ({
         ...row,
         id: row.id || `row_${index}`
       }));
-      
+
       setData({ ...result, rows: rowsWithIds });
     } catch (error) {
       console.error("Error fetching entity data:", error);
@@ -84,13 +94,16 @@ export default function Model() {
   }));
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] fixed left-64 right-0 top-14">
+    <div
+      className="flex h-[calc(100vh-3.5rem)] fixed right-0 top-14 transition-[left] duration-300 ease-in-out"
+      style={{ left: sidebarWidth }}
+    >
       <SubSidebar
         namespaceType="model"
         onSubjectAreaSelect={setSelectedSubjectAreaId}
         selectedSubjectAreaId={selectedSubjectAreaId || undefined}
       />
-      
+
       <div className="flex-1 overflow-hidden">
         {!selectedEntity ? (
           <div className="p-6 space-y-6 h-full overflow-y-auto">
@@ -98,7 +111,7 @@ export default function Model() {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <button 
+                    <button
                       onClick={() => {
                         setSelectedEntity(null);
                         setSelectedSubjectAreaId(null);
@@ -184,11 +197,11 @@ export default function Model() {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <button 
+                    <button
                       onClick={() => {
                         setSelectedEntity(null);
                         setSelectedSubjectAreaId(null);
-                      }} 
+                      }}
                       className="hover:text-foreground transition-colors"
                     >
                       {selectedEntity.subjectarea?.namespace?.name || 'Unknown'}
@@ -198,11 +211,11 @@ export default function Model() {
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <button 
+                    <button
                       onClick={() => {
                         setSelectedSubjectAreaId(selectedEntity.sa_id);
                         setSelectedEntity(null);
-                      }} 
+                      }}
                       className="hover:text-foreground transition-colors"
                     >
                       {selectedEntity.subjectarea.name}
@@ -233,7 +246,7 @@ export default function Model() {
                 </p>
               </div>
             </div>
-            
+
             {data.rows.length === 0 ? (
               <div className="flex items-center justify-center flex-1">
                 <div className="text-center space-y-2">
