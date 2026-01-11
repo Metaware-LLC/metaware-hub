@@ -17,8 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { API_CONFIG } from "@/config/api";
@@ -38,21 +37,12 @@ interface RuleEditorProps {
   };
 }
 
-interface LocalRule {
-  name: string;
-  rule_expression: string;
-  subtype: "check" | "action";
-  enabled: boolean;
-  id?: string;
-}
-
 export function RuleEditor({ open, onClose, columnName, entityContext }: RuleEditorProps) {
   const [ruleName, setRuleName] = useState("");
   const [ruleExpression, setRuleExpression] = useState("");
   const [ruleType, setRuleType] = useState<"check" | "action">("check");
-  const [localRules, setLocalRules] = useState<LocalRule[]>([]);
   const [existingRules, setExistingRules] = useState<Rule[]>([]);
-  const [editingRuleIndex, setEditingRuleIndex] = useState<number | null>(null);
+  const [editingRule, setEditingRule] = useState<Rule | null>(null);
   const [isApplying, setIsApplying] = useState(false);
 
   const [fetchRulesets, { loading: loadingRulesets }] = useLazyQuery(GET_META_RULESETS, {
@@ -61,14 +51,10 @@ export function RuleEditor({ open, onClose, columnName, entityContext }: RuleEdi
       console.log("Rulesets query response:", data);
       if (data?.meta_ruleset && data.meta_ruleset.length > 0) {
         const allRules = data.meta_ruleset.flatMap((rs: Ruleset) => rs.rules || []);
-        console.log("All rules:", allRules);
-        console.log("Filtering for column:", columnName);
         // Filter rules for this specific column
         const columnRules = allRules.filter((rule: Rule) => rule.meta?.alias === columnName || rule.meta?.name === columnName);
-        console.log("Filtered column rules:", columnRules);
         setExistingRules(columnRules);
       } else {
-        console.log("No rulesets found in response");
         setExistingRules([]);
       }
     },
@@ -98,13 +84,12 @@ export function RuleEditor({ open, onClose, columnName, entityContext }: RuleEdi
       setRuleName("");
       setRuleExpression("");
       setRuleType("check");
-      setLocalRules([]);
       setExistingRules([]);
-      setEditingRuleIndex(null);
+      setEditingRule(null);
     }
   }, [open, entityContext.en_id, fetchRulesets]);
 
-  const handleAddRule = () => {
+  const handleApplyRule = async () => {
     if (!ruleName.trim() || !ruleExpression.trim()) {
       toast({
         title: "Validation Error",
@@ -114,135 +99,67 @@ export function RuleEditor({ open, onClose, columnName, entityContext }: RuleEdi
       return;
     }
 
-    const newRule: LocalRule = {
-      name: ruleName,
-      rule_expression: ruleExpression,
-      subtype: ruleType,
-      enabled: true,
-    };
-
-    if (editingRuleIndex !== null) {
-      // Update existing rule
-      const updated = [...localRules];
-      updated[editingRuleIndex] = newRule;
-      setLocalRules(updated);
-      setEditingRuleIndex(null);
-    } else {
-      // Add new rule
-      setLocalRules([...localRules, newRule]);
-    }
-
-    // Reset form
-    setRuleName("");
-    setRuleExpression("");
-    setRuleType("check");
-    
-    toast({
-      title: "Rule Added",
-      description: `Rule "${newRule.name}" has been added locally`,
-    });
-  };
-
-  const handleEditLocalRule = (index: number) => {
-    const rule = localRules[index];
-    setRuleName(rule.name);
-    setRuleExpression(rule.rule_expression);
-    setRuleType(rule.subtype);
-    setEditingRuleIndex(index);
-  };
-
-  const handleDeleteLocalRule = (index: number) => {
-    setLocalRules(localRules.filter((_, i) => i !== index));
-    if (editingRuleIndex === index) {
-      setEditingRuleIndex(null);
-      setRuleName("");
-      setRuleExpression("");
-      setRuleType("check");
-    }
-  };
-
-  const handleToggleEnabled = (index: number) => {
-    const updated = [...localRules];
-    updated[index].enabled = !updated[index].enabled;
-    setLocalRules(updated);
-  };
-
-  const handleDeleteExistingRule = async (ruleId: string) => {
-    try {
-      const response = await fetch(`${API_CONFIG.REST_ENDPOINT}/mwn/delete`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ object_type: "rule", ids: [ruleId] }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete rule");
-      }
-
-      toast({
-        title: "Success",
-        description: "Rule deleted successfully",
-      });
-
-      // Refresh the rules list
-      fetchRulesets({
-        variables: {
-          id: "",
-          sourceId: "",
-          targetEnId: entityContext.en_id,
-          type: "dq",
-        },
-      });
-    } catch (error) {
-      console.error("Error deleting rule:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete rule",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleApplyRules = async () => {
-    if (localRules.length === 0) {
-      toast({
-        title: "No Rules",
-        description: "Please add at least one rule before applying",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsApplying(true);
+
+    // Optimistically update the UI BEFORE making the API call
+    let previousRules = [...existingRules];
+    if (editingRule) {
+      // Update existing rule in the list
+      setExistingRules(prevRules =>
+        prevRules.map(rule =>
+          rule.id === editingRule.id
+            ? { ...rule, name: ruleName, rule_expression: ruleExpression, subtype: ruleType }
+            : rule
+        )
+      );
+    } else {
+      // Add new rule to the list (create a temporary rule object)
+      const tempRule: Rule = {
+        id: `temp_${Date.now()}`, // Temporary ID
+        name: ruleName,
+        rule_expression: ruleExpression,
+        subtype: ruleType,
+        type: "dq",
+        rule_status: "active",
+        language: "sql",
+        description: ruleName,
+        alias: ruleName,
+        is_shared: null,
+        meta_id: null,
+        meta: { name: columnName, alias: columnName, id: "" },
+      };
+      setExistingRules(prevRules => [...prevRules, tempRule]);
+    }
 
     try {
       const ruleRequests = [
-        ...existingRules.map((rule) => ({
-          id: rule.id,
-          type: rule.type,
-          subtype: rule.subtype,
-          name: rule.name,
-          alias: rule.alias || rule.name,
-          rule_expression: rule.rule_expression,
-          rule_status: rule.rule_status,
-          description: rule.description || rule.name,
-          is_shared: rule.is_shared,
-          language: rule.language,
-          meta_id: rule.meta_id,
-          meta: rule.meta?.alias || rule.meta?.name,
-        })),
-        ...localRules.map((rule) => ({
+        ...existingRules
+          .filter((rule) => editingRule ? rule.id !== editingRule.id : true)
+          .map((rule) => ({
+            id: rule.id,
+            type: rule.type,
+            subtype: rule.subtype,
+            name: rule.name,
+            alias: rule.alias || rule.name,
+            rule_expression: rule.rule_expression,
+            rule_status: rule.rule_status,
+            description: rule.description || rule.name,
+            is_shared: rule.is_shared,
+            language: rule.language,
+            meta_id: rule.meta_id,
+            meta: rule.meta?.alias || rule.meta?.name,
+          })),
+        {
+          ...(editingRule?.id && { id: editingRule.id }),
           type: "dq",
-          subtype: rule.subtype,
-          name: rule.name,
-          description: rule.name,
-          rule_status: rule.enabled ? "active" : "inactive",
-          rule_expression: rule.rule_expression,
+          subtype: ruleType,
+          name: ruleName,
+          description: ruleName,
+          rule_status: "active",
+          rule_expression: ruleExpression,
           meta: columnName,
           language: "sql",
-        })),
+        },
       ];
 
       const payload = {
@@ -271,20 +188,102 @@ export function RuleEditor({ open, onClose, columnName, entityContext }: RuleEdi
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to apply rules");
-      }
-
       const result = await response.json();
+      console.log("create_ruleset API response:", result);
+
+      // Check if response indicates success by checking the response body
+      // The API may return 400 status but still have success in the body
+      const isSuccess = result.status === "success" || result.status_code === 201;
+
+      if (isSuccess) {
+        toast({
+          title: "Success",
+          description: editingRule ? "Rule updated successfully" : "Rule applied successfully",
+        });
+
+        // Reset form
+        setRuleName("");
+        setRuleExpression("");
+        setRuleType("check");
+        setEditingRule(null);
+
+        // Refresh existing rules from server to get the real IDs and sync
+        fetchRulesets({
+          variables: {
+            id: "",
+            sourceId: "",
+            targetEnId: entityContext.en_id,
+            type: "dq",
+          },
+        });
+      } else {
+        // Restore previous state on error
+        setExistingRules(previousRules);
+
+        throw new Error(result.message || `Failed to apply rule: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error("Error applying rule:", error);
+
+      // Restore previous state on error
+      setExistingRules(previousRules);
+
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to apply rule",
+        variant: "destructive",
+      });
+    } finally {
+      setIsApplying(false);
+    }
+  };
+
+  const handleEditExistingRule = (rule: Rule) => {
+    console.log("Editing rule:", rule);
+    setEditingRule(rule);
+    setRuleName(rule.name);
+    setRuleExpression(rule.rule_expression);
+    setRuleType(rule.subtype as "check" | "action");
+
+    // Scroll to top of sheet to show the form
+    setTimeout(() => {
+      const sheetContent = document.querySelector('[role="dialog"]');
+      if (sheetContent) {
+        sheetContent.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 100);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingRule(null);
+    setRuleName("");
+    setRuleExpression("");
+    setRuleType("check");
+  };
+
+  const handleDeleteExistingRule = async (ruleId: string) => {
+    // Optimistically remove from UI immediately
+    setExistingRules(prevRules => prevRules.filter(rule => rule.id !== ruleId));
+
+    try {
+      const response = await fetch(`${API_CONFIG.REST_ENDPOINT}/mwn/delete`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ object_type: "rule", ids: [ruleId] }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete rule");
+      }
 
       toast({
         title: "Success",
-        description: `Rules applied successfully`,
+        description: "Rule deleted successfully",
       });
 
-      // Clear local rules and refresh existing rules
-      setLocalRules([]);
+      // Refresh the rules list to ensure sync with server
       fetchRulesets({
         variables: {
           id: "",
@@ -294,14 +293,23 @@ export function RuleEditor({ open, onClose, columnName, entityContext }: RuleEdi
         },
       });
     } catch (error) {
-      console.error("Error applying rules:", error);
+      console.error("Error deleting rule:", error);
+
+      // Restore the rule if deletion failed
+      fetchRulesets({
+        variables: {
+          id: "",
+          sourceId: "",
+          targetEnId: entityContext.en_id,
+          type: "dq",
+        },
+      });
+
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to apply rules",
+        description: "Failed to delete rule",
         variant: "destructive",
       });
-    } finally {
-      setIsApplying(false);
     }
   };
 
@@ -315,7 +323,7 @@ export function RuleEditor({ open, onClose, columnName, entityContext }: RuleEdi
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
-          {/* Add Rule Form */}
+          {/* Apply Rule Form */}
           <div className="space-y-4 border rounded-lg p-4 bg-card">
             <div className="space-y-2">
               <Label htmlFor="rule-name">
@@ -358,125 +366,31 @@ export function RuleEditor({ open, onClose, columnName, entityContext }: RuleEdi
             </div>
 
             <div className="flex gap-2 pt-2">
-              <Button onClick={handleAddRule} className="flex-1">
-                {editingRuleIndex !== null ? "Update Rule" : "Add Rule"}
+              <Button onClick={handleApplyRule} disabled={isApplying} className="flex-1">
+                {isApplying ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {editingRule ? "Updating..." : "Applying..."}
+                  </>
+                ) : (
+                  editingRule ? "Update Rule" : "Apply Rule"
+                )}
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setRuleName("");
-                  setRuleExpression("");
-                  setRuleType("check");
-                  setEditingRuleIndex(null);
-                }}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
+              {editingRule && (
+                <Button
+                  variant="outline"
+                  onClick={handleCancelEdit}
+                  className="flex-1"
+                >
+                  Cancel Edit
+                </Button>
+              )}
             </div>
           </div>
 
-          {/* Rules Lists */}
-          <Tabs defaultValue="check" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="check">Check Rules</TabsTrigger>
-              <TabsTrigger value="action">Action Rules</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="check" className="space-y-4 mt-4">
-              <h3 className="font-semibold text-lg">Check Rules List</h3>
-              
-              {localRules.filter((r) => r.subtype === "check").length === 0 ? (
-                <p className="text-sm text-muted-foreground">No check rules added yet</p>
-              ) : (
-                <div className="space-y-2">
-                  {localRules
-                    .map((rule, index) => ({ rule, originalIndex: index }))
-                    .filter(({ rule }) => rule.subtype === "check")
-                    .map(({ rule, originalIndex }) => (
-                      <div
-                        key={originalIndex}
-                        className="flex items-center gap-3 p-3 border rounded-lg bg-card"
-                      >
-                        <div className="flex-1">
-                          <p className="font-medium">{rule.name}</p>
-                          <p className="text-sm text-muted-foreground truncate">{rule.rule_expression}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={rule.enabled}
-                            onCheckedChange={() => handleToggleEnabled(originalIndex)}
-                          />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEditLocalRule(originalIndex)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteLocalRule(originalIndex)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="action" className="space-y-4 mt-4">
-              <h3 className="font-semibold text-lg">Action Rules List</h3>
-              
-              {localRules.filter((r) => r.subtype === "action").length === 0 ? (
-                <p className="text-sm text-muted-foreground">No action rules added yet</p>
-              ) : (
-                <div className="space-y-2">
-                  {localRules
-                    .map((rule, index) => ({ rule, originalIndex: index }))
-                    .filter(({ rule }) => rule.subtype === "action")
-                    .map(({ rule, originalIndex }) => (
-                      <div
-                        key={originalIndex}
-                        className="flex items-center gap-3 p-3 border rounded-lg bg-card"
-                      >
-                        <div className="flex-1">
-                          <p className="font-medium">{rule.name}</p>
-                          <p className="text-sm text-muted-foreground truncate">{rule.rule_expression}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={rule.enabled}
-                            onCheckedChange={() => handleToggleEnabled(originalIndex)}
-                          />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEditLocalRule(originalIndex)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteLocalRule(originalIndex)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-
           {/* Existing Rules */}
-          <div className="space-y-4 border-t pt-6">
-            <h3 className="font-semibold text-lg">Existing Rules for {columnName}</h3>
+          <div className="space-y-4">
+            <h3 className="font-semibold text-lg">Rules for {columnName}</h3>
             {loadingRulesets ? (
               <div className="flex items-center justify-center p-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -488,44 +402,45 @@ export function RuleEditor({ open, onClose, columnName, entityContext }: RuleEdi
                 {existingRules.map((rule) => (
                   <div
                     key={rule.id}
-                    className="flex items-center gap-3 p-3 border rounded-lg bg-muted/30"
+                    className={`flex items-center gap-3 p-3 border rounded-lg transition-colors ${editingRule?.id === rule.id ? "bg-primary/10 border-primary" : "bg-card"
+                      }`}
                   >
                     <div className="flex-1">
-                      <p className="font-medium">{rule.name}</p>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-medium">{rule.name}</p>
+                        <Badge variant="outline" className="text-xs">
+                          {rule.subtype}
+                        </Badge>
+                        <Badge
+                          variant={rule.rule_status === "active" ? "default" : "secondary"}
+                          className="text-xs"
+                        >
+                          {rule.rule_status}
+                        </Badge>
+                      </div>
                       <p className="text-sm text-muted-foreground truncate">{rule.rule_expression}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Type: {rule.subtype} | Status: {rule.rule_status}
-                      </p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => rule.id && handleDeleteExistingRule(rule.id)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditExistingRule(rule)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => rule.id && handleDeleteExistingRule(rule.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
-
-          {/* Apply Rules Button */}
-          <Button
-            onClick={handleApplyRules}
-            disabled={isApplying || localRules.length === 0}
-            className="w-full"
-            size="lg"
-          >
-            {isApplying ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Applying Rules...
-              </>
-            ) : (
-              "Apply Rules"
-            )}
-          </Button>
         </div>
       </SheetContent>
     </Sheet>

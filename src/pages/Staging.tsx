@@ -8,12 +8,15 @@ import { useMDConnectionContext } from "@/contexts/MDConnectionContext";
 import { queryMDTable } from "@/hooks/useMDConnection";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, X, Database, Loader2 } from "lucide-react";
+import { Search, X, Database, Loader2, BarChart3 } from "lucide-react";
 import { RuleEditor } from "@/components/rules/RuleEditor";
+import { DQDetails } from "@/components/dq/DQDetails";
+import { API_CONFIG } from "@/config/api";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
 import { GET_SUBJECTAREAS, GET_ENTITIES, type GetSubjectAreasResponse, type GetEntitiesResponse } from "@/graphql/queries";
 import { useLayout } from "@/context/LayoutContext";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Staging() {
   const [searchParams] = useSearchParams();
@@ -26,6 +29,10 @@ export default function Staging() {
   const [ruleEditorOpen, setRuleEditorOpen] = useState(false);
   const [selectedColumn, setSelectedColumn] = useState<string>("");
   const [tableNotFound, setTableNotFound] = useState(false);
+  const [showDQDetails, setShowDQDetails] = useState(false);
+  const [dqExecutionId, setDqExecutionId] = useState<string | null>(null);
+  const [loadingDQ, setLoadingDQ] = useState(false);
+  const { toast } = useToast();
 
   const { data: subjectAreasData } = useQuery<GetSubjectAreasResponse>(GET_SUBJECTAREAS);
   const { data: entitiesData } = useQuery<GetEntitiesResponse>(GET_ENTITIES);
@@ -121,6 +128,82 @@ export default function Staging() {
   const handleColumnClick = (columnKey: string) => {
     setSelectedColumn(columnKey);
     setRuleEditorOpen(true);
+  };
+
+  const handleDQDetailsClick = async () => {
+    if (!selectedEntity || !entityContext) return;
+
+    setLoadingDQ(true);
+    try {
+      const payload = {
+        entity_core: {
+          ns: entityContext.ns,
+          sa: entityContext.sa,
+          en: entityContext.en,
+          ns_type: "staging",
+          ns_id: entityContext.ns_id,
+          sa_id: entityContext.sa_id,
+          en_id: entityContext.en_id,
+        },
+        snapshot_ref: {},
+      };
+
+      console.log("🚀 Executing DQ Validation with payload:", payload);
+
+      const response = await fetch(`${API_CONFIG.REST_ENDPOINT}/mwn/execute_dq_validation`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ DQ validation API error:", errorText);
+        throw new Error(`DQ validation failed with status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("✅ DQ Validation Result:", result);
+
+      // Extract execution ID from response - check multiple locations
+      let executionId = result.execution_id || result.executionId || result.id || result.exec_id;
+
+      // If not found at top level, check inside return_data
+      if (!executionId && result.return_data) {
+        executionId = result.return_data.execution_id || result.return_data.executionId || result.return_data.id || result.return_data.exec_id;
+      }
+
+      console.log("🔍 Extracted executionId:", executionId);
+
+      if (!executionId) {
+        console.error("❌ No execution ID found in response:", result);
+        toast({
+          title: "Error",
+          description: "No execution ID returned from DQ validation. Check console for details.",
+          variant: "destructive",
+        });
+        throw new Error("No execution ID returned from DQ validation");
+      }
+
+      setDqExecutionId(executionId);
+      setShowDQDetails(true);
+
+      toast({
+        title: "Success",
+        description: "DQ validation executed successfully",
+      });
+    } catch (error) {
+      console.error("❌ Error executing DQ validation:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to execute DQ validation",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingDQ(false);
+    }
   };
 
   const columns = data.columns.map((col) => ({
@@ -233,61 +316,90 @@ export default function Staging() {
           </div>
         ) : (
           <div className="h-full flex flex-col p-6">
-            <Breadcrumb className="mb-4">
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <button
-                      onClick={() => {
-                        setSelectedEntity(null);
-                        setSelectedSubjectAreaId(null);
-                      }}
-                      className="hover:text-foreground transition-colors"
-                    >
-                      {selectedEntity.subjectarea?.namespace?.name || 'Unknown'}
-                    </button>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <button
-                      onClick={() => {
-                        setSelectedSubjectAreaId(selectedEntity.sa_id);
-                        setSelectedEntity(null);
-                      }}
-                      className="hover:text-foreground transition-colors"
-                    >
-                      {selectedEntity.subjectarea.name}
-                    </button>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>{selectedEntity.name}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-            <div className="mb-4 flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedEntity(null)}
-              >
-                ← Back to list
-              </Button>
-              <div className="flex-1">
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <Database className="h-5 w-5 text-primary" />
-                  {selectedEntity.name}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {selectedEntity.subjectarea?.namespace?.name || 'Unknown'}.{selectedEntity.subjectarea?.name || 'Unknown'}
-                </p>
-              </div>
-            </div>
+            {!showDQDetails && (
+              <>
+                <Breadcrumb className="mb-4">
+                  <BreadcrumbList>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink asChild>
+                        <button
+                          onClick={() => {
+                            setSelectedEntity(null);
+                            setSelectedSubjectAreaId(null);
+                          }}
+                          className="hover:text-foreground transition-colors"
+                        >
+                          {selectedEntity.subjectarea?.namespace?.name || 'Unknown'}
+                        </button>
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbLink asChild>
+                        <button
+                          onClick={() => {
+                            setSelectedSubjectAreaId(selectedEntity.sa_id);
+                            setSelectedEntity(null);
+                          }}
+                          className="hover:text-foreground transition-colors"
+                        >
+                          {selectedEntity.subjectarea.name}
+                        </button>
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage>{selectedEntity.name}</BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
+                <div className="mb-4 flex items-center gap-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedEntity(null)}
+                  >
+                    ← Back to list
+                  </Button>
+                  <div className="flex-1">
+                    <h2 className="text-xl font-semibold flex items-center gap-2">
+                      <Database className="h-5 w-5 text-primary" />
+                      {selectedEntity.name}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedEntity.subjectarea?.namespace?.name || 'Unknown'}.{selectedEntity.subjectarea?.name || 'Unknown'}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleDQDetailsClick}
+                    disabled={loadingDQ}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                  >
+                    {loadingDQ ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <BarChart3 className="mr-2 h-4 w-4" />
+                        DQ Details
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </>
+            )}
 
-            {data.rows.length === 0 ? (
+            {showDQDetails && dqExecutionId && entityContext ? (
+              <div className="flex-1">
+                <DQDetails
+                  executionId={dqExecutionId}
+                  entityContext={entityContext}
+                  onBack={() => setShowDQDetails(false)}
+                />
+              </div>
+            ) : data.rows.length === 0 ? (
               <div className="flex items-center justify-center flex-1">
                 <div className="text-center space-y-3 max-w-md">
                   <Database className="h-12 w-12 mx-auto text-muted-foreground opacity-50" />
