@@ -144,14 +144,14 @@ export function FileUploadModal({
           // Query staging table from MotherDuck
           const result = await queryMDTable(connection, namespace, subjectArea, entity);
           console.log('Staging data fetched from MotherDuck:', result);
-          
+
           if (result.rows && result.rows.length > 0) {
             // Add IDs to rows for table rendering
             const rowsWithIds = result.rows.map((row, index) => ({
               ...row,
               id: row.id || `row_${index}`
             }));
-            
+
             setLoadedTableData(rowsWithIds);
             setTableColumns(result.columns || []);
             // Close upload modal first
@@ -164,7 +164,7 @@ export function FileUploadModal({
             setShowSuccessModal(true);
             // Trigger refetch to update meta table
             onSuccess(undefined);
-            
+
             toast({
               title: "Success",
               description: "Data loaded successfully",
@@ -199,7 +199,7 @@ export function FileUploadModal({
       } else {
         toast({
           title: "Success",
-          description: shouldReturnDraftRows 
+          description: shouldReturnDraftRows
             ? "Meta fields detected. Click Save to persist them."
             : "File processed successfully",
         });
@@ -258,15 +258,17 @@ export function FileUploadModal({
         }
 
         .file-upload-zone {
-          border: 2px dashed hsl(var(--muted));
-          border-radius: 0.5rem;
+          border: 2px dashed hsl(var(--border));
+          border-radius: 1rem; /* rounded-2xl */
           padding: 1.5rem;
           text-align: center;
-          transition: border-color 0.2s;
+          transition: all 0.2s;
+          background: linear-gradient(to bottom right, hsl(var(--muted) / 0.3), hsl(var(--muted) / 0.1));
         }
 
         .file-upload-zone:hover {
           border-color: hsl(var(--primary));
+          background: linear-gradient(to bottom right, hsl(var(--primary) / 0.05), hsl(var(--accent) / 0.05));
         }
 
         .file-upload-zone-label {
@@ -299,7 +301,7 @@ export function FileUploadModal({
           gap: 0.5rem;
           padding: 0.75rem;
           background-color: hsl(var(--muted));
-          border-radius: 0.5rem;
+          border-radius: 0.75rem; /* rounded-xl */
         }
 
         .file-upload-preview-icon {
@@ -431,6 +433,7 @@ export function FileUploadModal({
                       size="icon"
                       onClick={handleRemoveFile}
                       disabled={isUploading}
+                      className="rounded-xl"
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -486,12 +489,14 @@ export function FileUploadModal({
               variant="outline"
               onClick={handleCancel}
               disabled={isUploading}
+              className="rounded-xl"
             >
               Cancel
             </Button>
             <Button
               onClick={handleProcess}
               disabled={!file || isUploading}
+              className="rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg shadow-primary/20"
             >
               {isUploading && <Loader2 className="file-upload-loader-icon" />}
               Process
@@ -519,16 +524,20 @@ export function FileUploadModal({
                 }))}
                 data={loadedTableData}
                 entityType="Staging Row"
-                onAdd={() => {}}
-                onEdit={() => {}}
-                onDelete={() => {}}
-                onSave={() => {}}
+                onAdd={() => { }}
+                onEdit={() => { }}
+                onDelete={() => { }}
+                onSave={() => { }}
               />
             )}
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowSuccessModal(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowSuccessModal(false)}
+              className="rounded-xl"
+            >
               Close
             </Button>
             <Button
@@ -536,6 +545,7 @@ export function FileUploadModal({
                 setShowSuccessModal(false);
                 navigate(`/staging?ns=${namespace}&sa=${subjectArea}&en=${entity}`);
               }}
+              className="rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg shadow-primary/20"
             >
               <ExternalLink className="success-modal-button-icon" />
               Go to Table Page

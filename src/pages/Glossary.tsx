@@ -453,10 +453,10 @@ export default function Glossary() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 icon-sm icon-muted" />
                 <Input type="text" placeholder="Search entities..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
               </div>
-              <Button variant="outline" size="icon" onClick={() => setImportModalOpen(true)} title="Import configuration" >
+              <Button variant="outline" size="icon" onClick={() => setImportModalOpen(true)} title="Import configuration" className="rounded-xl">
                 <Upload className="icon-sm" />
               </Button>
-              <Button variant="outline" size="icon" onClick={() => { setSearchQuery(""); setSelectedSubjectAreaId(null); }} title="Reset search and filters" >
+              <Button variant="outline" size="icon" onClick={() => { setSearchQuery(""); setSelectedSubjectAreaId(null); }} title="Reset search and filters" className="rounded-xl">
                 <X className="icon-sm" />
               </Button>
             </div>
@@ -498,6 +498,7 @@ export default function Glossary() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedEntity(null)}
+                className="rounded-xl"
               >
                 ← Back to list
               </Button>
@@ -513,10 +514,10 @@ export default function Glossary() {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-scroll">
-              <TabsList>
-                <TabsTrigger value="meta">Meta</TabsTrigger>
-                <TabsTrigger value="associations">Source Associations</TabsTrigger>
-                <TabsTrigger value="glossary_associations">Glossary Associations</TabsTrigger>
+              <TabsList className="rounded-xl bg-muted/50">
+                <TabsTrigger value="meta" className="rounded-lg">Meta</TabsTrigger>
+                <TabsTrigger value="associations" className="rounded-lg">Source Associations</TabsTrigger>
+                <TabsTrigger value="glossary_associations" className="rounded-lg">Glossary Associations</TabsTrigger>
               </TabsList>
 
               <TabsContent value="meta" className={`mt-0 flex-1 overflow-hidden flex flex-col ${activeTab !== 'meta' ? 'hidden' : ''}`}>
@@ -570,11 +571,18 @@ export default function Glossary() {
                       <Database className="icon-xl mx-auto icon-muted opacity-50" />
                       <p className="text-muted">No metadata found</p>
                       <div className="flex gap-3 justify-center">
-                        <Button onClick={() => setBlueprintModalOpen(true)} >
+                        <Button
+                          onClick={() => setBlueprintModalOpen(true)}
+                          className="rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg shadow-primary/20"
+                        >
                           <Sparkles className="icon-sm mr-2" />
                           Generate Standardized Blueprint
                         </Button>
-                        <Button variant="outline" onClick={() => setCustomBlueprintModalOpen(true)}>
+                        <Button
+                          variant="outline"
+                          onClick={() => setCustomBlueprintModalOpen(true)}
+                          className="rounded-xl"
+                        >
                           <Wand2 className="icon-sm mr-2" />
                           Generate Custom Blueprint
                         </Button>
@@ -615,7 +623,7 @@ export default function Glossary() {
                         <Button
                           variant="ghost"
                           onClick={() => setShowDiagram(false)}
-                          className="text-muted-foreground hover:text-foreground pl-0"
+                          className="text-muted-foreground hover:text-foreground pl-0 rounded-xl"
                         >
                           <ArrowLeft className="w-4 h-4 mr-2" />
                           Back to Associations
@@ -628,19 +636,30 @@ export default function Glossary() {
                   ) : (
                     <>
                       <div className="flex-none space-y-4">
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-end gap-4">
                           <div className="flex-1">
                             <SourceAssociationSelect glossaryEntity={selectedEntity} value={sourceEntity?.id} onSelect={setSourceEntity} />
                           </div>
-                          <Button
-                            onClick={() => setShowDiagram(true)}
-                            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md border-0 transition-all duration-300"
-                          >
-                            <GitGraph className="w-4 h-4 mr-2" />
-                            View Relationship Diagram
-                          </Button>
+                          <div>
+                            <Button
+                              onClick={() => setShowDiagram(true)}
+                              className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg border-0 transition-all duration-300"
+                            >
+                              <GitGraph className="w-4 h-4 mr-2" />
+                              View Relationship Diagram
+                            </Button>
+                          </div>
                         </div>
                       </div>
+
+                      {!sourceEntity && (
+                        <div className="flex-center py-12 border-2 border-dashed border-border rounded-2xl bg-muted/20">
+                          <div className="text-center space-y-2">
+                            <p className="text-muted-foreground text-sm">No source entity selected</p>
+                            <p className="text-xs text-muted-foreground">Select a source entity above to view and manage field mappings</p>
+                          </div>
+                        </div>
+                      )}
 
                       {sourceEntity && (<MappingTable glossaryEntity={selectedEntity} sourceEntity={sourceEntity} existingRuleset={existingRuleset || undefined} />)}
                     </>

@@ -209,12 +209,13 @@ export function MappingTable({ glossaryEntity, sourceEntity, existingRuleset }: 
       <div className="flex-between">
         <h3 className="text-heading-sm">Field Mapping</h3>
         <div className="flex-start gap-sm">
-          <Button onClick={() => setIsModalOpen(true)} variant="outline">
+          <Button onClick={() => setIsModalOpen(true)} variant="outline" className="rounded-xl">
             Add Glossary Meta
           </Button>
           <Button
             onClick={handleSave}
             disabled={mappingRows.length === 0 || saving}
+            className="rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg shadow-primary/20"
           >
             {saving ? (
               <>
@@ -228,8 +229,8 @@ export function MappingTable({ glossaryEntity, sourceEntity, existingRuleset }: 
         </div>
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
-        <ScrollArea className="h-[calc(100vh-400px)] max-h-[600px]">
+      <div className="border rounded-xl overflow-hidden">
+        <ScrollArea className="h-[calc(100vh-280px)] max-h-[400px]">
           <div className="min-w-full">
             <table className="w-full min-w-[800px]">
               <thead className="bg-muted/50 sticky top-0 z-10">
@@ -273,14 +274,14 @@ export function MappingTable({ glossaryEntity, sourceEntity, existingRuleset }: 
                                 handleSourceMetaChange(row.id, e.target.value)
                               }
                               placeholder="Type expression or select"
-                              className="flex-1"
+                              className="flex-1 rounded-xl"
                             />
                             <Popover
                               open={openPopoverId === row.id}
                               onOpenChange={(open) => setOpenPopoverId(open ? row.id : null)}
                             >
                               <PopoverTrigger asChild>
-                                <Button variant="outline" size="icon" className="shrink-0">
+                                <Button variant="outline" size="icon" className="shrink-0 rounded-xl">
                                   <ChevronDown className="icon-sm" />
                                 </Button>
                               </PopoverTrigger>
@@ -290,7 +291,7 @@ export function MappingTable({ glossaryEntity, sourceEntity, existingRuleset }: 
                                     <Button
                                       key={meta.id}
                                       variant="ghost"
-                                      className="w-full justify-start"
+                                      className="w-full justify-start rounded-lg text-sm"
                                       onClick={() => {
                                         handleSourceMetaChange(row.id, meta.alias);
                                         setOpenPopoverId(null);
@@ -310,6 +311,7 @@ export function MappingTable({ glossaryEntity, sourceEntity, existingRuleset }: 
                           variant="ghost"
                           size="icon"
                           onClick={() => handleRemoveRow(row.id)}
+                          className="rounded-xl hover:bg-destructive/10 hover:text-destructive"
                         >
                           <Trash2 className="icon-sm" />
                         </Button>

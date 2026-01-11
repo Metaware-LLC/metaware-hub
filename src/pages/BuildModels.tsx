@@ -339,10 +339,10 @@ export default function BuildModels() {
   return (
     <div className="min-h-screen bg-background">
       {/* Main Content */}
-      <div className="p-6 space-y-6">
+      <div className="p-4 space-y-4">
         <div className="mx-auto max-w-7xl">
           {/* Breadcrumb */}
-          <Breadcrumb className="mb-4">
+          <Breadcrumb className="mb-2">
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
@@ -357,7 +357,7 @@ export default function BuildModels() {
           </Breadcrumb>
 
           {/* Page Header */}
-          <div className="mb-6 flex items-center gap-4">
+          <div className="mb-3 flex items-center gap-3">
             <Button
               variant="ghost"
               size="sm"
@@ -366,8 +366,8 @@ export default function BuildModels() {
               ← Back
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Build Models</h1>
-              <p className="text-sm text-muted-foreground mt-1">
+              <h1 className="text-xl font-bold text-foreground">Build Models</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Build glossary publish configurations and load data
               </p>
             </div>
