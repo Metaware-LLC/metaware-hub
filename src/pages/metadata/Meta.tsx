@@ -29,28 +29,29 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { 
-  GET_NAMESPACES, 
-  GET_SUBJECTAREAS, 
-  GET_ENTITIES, 
+import {
+  GET_NAMESPACES,
+  GET_SUBJECTAREAS,
+  GET_ENTITIES,
   GET_META_FOR_ENTITY,
   type GetNamespacesResponse,
   type GetSubjectAreasResponse,
   type GetEntitiesResponse,
-  type GetMetaForEntityResponse
+  type GetMetaForEntityResponse,
 } from "@/graphql/queries";
 import { entityAPI, metaAPI } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { FileUploadModal } from "@/components/meta/FileUploadModal";
-import { GroupedNamespaceSelect } from "@/components/table/GroupedNamespaceSelect";
+import { GlossaryEntityDropdown } from "@/components/glossary/GlossaryEntityDropdown";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 
 /**
@@ -78,50 +79,36 @@ const metaColumns: Column[] = [
  * with real-time data from the GraphQL API.
  */
 export default function Meta() {
-  // State for dropdown selections
-  const [selectedNamespace, setSelectedNamespace] = useState<string>('');
-  const [selectedSubjectArea, setSelectedSubjectArea] = useState<string>('');
-  const [selectedEntity, setSelectedEntity] = useState<string>('');
+  const [selectedEntityId, setSelectedEntityId] = useState<string | undefined>();
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [editedData, setEditedData] = useState<TableData[]>([]);
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const navigate = useNavigate();
 
   // GraphQL queries for dropdown data
   const { data: namespacesData } = useQuery<GetNamespacesResponse>(GET_NAMESPACES);
   const { data: subjectAreasData } = useQuery<GetSubjectAreasResponse>(GET_SUBJECTAREAS);
   const { data: entitiesData } = useQuery<GetEntitiesResponse>(GET_ENTITIES);
-  
+
   // GraphQL query for meta fields (only when entity is selected)
   const { data: metaData, loading: metaLoading, error: metaError, refetch } = useQuery<GetMetaForEntityResponse>(
     GET_META_FOR_ENTITY,
     {
-      variables: { enid: selectedEntity },
-      skip: !selectedEntity, // Skip query if no entity is selected
+      variables: { enid: selectedEntityId },
+      skip: !selectedEntityId, // Skip query if no entity is selected
     }
   );
 
   // Wrapper function to properly handle refresh
   const handleRefresh = async () => {
-    if (selectedEntity) {
+    if (selectedEntityId) {
       await refetch();
     }
   };
 
-  /**
-   * Filter subject areas based on selected namespace
-   */
-  const availableSubjectAreas = subjectAreasData?.meta_subjectarea.filter(
-    area => area.ns_id === selectedNamespace
-  ) || [];
 
-  /**
-   * Filter entities based on selected subject area
-   */
-  const availableEntities = entitiesData?.meta_entity.filter(
-    entity => entity.sa_id === selectedSubjectArea
-  ) || [];
 
   /**
    * Transform GraphQL meta data to table format
@@ -144,36 +131,11 @@ export default function Meta() {
     };
   }) || [];
 
-  // Reset editedData when entity changes
-  useEffect(() => {
-    setEditedData([]);
-  }, [selectedEntity]);
-
   /**
-   * Handle namespace selection change
-   * Resets dependent dropdowns when namespace changes
+   * Handle entity selection from cascading dropdown
    */
-  const handleNamespaceChange = (value: string) => {
-    setSelectedNamespace(value);
-    setSelectedSubjectArea('');
-    setSelectedEntity('');
-  };
-
-  /**
-   * Handle subject area selection change
-   * Resets entity dropdown when subject area changes
-   */
-  const handleSubjectAreaChange = (value: string) => {
-    setSelectedSubjectArea(value);
-    setSelectedEntity('');
-  };
-
-  /**
-   * Handle entity selection change
-   * Triggers meta data fetch for the selected entity
-   */
-  const handleEntityChange = (value: string) => {
-    setSelectedEntity(value);
+  const handleEntitySelect = (entity: any) => {
+    setSelectedEntityId(entity.id);
     setEditedData([]); // Clear draft rows when entity changes
   };
 
@@ -222,7 +184,7 @@ export default function Meta() {
    * Only processes rows with draft status and persists them
    */
   const handleSaveDraftMeta = async (data: TableData[]) => {
-    if (!selectedEntity) {
+    if (!selectedEntityId) {
       toast({
         title: "Error",
         description: "Please select an entity first",
@@ -233,7 +195,7 @@ export default function Meta() {
 
     setIsSaving(true);
     try {
-      const selectedEntityData = availableEntities.find(e => e.id === selectedEntity);
+      const selectedEntityData = entitiesData?.meta_entity.find(e => e.id === selectedEntityId);
       if (!selectedEntityData) return;
 
       const entityData = {
@@ -259,7 +221,7 @@ export default function Meta() {
 
       // Process draft rows (new) and edited rows (modified existing)
       const changedRows = data.filter(item => item._status === 'draft' || item._status === 'edited');
-      
+
       if (changedRows.length === 0) {
         toast({
           title: "No changes",
@@ -285,7 +247,7 @@ export default function Meta() {
         is_tertiary_grain: Boolean(item.is_tertiary_grain),
         tags: '',
         custom_props: [],
-        entity_id: selectedEntity,
+        entity_id: selectedEntityId,
         ns: selectedEntityData.subjectarea?.namespace?.name || '',
         sa: selectedEntityData.subjectarea?.name || '',
         en: selectedEntityData.name,
@@ -294,9 +256,9 @@ export default function Meta() {
           sa: selectedEntityData.subjectarea?.name || '',
           en: selectedEntityData.name,
           ns_type: 'staging',
-          ns_id: selectedNamespace,
+          ns_id: selectedEntityData.subjectarea?.namespace?.id || '',
           sa_id: selectedEntityData.sa_id,
-          en_id: selectedEntity,
+          en_id: selectedEntityId,
         },
       }));
 
@@ -305,7 +267,7 @@ export default function Meta() {
       // Clear edited data and refetch
       setEditedData([]);
       await refetch();
-      
+
       toast({
         title: "Success",
         description: `${metaFields.length} meta field(s) saved successfully`,
@@ -322,11 +284,10 @@ export default function Meta() {
   };
 
   /**
-   * Get the selected entity name for display
+   * Get the selected entity data
    */
-  const selectedEntityName = availableEntities.find(e => e.id === selectedEntity)?.name || '';
-  const selectedEntityData = availableEntities.find(e => e.id === selectedEntity);
-  
+  const selectedEntityData = entitiesData?.meta_entity.find(e => e.id === selectedEntityId);
+
   /**
    * Check if meta exists for the selected entity
    */
@@ -340,7 +301,7 @@ export default function Meta() {
     if (draftRows && draftRows.return_data) {
       // Meta fields are in return_data[1] (return_data[0] is entity data)
       const metaFields = draftRows.return_data[1];
-      
+
       if (metaFields && Array.isArray(metaFields) && metaFields.length > 0) {
         // Convert server response to table data format with draft status
         const formattedDraftRows: TableData[] = metaFields.map((row: any, index: number) => ({
@@ -368,97 +329,76 @@ export default function Meta() {
   };
 
   return (
-    <div className="stack-lg">
+    <div className="p-4 space-y-4">
+      {/* Breadcrumb */}
+      <Breadcrumb className="mb-2">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/model">Data Model</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Meta</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       {/* Page Header */}
-      <div className="stack-xs">
-        <h1 className="text-heading-lg">Meta Data Management</h1>
-        <p className="text-muted">
-          Explore field-level metadata for entities within your data landscape
-        </p>
-      </div>
-
-      {/* Cascading Dropdowns */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
-        {/* Namespace Dropdown - Grouped by Type */}
-        <div className="stack-sm">
-          <Label htmlFor="namespace">NameSpace</Label>
-          <GroupedNamespaceSelect
-            namespaces={namespacesData?.meta_namespace || []}
-            value={selectedNamespace}
-            onChange={handleNamespaceChange}
-            placeholder="Select namespace..."
-          />
-        </div>
-
-        {/* Subject Area Dropdown */}
-        <div className="stack-sm">
-          <Label htmlFor="subject-area">Subject Area</Label>
-          <Select 
-            onValueChange={handleSubjectAreaChange} 
-            value={selectedSubjectArea}
-            disabled={!selectedNamespace}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select subject area..." />
-            </SelectTrigger>
-            <SelectContent>
-              {availableSubjectAreas.map((area) => (
-                <SelectItem key={area.id} value={area.id}>
-                  {area.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Entity Dropdown */}
-        <div className="stack-sm">
-          <Label htmlFor="entity">Entity</Label>
-          <div className="flex-start gap-sm">
-            <Select 
-              onValueChange={handleEntityChange} 
-              value={selectedEntity}
-              disabled={!selectedSubjectArea}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select entity..." />
-              </SelectTrigger>
-              <SelectContent>
-                {availableEntities.map((entity) => (
-                  <SelectItem key={entity.id} value={entity.id}>
-                    {entity.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            {/* File Upload Button */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setUploadModalOpen(true)}
-                      disabled={!selectedEntity || hasExistingMeta}
-                    >
-                      <Upload className="icon-sm" />
-                    </Button>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {!selectedEntity 
-                    ? "Select an entity first"
-                    : hasExistingMeta 
-                    ? "Meta already exists - File Upload Disabled"
-                    : "Upload CSV to auto-detect meta fields"}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
+      <div className="mb-3 flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/model")}
+          className="rounded-xl"
+        >
+          ← Back
+        </Button>
+        <div>
+          <h1 className="text-xl font-bold text-foreground">Meta Data Management</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Explore field-level metadata for entities within your data landscape
+          </p>
         </div>
       </div>
+
+      {/* Entity Selection with Cascading Dropdown - All Types */}
+      <div className="space-y-4">
+        <Label>Select Entity (All Types)</Label>
+        <GlossaryEntityDropdown
+          value={selectedEntityId}
+          onSelect={handleEntitySelect}
+          namespaceTypes={["staging", "glossary", "model", "reference"]} // Show all types
+          placeholder="Select entity from any namespace type..."
+        />
+      </div>
+
+      {/* File Upload Card - Shown when entity selected and no meta exists */}
+      {selectedEntityId && !hasExistingMeta && (
+        <Card className="rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 p-3 shadow-lg shadow-primary/30">
+                <Upload className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1 space-y-2">
+                <h3 className="text-lg font-semibold">Quick Start: Upload CSV</h3>
+                <p className="text-sm text-muted-foreground">
+                  Upload a CSV file to automatically detect and create meta fields for {selectedEntityData?.name || 'this entity'}
+                </p>
+                <Button
+                  onClick={() => setUploadModalOpen(true)}
+                  className="mt-3 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg shadow-primary/20"
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload CSV File
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* File Upload Modal */}
       {selectedEntityData && (
@@ -476,13 +416,13 @@ export default function Meta() {
       )}
 
       {/* Entity Meta Table */}
-      {selectedEntity && (
-        <div className="stack-md">
-          <div className="border-t pt-6 stack-sm">
-            <h2 className="text-heading-md">
-              Entity Metadata: {selectedEntityName}
+      {selectedEntityId && (
+        <div className="mt-8 space-y-4">
+          <div className="border-t pt-6">
+            <h2 className="text-xl font-semibold">
+              Entity Metadata: {selectedEntityData?.name || ''}
             </h2>
-            <p className="text-muted">
+            <p className="text-sm text-muted-foreground mt-1">
               Field-level metadata and business rules for the selected entity
             </p>
           </div>
@@ -515,21 +455,9 @@ export default function Meta() {
       )}
 
       {/* Helper Messages */}
-      {!selectedEntity && selectedSubjectArea && (
-        <div className="flex-center py-12">
-          <p className="text-muted">Please select an entity to view its metadata</p>
-        </div>
-      )}
-
-      {!selectedSubjectArea && selectedNamespace && (
-        <div className="flex-center py-12">
-          <p className="text-muted">Please select a subject area to continue</p>
-        </div>
-      )}
-
-      {!selectedNamespace && (
-        <div className="flex-center py-12">
-          <p className="text-muted">Please select a namespace to begin exploring metadata</p>
+      {!selectedEntityId && (
+        <div className="flex items-center justify-center py-12">
+          <p className="text-sm text-muted-foreground">Please select an entity to view its metadata</p>
         </div>
       )}
     </div>

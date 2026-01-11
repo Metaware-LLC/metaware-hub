@@ -83,9 +83,9 @@ export function GenerateBlueprintModal({
     try {
       const targetNs = glossaryEntity.subjectarea?.namespace?.name || "";
       const targetSa = glossaryEntity.subjectarea?.name || "";
-      
+
       const response = await glossaryAPI.generateSuggestions(selectedEntityIds, targetNs, targetSa) as any;
-      
+
       // Transform the response into the format needed for StandardizedMetaEditor
       const standardizedMetas = response.return_data?.standardized_metas || [];
       const transformedMeta = standardizedMetas.map((meta: any, index: number) => ({
@@ -106,17 +106,17 @@ export function GenerateBlueprintModal({
         tags: "",
         custom_props: [],
       }));
-      
+
       // Transform the raw_columns into mappings for MappingEditorModal
-      const mappings = standardizedMetas.flatMap((meta: any) => 
+      const mappings = standardizedMetas.flatMap((meta: any) =>
         (meta.raw_columns || []).map((rawCol: any) => {
           // Look up the source entity ID from the loaded entities
-          const sourceEntity = stagingEntities.find((e: any) => 
-            e.name === rawCol.en && 
+          const sourceEntity = stagingEntities.find((e: any) =>
+            e.name === rawCol.en &&
             e.subjectarea?.name === rawCol.sa &&
             e.subjectarea?.namespace?.name === rawCol.ns
           );
-          
+
           return {
             glossary_meta_name: meta.name,
             glossary_meta_alias: meta.alias,
@@ -130,7 +130,7 @@ export function GenerateBlueprintModal({
           };
         })
       );
-      
+
       onSuccess(transformedMeta, mappings);
       onOpenChange(false);
       setSelectedEntityIds([]);
@@ -150,12 +150,12 @@ export function GenerateBlueprintModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[80vh]">
-        <DialogHeader>
-        <DialogTitle className="flex-start gap-sm">
-          <Sparkles className="icon-md icon-primary" />
-          Generate Standardized Blueprint
-        </DialogTitle>
+      <DialogContent className="max-w-3xl max-h-[85vh]">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="flex-start gap-sm text-lg">
+            <Sparkles className="icon-md icon-primary" />
+            Generate Standardized Blueprint
+          </DialogTitle>
         </DialogHeader>
 
         {isLoading ? (
@@ -164,15 +164,15 @@ export function GenerateBlueprintModal({
           </div>
         ) : (
           <>
-            <ScrollArea className="h-[400px] pr-4">
-              <div className="stack-md">
+            <ScrollArea className="h-[350px] pr-3">
+              <div className="space-y-2">
                 {subjectAreasWithEntities.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">
                     No staging entities found to generate conventions from.
                   </p>
                 ) : (
                   subjectAreasWithEntities.map((subjectArea: any) => (
-                    <div key={subjectArea.id} className="bordered-container stack-sm">
+                    <div key={subjectArea.id} className="border rounded-xl p-3 space-y-2">
                       <div className="flex-start gap-3">
                         <Checkbox
                           checked={subjectArea.entities.every((e: any) =>
@@ -181,21 +181,21 @@ export function GenerateBlueprintModal({
                           onCheckedChange={() => handleToggleSubjectArea(subjectArea.id)}
                         />
                         <div className="flex-1">
-                          <h3 className="font-semibold">{subjectArea.name}</h3>
-                          <p className="text-muted">
+                          <h3 className="font-semibold text-sm">{subjectArea.name}</h3>
+                          <p className="text-xs text-muted-foreground">
                             {subjectArea.namespace?.name} • {subjectArea.entities.length} entities
                           </p>
                         </div>
                       </div>
 
-                      <div className="ml-7 stack-sm">
+                      <div className="ml-6 grid grid-cols-2 gap-x-4 gap-y-1.5">
                         {subjectArea.entities.map((entity: any) => (
                           <div key={entity.id} className="flex-start gap-3">
                             <Checkbox
                               checked={selectedEntityIds.includes(entity.id)}
                               onCheckedChange={() => handleToggleEntity(entity.id)}
                             />
-                            <span className="text-sm">{entity.name}</span>
+                            <span className="text-xs">{entity.name}</span>
                           </div>
                         ))}
                       </div>
@@ -206,12 +206,17 @@ export function GenerateBlueprintModal({
             </ScrollArea>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
+              <Button
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="rounded-xl"
+              >
                 Cancel
               </Button>
               <Button
                 onClick={handleGenerate}
                 disabled={selectedEntityIds.length === 0 || isGenerating}
+                className="rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg shadow-primary/20"
               >
                 {isGenerating ? (
                   <>

@@ -246,11 +246,12 @@ export const GlossaryModelGraph = ({ glossaryEntity, metaFields, relations, onBa
                     style: {
                         background: 'hsl(var(--card))',
                         border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
+                        borderRadius: '12px',
                         width: 220,
                         fontSize: '12px',
                         padding: 0,
-                        textAlign: 'left'
+                        textAlign: 'left',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
                     }
                 },
             };

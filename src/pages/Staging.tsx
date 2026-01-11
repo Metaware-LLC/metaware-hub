@@ -235,7 +235,7 @@ export default function Staging() {
 
       <div className="flex-1 overflow-hidden">
         {!selectedEntity ? (
-          <div className="p-6 space-y-6 h-full overflow-y-auto">
+          <div className="p-4 space-y-4 h-full overflow-y-auto">
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
@@ -263,8 +263,8 @@ export default function Staging() {
               </BreadcrumbList>
             </Breadcrumb>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Staging Management</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-xl font-bold text-foreground">Staging Management</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Manage staging models and data processing workflows
               </p>
             </div>
@@ -277,7 +277,7 @@ export default function Staging() {
                   placeholder="Search entities..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 rounded-xl"
                 />
               </div>
               <Button
@@ -288,6 +288,7 @@ export default function Staging() {
                   setSelectedSubjectAreaId(null);
                 }}
                 title="Reset search and filters"
+                className="rounded-xl"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -353,13 +354,14 @@ export default function Staging() {
                     </BreadcrumbItem>
                   </BreadcrumbList>
                 </Breadcrumb>
-                <div className="mb-4 flex items-center gap-4">
+                <div className="mb-3 flex items-center gap-3">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setSelectedEntity(null)}
+                    className="rounded-xl"
                   >
-                    ← Back to list
+                    ← Back
                   </Button>
                   <div className="flex-1">
                     <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -373,7 +375,7 @@ export default function Staging() {
                   <Button
                     onClick={handleDQDetailsClick}
                     disabled={loadingDQ}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                    className="rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg shadow-primary/20"
                   >
                     {loadingDQ ? (
                       <>
@@ -414,7 +416,7 @@ export default function Staging() {
                     </p>
                   </div>
                   {!tableNotFound && (
-                    <Button variant="outline" size="sm" onClick={fetchData}>
+                    <Button variant="outline" size="sm" onClick={fetchData} className="rounded-xl">
                       Retry
                     </Button>
                   )}

@@ -25,7 +25,8 @@ import { useToast } from "@/hooks/use-toast";
 import { GroupedNamespaceSelect } from "@/components/table/GroupedNamespaceSelect";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 
 
@@ -61,10 +62,11 @@ const subjectAreaColumns: Column[] = [
  */
 export default function SubjectArea() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [editedData, setEditedData] = useState<TableData[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   /**
    * GraphQL queries to fetch all subject areas and namespaces
    * Handles loading states, errors, and data updates automatically
@@ -108,13 +110,13 @@ export default function SubjectArea() {
           prev.map(row =>
             row.id === id
               ? {
-                  ...row,
-                  ns_id: value,
-                  namespace_display: `${selectedNs.type}->${selectedNs.name}`,
-                  namespace_name: selectedNs.name,
-                  namespace_type: selectedNs.type,
-                  _status: row._status === 'draft' ? 'draft' : 'edited'
-                }
+                ...row,
+                ns_id: value,
+                namespace_display: `${selectedNs.type}->${selectedNs.name}`,
+                namespace_name: selectedNs.name,
+                namespace_type: selectedNs.type,
+                _status: row._status === 'draft' ? 'draft' : 'edited'
+              }
               : row
           )
         );
@@ -216,7 +218,7 @@ export default function SubjectArea() {
       const subjectAreasToSave = data
         .map(item => {
           const isNewRecord = item._status === 'draft';
-          
+
           if (isNewRecord) {
             // For new records, send all required fields
             return {
@@ -232,19 +234,19 @@ export default function SubjectArea() {
             // For edited records, send all required fields plus changed fields
             const originalRow = tableData.find(row => row.id === item.id);
             let hasChanges = false;
-            
+
             if (originalRow) {
               if (item.name !== originalRow.name ||
-                  item.type !== originalRow.type ||
-                  item.tags !== originalRow.tags ||
-                  item.ns_id !== originalRow.ns_id) {
+                item.type !== originalRow.type ||
+                item.tags !== originalRow.tags ||
+                item.ns_id !== originalRow.ns_id) {
                 hasChanges = true;
               }
             }
-            
+
             // Only return if there are actual changes
             if (!hasChanges) return null;
-            
+
             return {
               id: item.id,
               type: item.type || '',
@@ -322,13 +324,38 @@ export default function SubjectArea() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 space-y-4">
+      {/* Breadcrumb */}
+      <Breadcrumb className="mb-2">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/model">Data Model</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Subject Area</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Subject Area Management</h1>
-        <p className="text-muted-foreground">
-          Organize related entities within logical business domains
-        </p>
+      <div className="mb-3 flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/model")}
+          className="rounded-xl"
+        >
+          ← Back
+        </Button>
+        <div>
+          <h1 className="text-xl font-bold text-foreground">Subject Area Management</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Organize related entities within logical business domains
+          </p>
+        </div>
       </div>
 
       {/* Data Table with GraphQL Integration */}

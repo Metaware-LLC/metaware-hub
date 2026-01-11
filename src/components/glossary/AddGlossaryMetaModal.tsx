@@ -53,7 +53,7 @@ export function AddGlossaryMetaModal({
   });
 
   const metaFields = data?.meta_meta || [];
-  
+
   console.log("📊 Current state:", {
     open,
     loading,
@@ -67,7 +67,7 @@ export function AddGlossaryMetaModal({
     if (open) {
       console.log("🚀 Modal opened, initializing selectedMetas with:", Array.from(alreadySelectedIds));
       setSelectedMetas(new Set(alreadySelectedIds));
-      
+
       if (!entityId) {
         console.error("❌ Entity ID is missing!");
         toast({
@@ -108,11 +108,11 @@ export function AddGlossaryMetaModal({
     const newlySelected = metaFields.filter(
       (meta) => selectedMetas.has(meta.id) && !alreadySelectedIds.has(meta.id)
     );
-    
+
     const removedIds = Array.from(alreadySelectedIds).filter(
       (id) => !selectedMetas.has(id)
     );
-    
+
     onSave(newlySelected, removedIds);
     onOpenChange(false);
   };
@@ -121,7 +121,7 @@ export function AddGlossaryMetaModal({
     <>
       <style>{`
         .glossary-modal-content {
-          max-width: 42rem;
+          max-width: 56rem;
         }
 
         .glossary-modal-loading {
@@ -152,13 +152,13 @@ export function AddGlossaryMetaModal({
         }
 
         .glossary-modal-scroll {
-          max-height: 25rem;
-          padding-right: 1rem;
+          max-height: 30rem;
+          padding-right: 0.75rem;
         }
 
         .glossary-modal-list {
-          display: flex;
-          flex-direction: column;
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
           gap: 0.75rem;
         }
 
@@ -166,14 +166,15 @@ export function AddGlossaryMetaModal({
           display: flex;
           align-items: flex-start;
           gap: 0.75rem;
-          padding: 0.75rem;
-          border-radius: 0.5rem;
+          padding: 0.625rem 0.75rem;
+          border-radius: 0.75rem;
           border: 1px solid hsl(var(--border));
-          transition: background-color 0.2s;
+          transition: all 0.2s;
         }
 
         .glossary-modal-item:hover {
           background-color: hsl(var(--muted) / 0.5);
+          border-color: hsl(var(--primary) / 0.3);
         }
 
         .glossary-modal-checkbox {
@@ -203,19 +204,19 @@ export function AddGlossaryMetaModal({
           display: flex;
           align-items: center;
           gap: 0.75rem;
-          padding: 0.75rem;
-          border-radius: 0.5rem;
+          padding: 0.625rem 0.75rem;
+          border-radius: 0.75rem;
           border: 1px solid hsl(var(--border));
           background-color: hsl(var(--muted) / 0.3);
-          margin-bottom: 0.75rem;
+          margin-bottom: 0.625rem;
           font-weight: 500;
         }
       `}</style>
 
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="glossary-modal-content">
-          <DialogHeader>
-            <DialogTitle>Add Glossary Meta</DialogTitle>
+          <DialogHeader className="pb-3">
+            <DialogTitle className="text-lg">Add Glossary Meta</DialogTitle>
           </DialogHeader>
 
           {loading ? (
@@ -265,12 +266,13 @@ export function AddGlossaryMetaModal({
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">
               Cancel
             </Button>
             <Button
               onClick={handleSave}
               disabled={loading}
+              className="rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg shadow-primary/20"
             >
               Save Changes
             </Button>

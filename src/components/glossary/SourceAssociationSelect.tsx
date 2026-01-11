@@ -54,29 +54,32 @@ export function SourceAssociationSelect({
   }
 
   return (
-    <Select
-      value={value}
-      onValueChange={(val) => {
-        const selected = sourceAssociations.find((e) => e.id === val);
-        if (selected) onSelect(selected);
-      }}
-    >
-      <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select Association" />
-      </SelectTrigger>
-      <SelectContent>
-        {sourceAssociations.map((entity) => (
-          <SelectItem key={entity.id} value={entity.id}>
-            <span className="font-medium">
-              {entity.subjectarea?.namespace?.name}
-            </span>
-            <span className="text-muted-foreground mx-1.5">/</span>
-            <span className="font-medium">{entity.subjectarea?.name}</span>
-            <span className="text-muted-foreground mx-1.5">/</span>
-<span>{entity.name}</span>
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div className="space-y-2">
+      <label className="text-sm font-medium">Source Entity Association</label>
+      <Select
+        value={value}
+        onValueChange={(val) => {
+          const selected = sourceAssociations.find((e) => e.id === val);
+          if (selected) onSelect(selected);
+        }}
+      >
+        <SelectTrigger className="w-full rounded-xl">
+          <SelectValue placeholder="Select a source entity to map from..." />
+        </SelectTrigger>
+        <SelectContent>
+          {sourceAssociations.map((entity) => (
+            <SelectItem key={entity.id} value={entity.id}>
+              <span className="font-medium">
+                {entity.subjectarea?.namespace?.name}
+              </span>
+              <span className="text-muted-foreground mx-1.5">/</span>
+              <span className="font-medium">{entity.subjectarea?.name}</span>
+              <span className="text-muted-foreground mx-1.5">/</span>
+              <span>{entity.name}</span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }

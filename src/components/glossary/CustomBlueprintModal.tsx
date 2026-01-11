@@ -43,7 +43,7 @@ export function CustomBlueprintModal({
       const targetNs = glossaryEntity.subjectarea?.namespace?.name || "";
       const targetSa = glossaryEntity.subjectarea?.name || "";
       const targetEn = glossaryEntity.name || "";
-      
+
       const response = await glossaryAPI.generateCustomBlueprint({
         topic: topic.trim(),
         ...(numFields !== undefined && { num_fields: numFields }),
@@ -52,7 +52,7 @@ export function CustomBlueprintModal({
         target_sa: targetSa,
         target_en: targetEn,
       }) as any;
-      
+
       // Transform the response into the format needed for StandardizedMetaEditor
       const standardizedMetas = response.return_data?.standardized_metas || [];
       const transformedMeta = standardizedMetas.map((meta: any, index: number) => ({
@@ -73,11 +73,11 @@ export function CustomBlueprintModal({
         tags: "",
         custom_props: [],
       }));
-      
+
       // No mappings for custom blueprint since there's no source entity
       onSuccess(transformedMeta, []);
       onOpenChange(false);
-      
+
       // Reset form
       setTopic("");
       setNumFields(undefined);
@@ -104,29 +104,30 @@ export function CustomBlueprintModal({
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex-start gap-sm">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="flex-start gap-sm text-lg">
             <Wand2 className="icon-md icon-primary" />
             Generate Custom Blueprint
           </DialogTitle>
-          <p className="text-muted text-sm">
+          <p className="text-xs text-muted-foreground">
             Use AI to generate fields based on your topic or example data.
           </p>
         </DialogHeader>
 
-        <div className="stack-lg py-4">
+        <div className="space-y-3 py-3">
           <div className="flex gap-4 items-end">
-            <div className="flex-1 stack-sm">
-              <Label htmlFor="topic">Describe your topic:</Label>
+            <div className="flex-1 space-y-1.5">
+              <Label htmlFor="topic" className="text-sm">Describe your topic:</Label>
               <Input
                 id="topic"
                 placeholder='Examples: "flight logs", "social media", "stock trades"'
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
+                className="rounded-xl"
               />
             </div>
-            <div className="w-24 stack-sm">
-              <Label htmlFor="numFields"># Fields:</Label>
+            <div className="w-24 space-y-1.5">
+              <Label htmlFor="numFields" className="text-sm"># Fields:</Label>
               <Input
                 id="numFields"
                 type="number"
@@ -135,22 +136,23 @@ export function CustomBlueprintModal({
                 placeholder="Auto"
                 value={numFields ?? ""}
                 onChange={(e) => setNumFields(e.target.value ? parseInt(e.target.value) : undefined)}
+                className="rounded-xl"
               />
             </div>
           </div>
 
-          <div className="flex-center gap-4">
+          <div className="flex-center gap-3 my-2">
             <Separator className="flex-1" />
-            <span className="text-muted text-sm">OR</span>
+            <span className="text-xs text-muted-foreground">OR</span>
             <Separator className="flex-1" />
           </div>
 
-          <div className="stack-sm">
-            <Label htmlFor="exampleData">Provide some example data:</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="exampleData" className="text-sm">Provide some example data:</Label>
             <Textarea
               id="exampleData"
               placeholder="Paste CSV, JSON, or XML here..."
-              className="min-h-[150px] font-mono text-sm"
+              className="min-h-[120px] font-mono text-xs rounded-xl"
               value={exampleData}
               onChange={(e) => setExampleData(e.target.value)}
             />
@@ -158,12 +160,17 @@ export function CustomBlueprintModal({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
+          <Button
+            variant="outline"
+            onClick={handleClose}
+            className="rounded-xl"
+          >
             Cancel
           </Button>
           <Button
             onClick={handleGenerate}
             disabled={(!topic.trim() && !exampleData.trim()) || isGenerating}
+            className="rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg shadow-primary/20"
           >
             {isGenerating ? (
               <>

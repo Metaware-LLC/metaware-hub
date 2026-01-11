@@ -70,7 +70,7 @@ export function SubSidebar({ namespaceType, onSubjectAreaSelect, selectedSubject
         }
 
         .subsidebar-content {
-          padding: 1rem;
+          padding: 0.75rem;
           opacity: ${isSubSidebarCollapsed ? 0 : 1};
           transition: opacity 200ms;
           width: 16rem;
@@ -80,7 +80,7 @@ export function SubSidebar({ namespaceType, onSubjectAreaSelect, selectedSubject
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
         }
 
         .subsidebar-header-text {
@@ -100,7 +100,7 @@ export function SubSidebar({ namespaceType, onSubjectAreaSelect, selectedSubject
         .subsidebar-list {
           display: flex;
           flex-direction: column;
-          gap: 0.25rem;
+          gap: 0.125rem;
         }
 
         .subsidebar-namespace-button {
@@ -108,8 +108,8 @@ export function SubSidebar({ namespaceType, onSubjectAreaSelect, selectedSubject
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          padding: 0.5rem 0.75rem;
-          font-size: 0.875rem;
+          padding: 0.375rem 0.75rem;
+          font-size: 0.8125rem;
           border-radius: 0.375rem;
           will-change: transform;
           transform: translateZ(0);
@@ -150,13 +150,13 @@ export function SubSidebar({ namespaceType, onSubjectAreaSelect, selectedSubject
           margin-left: 1.5rem;
           display: flex;
           flex-direction: column;
-          gap: 0.25rem;
+          gap: 0.125rem;
           overflow: hidden;
           transition: all 300ms ease-in-out;
         }
 
         .subsidebar-subjects-expanded {
-          margin-top: 0.25rem;
+          margin-top: 0.125rem;
           max-height: 125rem;
           opacity: 1;
         }
@@ -169,8 +169,8 @@ export function SubSidebar({ namespaceType, onSubjectAreaSelect, selectedSubject
         .subsidebar-subject-button {
           width: 100%;
           text-align: left;
-          padding: 0.5rem 0.75rem;
-          font-size: 0.875rem;
+          padding: 0.375rem 0.75rem;
+          font-size: 0.8125rem;
           border-radius: 0.375rem;
           will-change: transform;
           transform: translateZ(0);

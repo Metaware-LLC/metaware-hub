@@ -33,7 +33,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 
 /**
@@ -55,9 +56,9 @@ const getTypeBadgeVariant = (type: string): "staging" | "glossary" | "model" | "
  */
 const namespaceColumns: Column[] = [
   { key: 'name', title: 'Name', type: 'text', required: true },
-  { 
-    key: 'type', 
-    title: 'Type', 
+  {
+    key: 'type',
+    title: 'Type',
     type: 'select',
     options: ['staging', 'glossary', 'model', 'reference'],
     required: true,
@@ -101,9 +102,10 @@ const namespaceColumns: Column[] = [
 export default function NameSpace() {
   const { toast } = useToast();
   const apolloClient = useApolloClient();
+  const navigate = useNavigate();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   /**
    * GraphQL query to fetch all namespaces
    * Handles loading states, errors, and data updates automatically
@@ -198,15 +200,15 @@ export default function NameSpace() {
     setIsDeleting(true);
     try {
       await namespaceAPI.delete(ids);
-      
+
       // Refetch namespaces
       await refetch();
-      
+
       // Refetch subject areas and entities to clear deleted data from cache
       await apolloClient.refetchQueries({
         include: [GET_SUBJECTAREAS, GET_ENTITIES],
       });
-      
+
       toast({
         title: "Success",
         description: `${ids.length} namespace(s) deleted successfully`,
@@ -231,7 +233,7 @@ export default function NameSpace() {
       const namespacesToSave = data
         .map(item => {
           const isNewRecord = item._status === 'draft';
-          
+
           if (isNewRecord) {
             // For new records, send all required fields
             return {
@@ -249,19 +251,19 @@ export default function NameSpace() {
             // For edited records, send all required fields plus changed fields
             const originalRow = tableData.find(row => row.id === item.id);
             let hasChanges = false;
-            
+
             if (originalRow) {
               if (item.name !== originalRow.name ||
-                  item.type !== originalRow.type ||
-                  item.status !== originalRow.status ||
-                  item.tags !== originalRow.tags) {
+                item.type !== originalRow.type ||
+                item.status !== originalRow.status ||
+                item.tags !== originalRow.tags) {
                 hasChanges = true;
               }
             }
-            
+
             // Only return if there are actual changes
             if (!hasChanges) return null;
-            
+
             return {
               id: item.id,
               type: item.type || '',
@@ -337,13 +339,38 @@ export default function NameSpace() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 space-y-4">
+      {/* Breadcrumb */}
+      <Breadcrumb className="mb-2">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/model">Data Model</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>NameSpace</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">NameSpace Management</h1>
-        <p className="text-muted-foreground">
-          Manage logical boundaries and organize your data entities
-        </p>
+      <div className="mb-3 flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/model")}
+          className="rounded-xl"
+        >
+          ← Back
+        </Button>
+        <div>
+          <h1 className="text-xl font-bold text-foreground">NameSpace Management</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Manage logical boundaries and organize your data entities
+          </p>
+        </div>
       </div>
 
       {/* Data Table with GraphQL Integration */}

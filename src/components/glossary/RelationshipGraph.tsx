@@ -122,11 +122,12 @@ export const RelationshipGraph = ({ entityId, entityName }: RelationshipGraphPro
         background: "hsl(var(--primary))",
         color: "hsl(var(--primary-foreground))",
         border: "3px solid hsl(var(--primary))",
-        borderRadius: "8px",
-        padding: "16px",
-        fontSize: "14px",
+        borderRadius: "12px",
+        padding: "18px",
+        fontSize: "15px",
         fontWeight: "600",
-        width: 220,
+        width: 240,
+        boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.2), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
       },
     };
     newNodes.push(glossaryNode);
@@ -164,10 +165,11 @@ export const RelationshipGraph = ({ entityId, entityName }: RelationshipGraphPro
                 background: "hsl(var(--secondary))",
                 color: "hsl(var(--secondary-foreground))",
                 border: "2px solid hsl(var(--border))",
-                borderRadius: "8px",
-                padding: "12px",
-                fontSize: "13px",
-                width: 200,
+                borderRadius: "12px",
+                padding: "14px",
+                fontSize: "14px",
+                width: 220,
+                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
               },
             });
             nodeMap.set(sourceId, true);
@@ -206,10 +208,11 @@ export const RelationshipGraph = ({ entityId, entityName }: RelationshipGraphPro
                 background: "hsl(var(--accent))",
                 color: "hsl(var(--accent-foreground))",
                 border: "2px solid hsl(var(--border))",
-                borderRadius: "8px",
-                padding: "12px",
-                fontSize: "13px",
-                width: 200,
+                borderRadius: "12px",
+                padding: "14px",
+                fontSize: "14px",
+                width: 220,
+                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
               },
             });
             nodeMap.set(modelId, true);

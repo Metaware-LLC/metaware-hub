@@ -109,7 +109,7 @@ export const DataTable = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [newlyAddedIds, setNewlyAddedIds] = useState<string[]>([]);
-  
+
   const isCurrentlySaving = externalIsSaving ?? isSaving;
   const isCurrentlyDeleting = externalIsDeleting ?? false;
   const [sortColumn, setSortColumn] = useState<string | null>(null);
@@ -118,13 +118,13 @@ export const DataTable = ({
   const [groupByColumns, setGroupByColumns] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-  
+
   // Virtual scrolling state
   const [windowStart, setWindowStart] = useState(0);
   const [windowEnd, setWindowEnd] = useState(150);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isLoadingMore = useRef(false);
-  
+
   const WINDOW_SIZE = 150;
   const LOAD_THRESHOLD = 100;
 
@@ -134,7 +134,7 @@ export const DataTable = ({
   const filteredData = useMemo(() => {
     const dataToFilter = editedData.length > 0 ? editedData : data;
     let filtered = dataToFilter;
-    
+
     if (searchTerm) {
       filtered = filtered.filter((row) =>
         columns.some((col) =>
@@ -144,7 +144,7 @@ export const DataTable = ({
         )
       );
     }
-    
+
     Object.entries(columnFilters).forEach(([columnKey, filterValue]) => {
       if (filterValue) {
         filtered = filtered.filter((row) =>
@@ -154,20 +154,20 @@ export const DataTable = ({
         );
       }
     });
-    
+
     // Create a copy before sorting to avoid mutation issues
     return [...filtered].sort((a, b) => {
       if (a._status === 'draft' && b._status !== 'draft') return -1;
       if (a._status !== 'draft' && b._status === 'draft') return 1;
-      
+
       if (sortColumn) {
         const aValue = a[sortColumn];
         const bValue = b[sortColumn];
-        
+
         if (aValue == null && bValue == null) return 0;
         if (aValue == null) return 1;
         if (bValue == null) return -1;
-        
+
         let comparison = 0;
         if (typeof aValue === 'number' && typeof bValue === 'number') {
           comparison = aValue - bValue;
@@ -176,10 +176,10 @@ export const DataTable = ({
         } else {
           comparison = String(aValue).localeCompare(String(bValue));
         }
-        
+
         return sortDirection === 'asc' ? comparison : -comparison;
       }
-      
+
       return 0;
     });
   }, [data, editedData, searchTerm, columns, sortColumn, sortDirection, columnFilters]);
@@ -270,7 +270,7 @@ export const DataTable = ({
       // Exiting edit mode - notify parent first so it can reset state
       onEditModeChange?.(false);
       setEditingRows([]);
-      
+
       // Only revert non-draft rows if no external handler
       if (!onEditModeChange) {
         const newData = editedData.map(row => {
@@ -317,13 +317,13 @@ export const DataTable = ({
     }
     try {
       await onSave?.(editedData);
-      
+
       const draftIds = editedData.filter(row => row._status === 'draft').map(row => row.id);
       setNewlyAddedIds(draftIds);
-      
+
       setEditingRows([]);
       setEditedData([]);
-      
+
       setTimeout(() => {
         setNewlyAddedIds([]);
       }, 3000);
@@ -338,12 +338,12 @@ export const DataTable = ({
     const newRow: TableData = {
       id: `new_${Date.now()}`,
       _status: 'draft',
-      ...columns.reduce((acc, col) => ({ 
-        ...acc, 
-        [col.key]: col.type === 'checkbox' ? false : '' 
+      ...columns.reduce((acc, col) => ({
+        ...acc,
+        [col.key]: col.type === 'checkbox' ? false : ''
       }), {}),
     };
-    
+
     if (editedData.length === 0) {
       setEditedData([...data, newRow]);
     } else {
@@ -387,14 +387,14 @@ export const DataTable = ({
     if (sortColumn !== columnKey) {
       return <ArrowUpDown className="dt-sort-icon dt-sort-icon-inactive" />;
     }
-    return sortDirection === 'asc' 
+    return sortDirection === 'asc'
       ? <ArrowUp className="dt-sort-icon" />
       : <ArrowDown className="dt-sort-icon" />;
   };
 
   const handleDownloadCSV = () => {
     const headers = columns.map(col => col.title).join(',');
-    const rows = filteredData.map(row => 
+    const rows = filteredData.map(row =>
       columns.map(col => {
         const value = row[col.key];
         if (value == null) return '';
@@ -405,9 +405,9 @@ export const DataTable = ({
         return stringValue;
       }).join(',')
     ).join('\n');
-    
+
     const csv = `${headers}\n${rows}`;
-    
+
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -422,7 +422,7 @@ export const DataTable = ({
   const getRowClassName = (row: TableData) => {
     const baseClasses = 'transition-all duration-200';
     const isNewlyAdded = newlyAddedIds.includes(row.id);
-    
+
     switch (row._status) {
       case 'draft':
         return `bg-table-row-draft ${baseClasses}`;
@@ -469,7 +469,7 @@ export const DataTable = ({
           {columns.map((col, idx) => {
             const isEditing = editingRows.includes(row.id);
             const cellStyle = idx === 0 ? { paddingLeft: `${(level + 1) * 1.5}rem` } : {};
-            
+
             return (
               <TableCell key={col.key} style={cellStyle}>
                 {isEditing ? (
@@ -510,7 +510,7 @@ export const DataTable = ({
                     />
                   )
                 ) : col.renderCell ? (
-                  col.renderCell(row, isEditing, () => {})
+                  col.renderCell(row, isEditing, () => { })
                 ) : col.type === 'checkbox' ? (
                   <Checkbox checked={Boolean(row[col.key])} disabled />
                 ) : (
@@ -530,7 +530,7 @@ export const DataTable = ({
 
       return (
         <React.Fragment key={groupKey}>
-          <TableRow 
+          <TableRow
             className="dt-group-row"
             onClick={() => {
               setExpandedGroups(prev => {
@@ -726,12 +726,13 @@ export const DataTable = ({
         }
 
         .dt-table-wrapper {
-          border: 1px solid hsl(var(--border));
-          border-radius: 0.5rem;
+          border: 1px solid hsl(var(--border) / 0.5);
+          border-radius: 1.5rem;
           overflow: hidden;
           position: relative;
           display: flex;
           flex-direction: column;
+          box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
         }
 
         .dt-loading-overlay {
@@ -770,11 +771,11 @@ export const DataTable = ({
         }
 
         .dt-table-header {
-          background-color: hsl(var(--table-header));
+          background: linear-gradient(to right, hsl(var(--muted)), hsl(var(--background)));
           position: sticky;
           top: 0;
           z-index: 20;
-          box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
         .dt-cell-checkbox {
@@ -882,10 +883,10 @@ export const DataTable = ({
           justify-content: space-between;
           padding-left: 1rem;
           padding-right: 1rem;
-          padding-top: 0.5rem;
-          padding-bottom: 0.5rem;
-          border-top: 1px solid hsl(var(--border));
-          background-color: hsl(var(--muted) / 0.3);
+          padding-top: 0.75rem;
+          padding-bottom: 0.75rem;
+          border-top: 1px solid hsl(var(--border) / 0.5);
+          background: linear-gradient(to right, hsl(var(--muted) / 0.3), transparent);
         }
 
         .dt-footer-text {
@@ -914,22 +915,23 @@ export const DataTable = ({
               variant={editingRows.length > 0 ? "default" : "outline"}
               size="sm"
               onClick={handleEditMode}
+              className="rounded-xl"
             >
               <Edit className="dt-icon-md" />
-              {editingRows.length > 0 
-                ? "Exit Edit" 
-                : selectedRows.length > 0 
-                  ? `Edit ${selectedRows.length} row${selectedRows.length > 1 ? 's' : ''}` 
+              {editingRows.length > 0
+                ? "Exit Edit"
+                : selectedRows.length > 0
+                  ? `Edit ${selectedRows.length} row${selectedRows.length > 1 ? 's' : ''}`
                   : "Edit All"}
             </Button>
-            
+
             {hasChanges && (
-              <Button 
-                variant="default" 
-                size="sm" 
+              <Button
+                variant="default"
+                size="sm"
                 onClick={handleSave}
                 disabled={isCurrentlySaving}
-                className="animate-fade-in"
+                className="animate-fade-in rounded-xl"
               >
                 {isCurrentlySaving ? (
                   <>
@@ -944,23 +946,24 @@ export const DataTable = ({
                 )}
               </Button>
             )}
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
+
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleAddRow}
-              className="dt-button-scale"
+              className="dt-button-scale rounded-xl"
             >
               <Plus className="dt-icon-md" />
               Add {entityType}
             </Button>
-            
+
             {selectedRows.length > 0 && (
-              <Button 
-                variant="destructive" 
-                size="sm" 
+              <Button
+                variant="destructive"
+                size="sm"
                 onClick={handleDelete}
                 disabled={isCurrentlyDeleting}
+                className="rounded-xl"
               >
                 {isCurrentlyDeleting ? (
                   <>
@@ -976,7 +979,7 @@ export const DataTable = ({
               </Button>
             )}
           </div>
-          
+
           <div className="dt-toolbar-right">
             <div className="dt-search-wrapper">
               <Search className="dt-search-icon" />
@@ -984,13 +987,13 @@ export const DataTable = ({
                 placeholder="Search all columns..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="dt-search-input"
+                className="dt-search-input rounded-xl"
               />
             </div>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="rounded-xl">
                   <Group className="dt-icon-md" />
                   Group By
                   {groupByColumns.length > 0 && (
@@ -1049,6 +1052,7 @@ export const DataTable = ({
               size="sm"
               onClick={() => setShowFilters(!showFilters)}
               title="Toggle column filters"
+              className="rounded-xl"
             >
               <Filter className="dt-icon-md" />
               Filters
@@ -1060,11 +1064,12 @@ export const DataTable = ({
                 size="sm"
                 onClick={clearAllFilters}
                 title="Clear all filters"
+                className="rounded-xl"
               >
                 <FilterX className="dt-icon-sm" />
               </Button>
             )}
-            
+
             {onRefresh && (
               <Button
                 variant="outline"
@@ -1072,16 +1077,18 @@ export const DataTable = ({
                 onClick={onRefresh}
                 disabled={isCurrentlySaving || isCurrentlyDeleting}
                 title="Refresh data"
+                className="rounded-xl"
               >
                 <RefreshCw className="dt-icon-sm" />
               </Button>
             )}
-            
+
             <Button
               variant="outline"
               size="sm"
               onClick={handleDownloadCSV}
               title="Download as CSV"
+              className="rounded-xl"
             >
               <Download className="dt-icon-sm" />
             </Button>
@@ -1089,6 +1096,7 @@ export const DataTable = ({
               variant="outline"
               size="sm"
               onClick={() => setIsFullscreen(!isFullscreen)}
+              className="rounded-xl"
             >
               <Maximize className="dt-icon-sm" />
             </Button>
@@ -1107,195 +1115,195 @@ export const DataTable = ({
             </div>
           )}
           <div className="dt-table-scroll" ref={scrollContainerRef}>
-          <Table>
-            <TableHeader className="dt-table-header">
-              <TableRow>
-                <TableHead className="dt-cell-checkbox">
-                  <Checkbox
-                    checked={selectedRows.length === filteredData.length && filteredData.length > 0}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedRows(filteredData.map(row => row.id));
-                      } else {
-                        setSelectedRows([]);
-                      }
-                    }}
-                  />
-                </TableHead>
-                {columns.map((col) => (
-                  <TableHead key={col.key}>
-                    <div className="dt-header-content">
-                      <div className="dt-header-row">
-                        <span
-                          className={cn(
-                            "font-semibold cursor-pointer hover:text-primary transition-colors",
-                            col.onHeaderClick && "cursor-pointer"
-                          )}
-                          onClick={() => col.onHeaderClick?.(col.key)}
-                        >
-                          {col.title}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="dt-sort-button ml-1"
-                          onClick={() => handleSort(col.key)}
-                          title="Sort column"
-                        >
-                          {getSortIcon(col.key)}
-                        </Button>
-                      </div>
-                      {showFilters && (
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className={cn(
-                                "dt-filter-button",
-                                columnFilters[col.key] && "dt-filter-button-active"
-                              )}
-                            >
-                              <Filter className="dt-filter-icon" />
-                              {columnFilters[col.key] ? 'Filtered' : 'Filter'}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="dt-popover-content" align="start">
-                            <div className="dt-popover-inner">
-                              <Input
-                                placeholder={`Filter ${col.title}...`}
-                                value={columnFilters[col.key] || ''}
-                                onChange={(e) => 
-                                  setColumnFilters(prev => ({
-                                    ...prev,
-                                    [col.key]: e.target.value
-                                  }))
-                                }
-                              />
-                              {columnFilters[col.key] && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="dt-clear-filter-button"
-                                  onClick={() => {
-                                    setColumnFilters(prev => {
-                                      const newFilters = { ...prev };
-                                      delete newFilters[col.key];
-                                      return newFilters;
-                                    });
-                                  }}
-                                >
-                                  <X className="dt-icon-md" />
-                                  Clear Filter
-                                </Button>
-                              )}
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      )}
-                    </div>
+            <Table>
+              <TableHeader className="dt-table-header">
+                <TableRow>
+                  <TableHead className="dt-cell-checkbox">
+                    <Checkbox
+                      checked={selectedRows.length === filteredData.length && filteredData.length > 0}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedRows(filteredData.map(row => row.id));
+                        } else {
+                          setSelectedRows([]);
+                        }
+                      }}
+                    />
                   </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {groupedData ? (
-                renderNestedGroups(groupedData, groupByColumns)
-              ) : (
-                visibleData.map((row) => (
-                  <TableRow key={row.id} className={getRowClassName(row)}>
-                    <TableCell className="dt-cell-checkbox">
-                      <Checkbox
-                        checked={selectedRows.includes(row.id)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setSelectedRows(prev => [...prev, row.id]);
-                          } else {
-                            setSelectedRows(prev => prev.filter(id => id !== row.id));
-                          }
-                        }}
-                      />
-                    </TableCell>
-                    {columns.map((col) => {
-                      const isEditing = editingRows.includes(row.id);
-                      
-                      return (
-                        <TableCell key={col.key}>
-                          {isEditing ? (
-                            col.type === 'select' && col.options ? (
-                              <Select
-                                value={String(row[col.key] || '')}
-                                onValueChange={(value) => handleCellEdit(row.id, col.key, value)}
+                  {columns.map((col) => (
+                    <TableHead key={col.key}>
+                      <div className="dt-header-content">
+                        <div className="dt-header-row">
+                          <span
+                            className={cn(
+                              "font-semibold cursor-pointer hover:text-primary transition-colors",
+                              col.onHeaderClick && "cursor-pointer"
+                            )}
+                            onClick={() => col.onHeaderClick?.(col.key)}
+                          >
+                            {col.title}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="dt-sort-button ml-1"
+                            onClick={() => handleSort(col.key)}
+                            title="Sort column"
+                          >
+                            {getSortIcon(col.key)}
+                          </Button>
+                        </div>
+                        {showFilters && (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={cn(
+                                  "dt-filter-button",
+                                  columnFilters[col.key] && "dt-filter-button-active"
+                                )}
                               >
-                                <SelectTrigger className="dt-select-trigger">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="dt-select-content">
-                                  {col.options.map((opt) => {
-                                    const value = typeof opt === 'string' ? opt : opt.value;
-                                    const label = typeof opt === 'string' ? opt : opt.label;
-                                    return (
-                                      <SelectItem key={value} value={value}>
-                                        {label}
-                                      </SelectItem>
-                                    );
-                                  })}
-                                </SelectContent>
-                              </Select>
-                            ) : col.type === 'checkbox' ? (
-                              <Checkbox
-                                checked={Boolean(row[col.key])}
-                                onCheckedChange={(checked) => handleCellEdit(row.id, col.key, Boolean(checked))}
-                              />
+                                <Filter className="dt-filter-icon" />
+                                {columnFilters[col.key] ? 'Filtered' : 'Filter'}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="dt-popover-content" align="start">
+                              <div className="dt-popover-inner">
+                                <Input
+                                  placeholder={`Filter ${col.title}...`}
+                                  value={columnFilters[col.key] || ''}
+                                  onChange={(e) =>
+                                    setColumnFilters(prev => ({
+                                      ...prev,
+                                      [col.key]: e.target.value
+                                    }))
+                                  }
+                                />
+                                {columnFilters[col.key] && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="dt-clear-filter-button"
+                                    onClick={() => {
+                                      setColumnFilters(prev => {
+                                        const newFilters = { ...prev };
+                                        delete newFilters[col.key];
+                                        return newFilters;
+                                      });
+                                    }}
+                                  >
+                                    <X className="dt-icon-md" />
+                                    Clear Filter
+                                  </Button>
+                                )}
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                      </div>
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {groupedData ? (
+                  renderNestedGroups(groupedData, groupByColumns)
+                ) : (
+                  visibleData.map((row) => (
+                    <TableRow key={row.id} className={getRowClassName(row)}>
+                      <TableCell className="dt-cell-checkbox">
+                        <Checkbox
+                          checked={selectedRows.includes(row.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedRows(prev => [...prev, row.id]);
+                            } else {
+                              setSelectedRows(prev => prev.filter(id => id !== row.id));
+                            }
+                          }}
+                        />
+                      </TableCell>
+                      {columns.map((col) => {
+                        const isEditing = editingRows.includes(row.id);
+
+                        return (
+                          <TableCell key={col.key}>
+                            {isEditing ? (
+                              col.type === 'select' && col.options ? (
+                                <Select
+                                  value={String(row[col.key] || '')}
+                                  onValueChange={(value) => handleCellEdit(row.id, col.key, value)}
+                                >
+                                  <SelectTrigger className="dt-select-trigger">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="dt-select-content">
+                                    {col.options.map((opt) => {
+                                      const value = typeof opt === 'string' ? opt : opt.value;
+                                      const label = typeof opt === 'string' ? opt : opt.label;
+                                      return (
+                                        <SelectItem key={value} value={value}>
+                                          {label}
+                                        </SelectItem>
+                                      );
+                                    })}
+                                  </SelectContent>
+                                </Select>
+                              ) : col.type === 'checkbox' ? (
+                                <Checkbox
+                                  checked={Boolean(row[col.key])}
+                                  onCheckedChange={(checked) => handleCellEdit(row.id, col.key, Boolean(checked))}
+                                />
+                              ) : col.renderCell ? (
+                                col.renderCell(row, isEditing, (value) => handleCellEdit(row.id, col.key, value))
+                              ) : (
+                                <Input
+                                  type={col.type === 'number' ? 'number' : col.type === 'date' ? 'date' : 'text'}
+                                  value={String(row[col.key] || '')}
+                                  onChange={(e) => handleCellEdit(row.id, col.key, e.target.value)}
+                                  className="dt-input"
+                                  required={col.required}
+                                />
+                              )
                             ) : col.renderCell ? (
-                              col.renderCell(row, isEditing, (value) => handleCellEdit(row.id, col.key, value))
+                              col.renderCell(row, isEditing, () => { })
+                            ) : col.type === 'checkbox' ? (
+                              <Checkbox checked={Boolean(row[col.key])} disabled />
                             ) : (
-                              <Input
-                                type={col.type === 'number' ? 'number' : col.type === 'date' ? 'date' : 'text'}
-                                value={String(row[col.key] || '')}
-                                onChange={(e) => handleCellEdit(row.id, col.key, e.target.value)}
-                                className="dt-input"
-                                required={col.required}
-                              />
-                            )
-                          ) : col.renderCell ? (
-                            col.renderCell(row, isEditing, () => {})
-                          ) : col.type === 'checkbox' ? (
-                            <Checkbox checked={Boolean(row[col.key])} disabled />
-                          ) : (
-                            String(row[col.key] || '')
-                          )}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                ))
+                              String(row[col.key] || '')
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          <div className="dt-footer">
+            <div className="dt-footer-text">
+              Total rows: <span className="dt-footer-highlight">{filteredData.length}</span>
+              {filteredData.length !== data.length && (
+                <span className="dt-footer-filtered">
+                  (filtered from {data.length})
+                </span>
               )}
-            </TableBody>
-          </Table>
-        </div>
-        
-        <div className="dt-footer">
-          <div className="dt-footer-text">
-            Total rows: <span className="dt-footer-highlight">{filteredData.length}</span>
-            {filteredData.length !== data.length && (
-              <span className="dt-footer-filtered">
-                (filtered from {data.length})
-              </span>
-            )}
-            {groupByColumns.length === 0 && windowEnd < filteredData.length && (
-              <span className="dt-footer-filtered">
-                (showing first {windowEnd} rows)
-              </span>
+              {groupByColumns.length === 0 && windowEnd < filteredData.length && (
+                <span className="dt-footer-filtered">
+                  (showing first {windowEnd} rows)
+                </span>
+              )}
+            </div>
+            {groupByColumns.length > 0 && (
+              <div className="dt-footer-text">
+                Grouped by: <span className="dt-footer-highlight">{groupByColumns.map(col => columns.find(c => c.key === col)?.title).join(' → ')}</span>
+              </div>
             )}
           </div>
-          {groupByColumns.length > 0 && (
-            <div className="dt-footer-text">
-              Grouped by: <span className="dt-footer-highlight">{groupByColumns.map(col => columns.find(c => c.key === col)?.title).join(' → ')}</span>
-            </div>
-          )}
         </div>
-      </div>
       </div>
     </>
   );
