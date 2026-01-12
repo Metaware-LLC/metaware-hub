@@ -17,7 +17,7 @@ import 'reactflow/dist/style.css';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, ZoomIn, Maximize2, GitBranch, Database, ArrowLeft } from "lucide-react";
+import { Download, ZoomIn, Maximize2, GitBranch, Database, ArrowLeft, X } from "lucide-react";
 import { toast } from "sonner";
 import { MetaField } from "@/graphql/queries/meta";
 import { GlossaryRelation } from "@/graphql/queries/glossaryrelation";
@@ -385,26 +385,6 @@ export const GlossaryModelGraph = ({ glossaryEntity, metaFields, relations, onBa
 
     return (
         <div className="flex h-full flex-col bg-background">
-            {/* Header */}
-            <div className="border-b bg-card p-4 flex items-center justify-between flex-none">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="sm" onClick={onBack}>
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Back to List
-                    </Button>
-                    <div>
-                        <h2 className="text-lg font-bold flex items-center gap-2">
-                            <Database className="w-5 h-5 text-primary" />
-                            Glossary Model Visualization
-                        </h2>
-                    </div>
-                </div>
-                <Button onClick={handleExport} variant="outline" size="sm">
-                    <Download className="w-4 h-4 mr-2" />
-                    Export
-                </Button>
-            </div>
-
             <div className="flex flex-1 min-h-0">
                 {/* Main Canvas */}
                 <div className="flex-1 border-r relative bg-muted/5">
@@ -437,6 +417,19 @@ export const GlossaryModelGraph = ({ glossaryEntity, metaFields, relations, onBa
                             }}
                             className="bg-card border"
                         />
+
+                        {/* X Close Button Panel */}
+                        <Panel position="top-left">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={onBack}
+                                className="rounded-full bg-card/90 backdrop-blur border hover:bg-card shadow-lg"
+                                title="Close graph"
+                            >
+                                <X className="w-4 h-4" />
+                            </Button>
+                        </Panel>
 
                         {/* Legend Panel */}
                         <Panel position="top-right" className="bg-card/80 backdrop-blur border rounded-lg p-3 shadow-lg max-w-[200px]">

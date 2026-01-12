@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Grid3x3 } from "lucide-react";
 
 
 
@@ -324,54 +325,54 @@ export default function SubjectArea() {
   }
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Breadcrumb */}
-      <Breadcrumb className="mb-2">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/model">Data Model</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Subject Area</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
-      {/* Page Header */}
-      <div className="mb-3 flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate("/model")}
-          className="rounded-xl"
-        >
-          ← Back
-        </Button>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="px-4 pb-4">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Subject Area Management</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Organize related entities within logical business domains
-          </p>
+          <div className="backdrop-blur-xl bg-card/80 border border-border/50 rounded-2xl shadow-2xl shadow-primary/5 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-5">
+                <div className="relative">
+                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center shadow-lg shadow-primary/30">
+                    <Grid3x3 className="w-6 h-6 text-primary-foreground" />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-xl font-bold text-foreground tracking-tight">Subject Area Management</h1>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-muted-foreground">Organize related entities within logical business domains</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="h-5 text-[10px] px-2 font-medium">
+                  {tableData.length} subject areas
+                </Badge>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Data Table with GraphQL Integration */}
-      <DataTable
-        columns={columnsWithRender}
-        data={tableData}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onSave={handleSave}
-        onRefresh={handleRefresh}
-        entityType="Subject Area"
-        externalEditedData={editedData}
-        onEditedDataChange={setEditedData}
-        isDeleting={isDeleting}
-        isSaving={isSaving}
-      />
+      {/* Main Content */}
+      <div className="pb-8 px-4">
+        <DataTable
+          columns={columnsWithRender}
+          data={tableData}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onSave={handleSave}
+          onRefresh={handleRefresh}
+          entityType="Subject Area"
+          externalEditedData={editedData}
+          onEditedDataChange={setEditedData}
+          isDeleting={isDeleting}
+          isSaving={isSaving}
+        />
+      </div>
     </div>
   );
 }

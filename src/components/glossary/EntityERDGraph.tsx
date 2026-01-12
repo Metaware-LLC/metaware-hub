@@ -12,6 +12,7 @@ import ReactFlow, {
     NodeTypes,
     ReactFlowInstance,
     MiniMap,
+    Panel,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { GET_ENTITY_RELATIONS } from "@/graphql/queries/entityrelation";
@@ -20,7 +21,7 @@ import type {
     GetEntityRelationsResponse,
     GetEntityRelationsVariables,
 } from "@/graphql/queries/entityrelation";
-import { Loader2, Database, Layers, Target, Key, ChevronsDown, ChevronsRight, Maximize } from "lucide-react";
+import { Loader2, Database, Layers, Target, Key, ChevronsDown, ChevronsRight, Maximize, X } from "lucide-react";
 import { ERDNode } from "./ERDNode";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +39,7 @@ import {
 interface EntityERDGraphProps {
     entityId: string;
     entityName: string;
+    onClose?: () => void;
 }
 
 // 1. Define custom Node Data
@@ -143,7 +145,7 @@ const recalculateLayout = (nodes: Node<ERDNodeData>[]): Node<ERDNodeData>[] => {
 };
 
 
-export const EntityERDGraph = ({ entityId, entityName }: EntityERDGraphProps) => {
+export const EntityERDGraph = ({ entityId, entityName, onClose }: EntityERDGraphProps) => {
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [selectedNodeData, setSelectedNodeData] = useState<ERDNodeData | null>(null);
@@ -447,7 +449,7 @@ export const EntityERDGraph = ({ entityId, entityName }: EntityERDGraphProps) =>
                     onNodeClick={onNodeClick}
                     onNodeDragStop={onNodeDragStop}
                     onPaneClick={onPaneClick}
-                    onInit={setReactFlowInstance} // Capture instance
+                    onInit={setReactFlowInstance}
                     connectionLineType={ConnectionLineType.SmoothStep}
                     fitView
                 >
@@ -459,6 +461,21 @@ export const EntityERDGraph = ({ entityId, entityName }: EntityERDGraphProps) =>
                         }}
                         className="bg-card border"
                     />
+
+                    {/* X Close Button */}
+                    {onClose && (
+                        <Panel position="top-left">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={onClose}
+                                className="rounded-full bg-card/90 backdrop-blur border hover:bg-card shadow-lg"
+                                title="Close diagram"
+                            >
+                                <X className="w-4 h-4" />
+                            </Button>
+                        </Panel>
+                    )}
                 </ReactFlow>
             </div>
 

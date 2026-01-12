@@ -13,13 +13,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb";
+import { useNavigate } from "react-router-dom";
 import { FileUploadModal } from "@/components/meta/FileUploadModal";
 import { ImportConfigModal } from "@/components/glossary/ImportConfigModal";
 import { GroupedNamespaceSelect } from "@/components/table/GroupedNamespaceSelect";
 import { DataTable, Column, TableData } from "@/components/table/DataTable";
-import { 
-  GET_NAMESPACES, 
-  GET_SUBJECTAREAS, 
+import {
+  GET_NAMESPACES,
+  GET_SUBJECTAREAS,
   GET_ENTITIES,
   GET_META_FOR_ENTITY,
   type GetNamespacesResponse,
@@ -52,7 +53,7 @@ const metaColumns: Column[] = [
 
 export default function PrepareFiles() {
   const [activeTab, setActiveTab] = useState("meta");
-  
+
   // Meta Upload State
   const [metaUploadModalOpen, setMetaUploadModalOpen] = useState(false);
   const [selectedNamespace, setSelectedNamespace] = useState<string>('');
@@ -70,7 +71,7 @@ export default function PrepareFiles() {
   const { data: namespacesData } = useQuery<GetNamespacesResponse>(GET_NAMESPACES);
   const { data: subjectAreasData } = useQuery<GetSubjectAreasResponse>(GET_SUBJECTAREAS);
   const { data: entitiesData } = useQuery<GetEntitiesResponse>(GET_ENTITIES);
-  
+
   // Query meta fields when entity is selected
   const { data: metaData, loading: metaLoading, refetch } = useQuery<GetMetaForEntityResponse>(
     GET_META_FOR_ENTITY,
@@ -137,7 +138,7 @@ export default function PrepareFiles() {
   const handleMetaUploadSuccess = (draftRows?: any) => {
     if (draftRows && draftRows.return_data) {
       const metaFields = draftRows.return_data[1];
-      
+
       if (metaFields && Array.isArray(metaFields) && metaFields.length > 0) {
         const formattedDraftRows: TableData[] = metaFields.map((row: any, index: number) => ({
           id: `draft_${Date.now()}_${index}`,
@@ -246,7 +247,7 @@ export default function PrepareFiles() {
   const handleEdit = async (id: string, updatedData: Partial<TableData>) => {
     console.log('Edit meta field:', id, updatedData);
     toast({
-      title: "Info", 
+      title: "Info",
       description: "Meta field updates not yet supported via API",
     });
   };
@@ -274,7 +275,7 @@ export default function PrepareFiles() {
   const handleSave = async (data: TableData[]) => {
     if (!selectedEntity) {
       toast({
-        title: "Error", 
+        title: "Error",
         description: "Please select an entity first",
         variant: "destructive",
       });
@@ -309,7 +310,7 @@ export default function PrepareFiles() {
       const metaFields = data
         .map(item => {
           const isNewRecord = item._status === 'draft';
-          
+
           if (isNewRecord) {
             return {
               id: `meta_${Date.now()}_${Math.random()}`,
@@ -345,7 +346,7 @@ export default function PrepareFiles() {
           } else {
             const originalRow = tableData.find(row => row.id === item.id);
             if (!originalRow) return null;
-            
+
             let hasChanges = false;
             if (
               item.name !== originalRow.name ||
@@ -362,9 +363,9 @@ export default function PrepareFiles() {
             ) {
               hasChanges = true;
             }
-            
+
             if (!hasChanges) return null;
-            
+
             return {
               id: item.id,
               type: item.type || '',
@@ -517,210 +518,219 @@ export default function PrepareFiles() {
         }
       `}</style>
 
-      <div className="prepare-files-container">
-        <div className="prepare-files-breadcrumb">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbPage>Prepare Files</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="px-4 pb-4">
+          <div>
+            <div className="backdrop-blur-xl bg-card/80 border border-border/50 rounded-2xl shadow-2xl shadow-primary/5 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-5">
+                  <div className="relative">
+                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center shadow-lg shadow-primary/30">
+                      <Upload className="w-6 h-6 text-primary-foreground" />
+                    </div>
+                  </div>
+                  <div>
+                    <h1 className="text-xl font-bold text-foreground tracking-tight">Prepare Files</h1>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-muted-foreground">Upload and process files for metadata auto-detection and glossary configuration</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="prepare-files-header">
-          <h1 className="prepare-files-title">Prepare Files</h1>
-          <p className="prepare-files-description">
-            Upload and process files for metadata auto-detection and glossary configuration
-          </p>
-        </div>
+        {/* Main Content */}
+        <div className="pb-8 px-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="prepare-files-tabs">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="meta">Meta Auto-Detect</TabsTrigger>
+              <TabsTrigger value="glossary">Glossary Import</TabsTrigger>
+            </TabsList>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="prepare-files-tabs">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="meta">Meta Auto-Detect</TabsTrigger>
-            <TabsTrigger value="glossary">Glossary Import</TabsTrigger>
-          </TabsList>
+            <TabsContent value="meta">
+              <Card className="prepare-files-card">
+                <CardHeader>
+                  <CardTitle>Meta Field Auto-Detection</CardTitle>
+                  <CardDescription>
+                    Upload a CSV file to automatically detect and create metadata fields for an entity
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="prepare-files-card-content">
+                  <div className="prepare-files-field">
+                    <Label className="prepare-files-label">
+                      Namespace <span className="prepare-files-required">*</span>
+                    </Label>
+                    <GroupedNamespaceSelect
+                      namespaces={namespacesData?.meta_namespace || []}
+                      value={selectedNamespace}
+                      onChange={handleNamespaceChange}
+                      placeholder="Select namespace"
+                    />
+                  </div>
 
-          <TabsContent value="meta">
-            <Card className="prepare-files-card">
-              <CardHeader>
-                <CardTitle>Meta Field Auto-Detection</CardTitle>
-                <CardDescription>
-                  Upload a CSV file to automatically detect and create metadata fields for an entity
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="prepare-files-card-content">
-                <div className="prepare-files-field">
-                  <Label className="prepare-files-label">
-                    Namespace <span className="prepare-files-required">*</span>
-                  </Label>
-                  <GroupedNamespaceSelect
-                    namespaces={namespacesData?.meta_namespace || []}
-                    value={selectedNamespace}
-                    onChange={handleNamespaceChange}
-                    placeholder="Select namespace"
-                  />
-                </div>
-
-                <div className="prepare-files-field">
-                  <Label className="prepare-files-label">
-                    Subject Area <span className="prepare-files-required">*</span>
-                  </Label>
-                  <Select 
-                    value={selectedSubjectArea} 
-                    onValueChange={handleSubjectAreaChange}
-                    disabled={!selectedNamespace}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select subject area" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableSubjectAreas.map((sa) => (
-                        <SelectItem key={sa.id} value={sa.id}>
-                          {sa.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="prepare-files-field">
-                  <Label className="prepare-files-label">
-                    Entity <span className="prepare-files-required">*</span>
-                  </Label>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <Select 
-                      value={selectedEntity} 
-                      onValueChange={handleEntityChange}
-                      disabled={!selectedSubjectArea}
+                  <div className="prepare-files-field">
+                    <Label className="prepare-files-label">
+                      Subject Area <span className="prepare-files-required">*</span>
+                    </Label>
+                    <Select
+                      value={selectedSubjectArea}
+                      onValueChange={handleSubjectAreaChange}
+                      disabled={!selectedNamespace}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select entity" />
+                        <SelectValue placeholder="Select subject area" />
                       </SelectTrigger>
                       <SelectContent>
-                        {availableEntities.map((entity) => (
-                          <SelectItem key={entity.id} value={entity.id}>
-                            {entity.name}
+                        {availableSubjectAreas.map((sa) => (
+                          <SelectItem key={sa.id} value={sa.id}>
+                            {sa.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => setMetaUploadModalOpen(true)}
-                              disabled={!selectedEntity || hasExistingMeta}
-                            >
-                              <Upload className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {!selectedEntity 
-                            ? "Select an entity first"
-                            : hasExistingMeta 
-                            ? "Meta already exists - File Upload Disabled"
-                            : "Upload CSV to auto-detect meta fields"}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
                   </div>
-                </div>
 
-                {selectedEntity && (
-                  <>
-                    <div className="prepare-files-info">
-                      <strong>Information:</strong>
-                      <ul className="prepare-files-info-list">
-                        <li>Upload CSV files to auto-detect metadata structure</li>
-                        <li>Choose to create metadata and/or load data</li>
-                        <li>Primary grain field detection available</li>
-                        {hasExistingMeta && <li><strong>Meta fields already exist - editing available below</strong></li>}
-                      </ul>
+                  <div className="prepare-files-field">
+                    <Label className="prepare-files-label">
+                      Entity <span className="prepare-files-required">*</span>
+                    </Label>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <Select
+                        value={selectedEntity}
+                        onValueChange={handleEntityChange}
+                        disabled={!selectedSubjectArea}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select entity" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableEntities.map((entity) => (
+                            <SelectItem key={entity.id} value={entity.id}>
+                              {entity.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setMetaUploadModalOpen(true)}
+                                disabled={!selectedEntity || hasExistingMeta}
+                              >
+                                <Upload className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {!selectedEntity
+                              ? "Select an entity first"
+                              : hasExistingMeta
+                                ? "Meta already exists - File Upload Disabled"
+                                : "Upload CSV to auto-detect meta fields"}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
+                  </div>
 
-                    {metaLoading ? (
-                      <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
-                        <div style={{ color: 'hsl(var(--muted-foreground))' }}>Loading meta fields...</div>
+                  {selectedEntity && (
+                    <>
+                      <div className="prepare-files-info">
+                        <strong>Information:</strong>
+                        <ul className="prepare-files-info-list">
+                          <li>Upload CSV files to auto-detect metadata structure</li>
+                          <li>Choose to create metadata and/or load data</li>
+                          <li>Primary grain field detection available</li>
+                          {hasExistingMeta && <li><strong>Meta fields already exist - editing available below</strong></li>}
+                        </ul>
                       </div>
-                    ) : (
-                      <DataTable
-                        columns={metaColumns}
-                        data={tableData}
-                        onAdd={handleAdd}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                        onSave={handleSave}
-                        onRefresh={handleRefresh}
-                        entityType="Meta Field"
-                        externalEditedData={editedData}
-                        onEditedDataChange={setEditedData}
-                        isDeleting={isDeleting}
-                        isSaving={isSaving}
-                      />
-                    )}
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
 
-          <TabsContent value="glossary">
-            <Card className="prepare-files-card">
-              <CardHeader>
-                <CardTitle>Glossary Configuration Import</CardTitle>
-                <CardDescription>
-                  Import glossary configuration from an Excel file
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="prepare-files-card-content">
-                <div className="prepare-files-info">
-                  <strong>Supported Sheet Types:</strong>
-                  <ul className="prepare-files-info-list">
-                    <li>Namespace</li>
-                    <li>Subject Area</li>
-                    <li>Meta</li>
-                    <li>Entity</li>
-                    <li>Rules</li>
-                  </ul>
-                </div>
+                      {metaLoading ? (
+                        <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+                          <div style={{ color: 'hsl(var(--muted-foreground))' }}>Loading meta fields...</div>
+                        </div>
+                      ) : (
+                        <DataTable
+                          columns={metaColumns}
+                          data={tableData}
+                          onAdd={handleAdd}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                          onSave={handleSave}
+                          onRefresh={handleRefresh}
+                          entityType="Meta Field"
+                          externalEditedData={editedData}
+                          onEditedDataChange={setEditedData}
+                          isDeleting={isDeleting}
+                          isSaving={isSaving}
+                        />
+                      )}
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-                <div className="prepare-files-actions">
-                  <Button onClick={() => setGlossaryImportModalOpen(true)}>
-                    <FileSpreadsheet className="prepare-files-upload-icon" />
-                    Import Configuration
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="glossary">
+              <Card className="prepare-files-card">
+                <CardHeader>
+                  <CardTitle>Glossary Configuration Import</CardTitle>
+                  <CardDescription>
+                    Import glossary configuration from an Excel file
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="prepare-files-card-content">
+                  <div className="prepare-files-info">
+                    <strong>Supported Sheet Types:</strong>
+                    <ul className="prepare-files-info-list">
+                      <li>Namespace</li>
+                      <li>Subject Area</li>
+                      <li>Meta</li>
+                      <li>Entity</li>
+                      <li>Rules</li>
+                    </ul>
+                  </div>
 
-        {/* Meta Upload Modal */}
-        {selectedEntityData && selectedNamespaceData && (
-          <FileUploadModal
-            open={metaUploadModalOpen}
-            onOpenChange={setMetaUploadModalOpen}
-            namespace={selectedNamespaceData.name}
-            subjectArea={availableSubjectAreas.find(sa => sa.id === selectedSubjectArea)?.name || ''}
-            entity={selectedEntityData.name}
-            entityDescription={selectedEntityData.description || ''}
-            namespaceType={selectedNamespaceData.type}
-            primaryGrain={selectedEntityData.primary_grain || ''}
-            onSuccess={handleMetaUploadSuccess}
+                  <div className="prepare-files-actions">
+                    <Button onClick={() => setGlossaryImportModalOpen(true)}>
+                      <FileSpreadsheet className="prepare-files-upload-icon" />
+                      Import Configuration
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+
+          {/* Meta Upload Modal */}
+          {selectedEntityData && selectedNamespaceData && (
+            <FileUploadModal
+              open={metaUploadModalOpen}
+              onOpenChange={setMetaUploadModalOpen}
+              namespace={selectedNamespaceData.name}
+              subjectArea={availableSubjectAreas.find(sa => sa.id === selectedSubjectArea)?.name || ''}
+              entity={selectedEntityData.name}
+              entityDescription={selectedEntityData.description || ''}
+              namespaceType={selectedNamespaceData.type}
+              primaryGrain={selectedEntityData.primary_grain || ''}
+              onSuccess={handleMetaUploadSuccess}
+            />
+          )}
+
+          {/* Glossary Import Modal */}
+          <ImportConfigModal
+            open={glossaryImportModalOpen}
+            onOpenChange={setGlossaryImportModalOpen}
           />
-        )}
-
-        {/* Glossary Import Modal */}
-        <ImportConfigModal
-          open={glossaryImportModalOpen}
-          onOpenChange={setGlossaryImportModalOpen}
-        />
+        </div>
       </div>
     </>
   );

@@ -6,7 +6,7 @@ import { DataTable } from "@/components/table/DataTable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, X, Database, Loader2, Upload, Sparkles, Wand2, GitGraph, ArrowLeft } from "lucide-react";
+import { Search, X, Database, Loader2, Upload, Sparkles, Wand2, GitGraph, ArrowLeft, BookOpen } from "lucide-react";
 import { GET_META_FOR_ENTITY, type MetaField } from "@/graphql/queries/meta";
 import { GET_RULESETS_BY_ENTITY, type RulesetWithSource } from "@/graphql/queries/ruleset";
 import { GET_SUBJECTAREAS, type GetSubjectAreasResponse } from "@/graphql/queries";
@@ -21,13 +21,14 @@ import { MappingEditorModal } from "@/components/glossary/MappingEditorModal";
 import { EntityERDGraph } from "@/components/glossary/EntityERDGraph";
 import { type Entity } from "@/graphql/queries/entity";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { rulesetAPI, metaAPI } from "@/services/api";
 import { GlossaryAssociations } from "@/components/glossary/GlossaryAssociations";
 import { useLayout } from "@/context/LayoutContext";
 
 export default function Glossary() {
+  const navigate = useNavigate();
   const [selectedSubjectAreaId, setSelectedSubjectAreaId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
@@ -420,43 +421,39 @@ export default function Glossary() {
 
       <div className="flex-1 overflow-hidden">
         {!selectedEntity ? (
-          <div className="page-content">
-            <Breadcrumb className="mb-4">
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <button
-                      onClick={() => { setSelectedEntity(null); setSelectedSubjectAreaId(null); setSearchQuery(""); }} className="breadcrumb-link" >
-                      Business Glossary
-                    </button>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                {selectedSubjectArea && (
-                  <>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                      <BreadcrumbPage>{selectedSubjectArea.name}</BreadcrumbPage>
-                    </BreadcrumbItem>
-                  </>
-                )}
-              </BreadcrumbList>
-            </Breadcrumb>
-            <div className="stack-xs mb-6">
-              <h1 className="text-heading-md">Business Glossary</h1>
-              <p className="text-muted">
-                Manage business terms and definitions
-              </p>
+          <div className="h-full overflow-y-auto">
+            {/* Header */}
+            <div className="px-4 pb-4 pt-1">
+              <div>
+                <div className="backdrop-blur-xl bg-card/80 border border-border/50 rounded-2xl shadow-2xl shadow-primary/5 px-6 py-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-5">
+                      <div className="relative">
+                        <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center shadow-lg shadow-primary/30">
+                          <BookOpen className="w-6 h-6 text-primary-foreground" />
+                        </div>
+                      </div>
+                      <div>
+                        <h1 className="text-xl font-bold text-foreground tracking-tight">Business Glossary</h1>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-xs text-muted-foreground">Manage business terms and definitions</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="flex-start gap-sm">
-              <div className="relative flex-1">
+            <div className="px-4 flex items-center justify-center gap-3">
+              <div className="relative w-full max-w-2xl">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 icon-sm icon-muted" />
-                <Input type="text" placeholder="Search entities..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+                <Input type="text" placeholder="Search entities..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 rounded-xl" />
               </div>
-              <Button variant="outline" size="icon" onClick={() => setImportModalOpen(true)} title="Import configuration" className="rounded-xl">
+              <Button variant="outline" size="icon" onClick={() => setImportModalOpen(true)} title="Import configuration" className="rounded-xl flex-shrink-0">
                 <Upload className="icon-sm" />
               </Button>
-              <Button variant="outline" size="icon" onClick={() => { setSearchQuery(""); setSelectedSubjectAreaId(null); }} title="Reset search and filters" className="rounded-xl">
+              <Button variant="outline" size="icon" onClick={() => { setSearchQuery(""); setSelectedSubjectAreaId(null); }} title="Reset search and filters" className="rounded-xl flex-shrink-0">
                 <X className="icon-sm" />
               </Button>
             </div>
@@ -465,234 +462,233 @@ export default function Glossary() {
               // Optionally refresh data after import
             }} />
 
-            <EntityGrid subjectAreaId={selectedSubjectAreaId || undefined} namespaceType="glossary" searchQuery={searchQuery} onEntityClick={setSelectedEntity} />
+            <div className="px-4 mt-4">
+              <EntityGrid subjectAreaId={selectedSubjectAreaId || undefined} namespaceType="glossary" searchQuery={searchQuery} onEntityClick={setSelectedEntity} />
+            </div>
           </div>
         ) : (
-          <div className="page-container flex flex-col card-padding">
-            <Breadcrumb className="mb-4">
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <button onClick={() => { setSelectedEntity(null); setSelectedSubjectAreaId(null); }} className="breadcrumb-link" >
-                      {selectedEntity.subjectarea?.namespace?.name || 'Unknown'}
-                    </button>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <button
-                      onClick={() => { setSelectedSubjectAreaId(selectedEntity.sa_id); setSelectedEntity(null); }} className="breadcrumb-link" >
-                      {selectedEntity.subjectarea.name}
-                    </button>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>{selectedEntity.name}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-            <div className="mb-4 flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedEntity(null)}
-                className="rounded-xl"
-              >
-                ← Back to list
-              </Button>
-              <div className="flex-1">
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <Database className="h-5 w-5 text-primary" />
-                  {selectedEntity.name}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {selectedEntity.subjectarea?.namespace?.name || 'Unknown'} . {selectedEntity.subjectarea?.name || 'Unknown'}
-                </p>
+          <div className="page-container flex flex-col">
+            {/* Modern Header */}
+            <div className="px-4 pb-4 pt-1">
+              <div className="backdrop-blur-xl bg-card/80 border border-border/50 rounded-2xl shadow-2xl shadow-primary/5 px-6 py-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-5">
+                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center shadow-lg shadow-primary/30">
+                      <Database className="w-6 h-6 text-primary-foreground" />
+                    </div>
+                    <div>
+                      {/* Breadcrumb Navigation */}
+                      <div className="flex items-center gap-2 mb-1">
+                        <button
+                          onClick={() => setSelectedEntity(null)}
+                          className="text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <ArrowLeft className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedEntity(null);
+                            setSelectedSubjectAreaId(null);
+                          }}
+                          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {selectedEntity.subjectarea?.namespace?.name || 'Unknown'}
+                        </button>
+                        <span className="text-xs text-muted-foreground">•</span>
+                        <button
+                          onClick={() => {
+                            setSelectedSubjectAreaId(selectedEntity.sa_id);
+                            setSelectedEntity(null);
+                          }}
+                          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {selectedEntity.subjectarea.name}
+                        </button>
+                      </div>
+                      <h1 className="text-xl font-bold tracking-tight">{selectedEntity.name}</h1>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-scroll">
-              <TabsList className="rounded-xl bg-muted/50">
-                <TabsTrigger value="meta" className="rounded-lg">Meta</TabsTrigger>
-                <TabsTrigger value="associations" className="rounded-lg">Source Associations</TabsTrigger>
-                <TabsTrigger value="glossary_associations" className="rounded-lg">Glossary Associations</TabsTrigger>
-              </TabsList>
+            {/* Content */}
+            <div className="px-4 flex-1 flex flex-col overflow-hidden">
 
-              <TabsContent value="meta" className={`mt-0 flex-1 overflow-hidden flex flex-col ${activeTab !== 'meta' ? 'hidden' : ''}`}>
-                {metaLoading ? (
-                  <div className="flex-center h-full">
-                    <Loader2 className="icon-xl animate-spin text-muted-foreground" />
-                  </div>
-                ) : draftMetaFields.length > 0 ? (
-                  <div className="flex-1 overflow-hidden bordered-container">
-                    <DataTable
-                      data={[]}
-                      externalEditedData={draftMetaFields.map(field => ({ ...field, id: field.id || `draft_${field.name}`, _status: 'draft' as const, }))}
-                      onEditedDataChange={(data) => { setDraftMetaFields(data.map(({ _status, ...rest }) => rest)); }}
-                      onEditModeChange={(isEditing) => {
-                        if (isEditing) {
-                          // Snapshot current state when entering edit mode
-                          setEditModeSnapshot(JSON.parse(JSON.stringify(draftMetaFields)));
-                        } else {
-                          // Revert to snapshot when exiting edit mode without saving
-                          if (editModeSnapshot.length > 0) {
-                            setDraftMetaFields(editModeSnapshot);
-                            setEditModeSnapshot([]);
-                          }
-                        }
-                      }}
-                      columns={draftMetaColumns}
-                      onAdd={() => {
-                        const newField = {
-                          id: `new_${Date.now()}`,
-                          name: '',
-                          alias: '',
-                          type: 'text',
-                          description: '',
-                          nullable: true,
-                          is_primary_grain: false,
-                          is_secondary_grain: false,
-                          is_tertiary_grain: false,
-                          order: draftMetaFields.length,
-                        };
-                        setDraftMetaFields([...draftMetaFields, newField]);
-                      }}
-                      onSave={handleSaveDraftMeta}
-                      onDelete={handleDeleteMeta}
-                      isSaving={isSavingDraft}
-                      isDeleting={isDeleting}
-                    />
-                  </div>
-                ) : metaFields.length === 0 ? (
-                  <div className="flex-center h-full">
-                    <div className="text-center stack-md">
-                      <Database className="icon-xl mx-auto icon-muted opacity-50" />
-                      <p className="text-muted">No metadata found</p>
-                      <div className="flex gap-3 justify-center">
-                        <Button
-                          onClick={() => setBlueprintModalOpen(true)}
-                          className="rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg shadow-primary/20"
-                        >
-                          <Sparkles className="icon-sm mr-2" />
-                          Generate Standardized Blueprint
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => setCustomBlueprintModalOpen(true)}
-                          className="rounded-xl"
-                        >
-                          <Wand2 className="icon-sm mr-2" />
-                          Generate Custom Blueprint
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex-1 overflow-hidden">
-                    <DataTable
-                      data={metaFields.map(field => ({
-                        id: field.id,
-                        name: field.name,
-                        alias: field.alias || '',
-                        type: field.type,
-                        description: field.description || '',
-                        nullable: field.nullable || false,
-                        is_primary_grain: field.is_primary_grain || false,
-                        is_secondary_grain: field.is_secondary_grain || false,
-                        is_tertiary_grain: field.is_tertiary_grain || false,
-                        order: field.order || 0,
-                      }))}
-                      columns={metaTableColumns}
-                      onSave={handleSaveExistingMeta}
-                      onAdd={() => { setBlueprintModalOpen(true); }} // Open blueprint modal to add more meta 
-                      onDelete={handleDeleteMeta}
-                      isSaving={isSavingDraft}
-                      isDeleting={isDeleting}
-                    />
-                  </div>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-scroll">
+                {/* Hide tabs when any graph is open */}
+                {!showDiagram && !showGlossaryGraph && (
+                  <TabsList className="rounded-xl bg-muted/50">
+                    <TabsTrigger value="meta" className="rounded-lg">Meta</TabsTrigger>
+                    <TabsTrigger value="associations" className="rounded-lg">Source Associations</TabsTrigger>
+                    <TabsTrigger value="glossary_associations" className="rounded-lg">Glossary Associations</TabsTrigger>
+                  </TabsList>
                 )}
-              </TabsContent>
 
-              <TabsContent value="associations" className="mt-0 flex-1 overflow-auto">
-                <div className="stack-lg card-padding h-full min-h-0 flex flex-col">
-                  {showDiagram ? (
-                    <div className="h-full flex flex-col">
-                      <div className="flex-none mb-4">
-                        <Button
-                          variant="ghost"
-                          onClick={() => setShowDiagram(false)}
-                          className="text-muted-foreground hover:text-foreground pl-0 rounded-xl"
-                        >
-                          <ArrowLeft className="w-4 h-4 mr-2" />
-                          Back to Associations
-                        </Button>
-                      </div>
-                      <div className="flex-1 border rounded-lg overflow-hidden relative min-h-0">
-                        <EntityERDGraph entityId={selectedEntity.id} entityName={selectedEntity.name} />
+                <TabsContent value="meta" className={`mt-0 flex-1 overflow-hidden flex flex-col ${activeTab !== 'meta' ? 'hidden' : ''}`}>
+                  {metaLoading ? (
+                    <div className="flex-center h-full">
+                      <Loader2 className="icon-xl animate-spin text-muted-foreground" />
+                    </div>
+                  ) : draftMetaFields.length > 0 ? (
+                    <div className="flex-1 overflow-hidden bordered-container">
+                      <DataTable
+                        data={[]}
+                        externalEditedData={draftMetaFields.map(field => ({ ...field, id: field.id || `draft_${field.name}`, _status: 'draft' as const, }))}
+                        onEditedDataChange={(data) => { setDraftMetaFields(data.map(({ _status, ...rest }) => rest)); }}
+                        onEditModeChange={(isEditing) => {
+                          if (isEditing) {
+                            // Snapshot current state when entering edit mode
+                            setEditModeSnapshot(JSON.parse(JSON.stringify(draftMetaFields)));
+                          } else {
+                            // Revert to snapshot when exiting edit mode without saving
+                            if (editModeSnapshot.length > 0) {
+                              setDraftMetaFields(editModeSnapshot);
+                              setEditModeSnapshot([]);
+                            }
+                          }
+                        }}
+                        columns={draftMetaColumns}
+                        onAdd={() => {
+                          const newField = {
+                            id: `new_${Date.now()}`,
+                            name: '',
+                            alias: '',
+                            type: 'text',
+                            description: '',
+                            nullable: true,
+                            is_primary_grain: false,
+                            is_secondary_grain: false,
+                            is_tertiary_grain: false,
+                            order: draftMetaFields.length,
+                          };
+                          setDraftMetaFields([...draftMetaFields, newField]);
+                        }}
+                        onSave={handleSaveDraftMeta}
+                        onDelete={handleDeleteMeta}
+                        isSaving={isSavingDraft}
+                        isDeleting={isDeleting}
+                      />
+                    </div>
+                  ) : metaFields.length === 0 ? (
+                    <div className="flex-center h-full">
+                      <div className="text-center stack-md">
+                        <Database className="icon-xl mx-auto icon-muted opacity-50" />
+                        <p className="text-muted">No metadata found</p>
+                        <div className="flex gap-3 justify-center">
+                          <Button
+                            onClick={() => setBlueprintModalOpen(true)}
+                            className="rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg shadow-primary/20"
+                          >
+                            <Sparkles className="icon-sm mr-2" />
+                            Generate Standardized Blueprint
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => setCustomBlueprintModalOpen(true)}
+                            className="rounded-xl"
+                          >
+                            <Wand2 className="icon-sm mr-2" />
+                            Generate Custom Blueprint
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ) : (
-                    <>
-                      <div className="flex-none space-y-4">
-                        <div className="flex items-end gap-4">
-                          <div className="flex-1">
-                            <SourceAssociationSelect glossaryEntity={selectedEntity} value={sourceEntity?.id} onSelect={setSourceEntity} />
-                          </div>
-                          <div>
-                            <Button
-                              onClick={() => setShowDiagram(true)}
-                              className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg border-0 transition-all duration-300"
-                            >
-                              <GitGraph className="w-4 h-4 mr-2" />
-                              View Relationship Diagram
-                            </Button>
-                          </div>
+                    <div className="flex-1 overflow-hidden">
+                      <DataTable
+                        data={metaFields.map(field => ({
+                          id: field.id,
+                          name: field.name,
+                          alias: field.alias || '',
+                          type: field.type,
+                          description: field.description || '',
+                          nullable: field.nullable || false,
+                          is_primary_grain: field.is_primary_grain || false,
+                          is_secondary_grain: field.is_secondary_grain || false,
+                          is_tertiary_grain: field.is_tertiary_grain || false,
+                          order: field.order || 0,
+                        }))}
+                        columns={metaTableColumns}
+                        onSave={handleSaveExistingMeta}
+                        onAdd={() => { setBlueprintModalOpen(true); }} // Open blueprint modal to add more meta 
+                        onDelete={handleDeleteMeta}
+                        isSaving={isSavingDraft}
+                        isDeleting={isDeleting}
+                      />
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="associations" className="mt-0 flex-1 overflow-auto">
+                  <div className="stack-lg card-padding h-full min-h-0 flex flex-col">
+                    {showDiagram ? (
+                      <div className="h-full flex flex-col">
+                        <div className="flex-1 border rounded-lg overflow-hidden relative min-h-0">
+                          <EntityERDGraph entityId={selectedEntity.id} entityName={selectedEntity.name} onClose={() => setShowDiagram(false)} />
                         </div>
                       </div>
-
-                      {!sourceEntity && (
-                        <div className="flex-center py-12 border-2 border-dashed border-border rounded-2xl bg-muted/20">
-                          <div className="text-center space-y-2">
-                            <p className="text-muted-foreground text-sm">No source entity selected</p>
-                            <p className="text-xs text-muted-foreground">Select a source entity above to view and manage field mappings</p>
+                    ) : (
+                      <>
+                        <div className="flex-none space-y-4">
+                          <div className="flex items-end gap-4">
+                            <div className="flex-1">
+                              <SourceAssociationSelect glossaryEntity={selectedEntity} value={sourceEntity?.id} onSelect={setSourceEntity} />
+                            </div>
+                            <div>
+                              <Button
+                                onClick={() => setShowDiagram(true)}
+                                className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg border-0 transition-all duration-300"
+                              >
+                                <GitGraph className="w-4 h-4 mr-2" />
+                                View Relationship Diagram
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      )}
 
-                      {sourceEntity && (<MappingTable glossaryEntity={selectedEntity} sourceEntity={sourceEntity} existingRuleset={existingRuleset || undefined} />)}
-                    </>
-                  )}
-                </div>
-              </TabsContent>
+                        {!sourceEntity && (
+                          <div className="flex-center py-12 border-2 border-dashed border-border rounded-2xl bg-muted/20">
+                            <div className="text-center space-y-2">
+                              <p className="text-muted-foreground text-sm">No source entity selected</p>
+                              <p className="text-xs text-muted-foreground">Select a source entity above to view and manage field mappings</p>
+                            </div>
+                          </div>
+                        )}
 
-              <TabsContent value="glossary_associations" className="mt-0 flex-1 overflow-hidden">
-                <GlossaryAssociations
-                  glossaryEntity={selectedEntity}
-                  metaFields={metaFields}
-                  showGraph={showGlossaryGraph}
-                  onShowGraphChange={setShowGlossaryGraph}
-                />
-              </TabsContent>
+                        {sourceEntity && (<MappingTable glossaryEntity={selectedEntity} sourceEntity={sourceEntity} existingRuleset={existingRuleset || undefined} />)}
+                      </>
+                    )}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="glossary_associations" className="mt-0 flex-1 overflow-hidden">
+                  <GlossaryAssociations
+                    glossaryEntity={selectedEntity}
+                    metaFields={metaFields}
+                    showGraph={showGlossaryGraph}
+                    onShowGraphChange={setShowGlossaryGraph}
+                  />
+                </TabsContent>
 
 
-            </Tabs>
+              </Tabs>
 
-            <GenerateBlueprintModal
-              open={blueprintModalOpen}
-              onOpenChange={setBlueprintModalOpen}
-              namespaceId={selectedEntity.subjectarea?.namespace?.id || ""}
-              glossaryEntity={selectedEntity}
-              onSuccess={handleBlueprintGenerated}
-            />
+              <GenerateBlueprintModal
+                open={blueprintModalOpen}
+                onOpenChange={setBlueprintModalOpen}
+                namespaceId={selectedEntity.subjectarea?.namespace?.id || ""}
+                glossaryEntity={selectedEntity}
+                onSuccess={handleBlueprintGenerated}
+              />
 
-            <CustomBlueprintModal
-              open={customBlueprintModalOpen}
-              onOpenChange={setCustomBlueprintModalOpen}
-              glossaryEntity={selectedEntity}
-              onSuccess={handleBlueprintGenerated}
-            />
+              <CustomBlueprintModal
+                open={customBlueprintModalOpen}
+                onOpenChange={setCustomBlueprintModalOpen}
+                glossaryEntity={selectedEntity}
+                onSuccess={handleBlueprintGenerated}
+              />
+            </div>
           </div>
         )}
       </div>

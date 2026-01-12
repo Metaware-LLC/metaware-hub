@@ -38,7 +38,8 @@ import {
   BarChart3,
   Activity,
   TrendingUp,
-  Timer
+  Timer,
+  Sparkles
 } from "lucide-react";
 import { toast } from "sonner";
 import { API_CONFIG } from "@/config/api";
@@ -52,8 +53,6 @@ import {
   GET_META_FOR_ENTITY,
   type MetaField,
 } from "@/graphql/queries/meta";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { Link } from "react-router-dom";
 import { useEffect } from "react";
 import { useMDConnectionContext } from "@/contexts/MDConnectionContext";
 import { queryMDTable } from "@/hooks/useMDConnection";
@@ -112,7 +111,7 @@ export default function BuildModels() {
   const [metaFields, setMetaFields] = useState<MetaField[]>([]);
 
   const [fetchMeta, { loading: metaLoading, data: metaData }] = useLazyQuery(GET_META_FOR_ENTITY);
-  const [fetchPublishConfig] = useLazyQuery(GET_GLOSSARY_PUBLISH_CONFIG);
+  const [fetchPublishConfig, { loading: publishConfigLoading }] = useLazyQuery(GET_GLOSSARY_PUBLISH_CONFIG);
 
   // Connect to MotherDuck on mount
   useEffect(() => {
@@ -133,6 +132,31 @@ export default function BuildModels() {
       setColumns(cols);
     }
   }, [metaData]);
+
+  // Auto-fetch publish config ID when switching to Load tab
+  useEffect(() => {
+    const fetchConfigId = async () => {
+      if (activeTab === 'load' && selectedEntity && targetNamespace && targetSchema && targetEntity) {
+        try {
+          const { data: configData } = await fetchPublishConfig({
+            variables: {
+              targetNamespace: targetNamespace,
+              targetSchema: targetSchema,
+              targetName: targetEntity
+            }
+          });
+
+          if (configData?.glossary_publish_config && configData.glossary_publish_config.length > 0) {
+            setPublishConfigId(configData.glossary_publish_config[0].id);
+          }
+        } catch (error) {
+          console.error("Error fetching publish config on tab switch:", error);
+        }
+      }
+    };
+
+    fetchConfigId();
+  }, [activeTab, selectedEntity, targetNamespace, targetSchema, targetEntity, fetchPublishConfig]);
 
   const handleEntitySelect = (entity: Entity) => {
     setSelectedEntity(entity);
@@ -166,7 +190,9 @@ export default function BuildModels() {
       alias: null,
       description: col.description,
       rule_expression: col.ruleExpression,
-      meta: col.glossary
+      meta: col.glossary,
+      type: "glossary_publish",
+      rule_status: "draft"
     }));
   };
 
@@ -190,6 +216,7 @@ export default function BuildModels() {
           target_namespace: targetNamespace,
           target_schema: targetSchema,
           target_name: targetEntity,
+          target_fqn: `${targetNamespace}.${targetSchema}.${targetEntity}`,
           status: configStatus,
           version: configVersion
         },
@@ -221,7 +248,29 @@ export default function BuildModels() {
       const result = await response.json();
 
       setBuildOutput(JSON.stringify(requestPayload, null, 2));
-      setPublishConfigId(result.publish_config_id || `gpc_${Math.random().toString(36).substr(2, 9)}`);
+
+      // Fetch the actual publish config ID from the database
+      try {
+        const { data: configData } = await fetchPublishConfig({
+          variables: {
+            targetNamespace: targetNamespace,
+            targetSchema: targetSchema,
+            targetName: targetEntity
+          }
+        });
+
+        if (configData?.glossary_publish_config && configData.glossary_publish_config.length > 0) {
+          setPublishConfigId(configData.glossary_publish_config[0].id);
+        } else {
+          // Fallback to response or generated ID
+          setPublishConfigId(result.publish_config_id || `gpc_${Math.random().toString(36).substr(2, 9)}`);
+        }
+      } catch (fetchError) {
+        console.error("Error fetching publish config:", fetchError);
+        // Fallback to response or generated ID
+        setPublishConfigId(result.publish_config_id || `gpc_${Math.random().toString(36).substr(2, 9)}`);
+      }
+
       toast.success("Build artifacts created successfully");
     } catch (error) {
       console.error("Error building artifacts:", error);
@@ -256,19 +305,18 @@ export default function BuildModels() {
 
       const payload = {
         publish_config_id: publishConfigId,
-        loader_runtime: {
+        connection_name: connectionName,
+        load_strategy: strategy,
+        materialize_as: materializeAs,
+        runtime_options: {
           type: selectedConnection?.type || "db",
           subtype: selectedConnection?.subtype || "DuckDB / MotherDuck",
-          connection_name: connectionName
-        },
-        loader_options: {
-          materialize_as: materializeAs,
-          strategy: strategy,
           ...(batchSize && { batch_size: parseInt(batchSize) }),
           ...(parallelism && { parallelism: parseInt(parallelism) }),
-          ...(commitInterval && { commit_interval: commitInterval }),
           dry_run: dryRun
-        }
+        },
+        loader_config_name: `${selectedEntity?.name || 'Entity'} Publish Load`,
+        loader_config_description: `Load glossary publish configuration for ${targetNamespace}.${targetSchema}.${targetEntity}`
       };
 
       console.log("Load payload:", payload);
@@ -338,41 +386,56 @@ export default function BuildModels() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Main Content */}
-      <div className="p-4 space-y-4">
-        <div className="mx-auto max-w-7xl">
-          {/* Breadcrumb */}
-          <Breadcrumb className="mb-2">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/model">Data Model</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Build Models</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+      {/* Header */}
+      <div className="px-4 pb-4">
+        <div>
+          <div className="backdrop-blur-xl bg-card/80 border border-border/50 rounded-2xl shadow-2xl shadow-primary/5 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-5">
+                <div className="relative">
+                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center shadow-lg shadow-primary/30">
+                    <Sparkles className="w-6 h-6 text-primary-foreground" />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-success border-2 border-card" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate("/model")}
+                      className="h-6 px-2 -ml-2"
+                    >
+                      <span className="text-xs text-muted-foreground hover:text-foreground">← Model</span>
+                    </Button>
+                    <span className="text-muted-foreground/40">•</span>
+                    <h1 className="text-xl font-bold text-foreground tracking-tight">Build Models</h1>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-muted-foreground">Build glossary publish configurations and load data</span>
+                    <span className="text-muted-foreground/40">•</span>
+                    <Badge variant="outline" className="h-5 text-[10px] px-2 font-medium">
+                      v{configVersion}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
 
-          {/* Page Header */}
-          <div className="mb-3 flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/model")}
-            >
-              ← Back
-            </Button>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">Build Models</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Build glossary publish configurations and load data
-              </p>
+              <div className="flex items-center gap-2">
+                {selectedEntity && (
+                  <Badge variant="secondary" className="font-mono text-xs px-3 py-1 rounded-full">
+                    {glossaryEntity}
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
+        </div>
+      </div>
 
+      {/* Main Content */}
+      <div className="pb-8 px-4">
+        <div className="mx-auto max-w-7xl space-y-6">
           {/* Entity Selection */}
           <Card className="rounded-2xl border-border/50">
             <CardHeader className="px-6 py-4">
