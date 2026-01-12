@@ -8,17 +8,18 @@ import { useMDConnectionContext } from "@/contexts/MDConnectionContext";
 import { queryMDTable } from "@/hooks/useMDConnection";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, X, Database, Loader2, BarChart3 } from "lucide-react";
+import { Search, X, Database, Loader2, BarChart3, Server, ArrowLeft } from "lucide-react";
 import { RuleEditor } from "@/components/rules/RuleEditor";
 import { DQDetails } from "@/components/dq/DQDetails";
 import { API_CONFIG } from "@/config/api";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { GET_SUBJECTAREAS, GET_ENTITIES, type GetSubjectAreasResponse, type GetEntitiesResponse } from "@/graphql/queries";
 import { useLayout } from "@/context/LayoutContext";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Staging() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [selectedSubjectAreaId, setSelectedSubjectAreaId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -235,42 +236,32 @@ export default function Staging() {
 
       <div className="flex-1 overflow-hidden">
         {!selectedEntity ? (
-          <div className="p-4 space-y-4 h-full overflow-y-auto">
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <button
-                      onClick={() => {
-                        setSelectedEntity(null);
-                        setSelectedSubjectAreaId(null);
-                        setSearchQuery("");
-                      }}
-                      className="hover:text-foreground transition-colors"
-                    >
-                      Staging
-                    </button>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                {selectedSubjectArea && (
-                  <>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                      <BreadcrumbPage>{selectedSubjectArea.name}</BreadcrumbPage>
-                    </BreadcrumbItem>
-                  </>
-                )}
-              </BreadcrumbList>
-            </Breadcrumb>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">Staging Management</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Manage staging models and data processing workflows
-              </p>
+          <div className="h-full overflow-y-auto">
+            {/* Header */}
+            <div className="px-4 pb-4 pt-1">
+              <div>
+                <div className="backdrop-blur-xl bg-card/80 border border-border/50 rounded-2xl shadow-2xl shadow-primary/5 px-6 py-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-5">
+                      <div className="relative">
+                        <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center shadow-lg shadow-primary/30">
+                          <Server className="w-6 h-6 text-primary-foreground" />
+                        </div>
+                      </div>
+                      <div>
+                        <h1 className="text-xl font-bold text-foreground tracking-tight">Staging Management</h1>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-xs text-muted-foreground">Manage staging models and data processing workflows</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="flex gap-2">
-              <div className="relative flex-1">
+            <div className="px-4 flex items-center justify-center gap-3">
+              <div className="relative w-full max-w-2xl">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="text"
@@ -288,18 +279,20 @@ export default function Staging() {
                   setSelectedSubjectAreaId(null);
                 }}
                 title="Reset search and filters"
-                className="rounded-xl"
+                className="rounded-xl flex-shrink-0"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
 
-            <EntityGrid
-              subjectAreaId={selectedSubjectAreaId || undefined}
-              namespaceType="staging"
-              searchQuery={searchQuery}
-              onEntityClick={setSelectedEntity}
-            />
+            <div className="px-4 mt-4">
+              <EntityGrid
+                subjectAreaId={selectedSubjectAreaId || undefined}
+                namespaceType="staging"
+                searchQuery={searchQuery}
+                onEntityClick={setSelectedEntity}
+              />
+            </div>
           </div>
         ) : !ready ? (
           <div className="flex items-center justify-center h-full">
@@ -316,117 +309,109 @@ export default function Staging() {
             </div>
           </div>
         ) : (
-          <div className="h-full flex flex-col p-6">
-            {!showDQDetails && (
-              <>
-                <Breadcrumb className="mb-4">
-                  <BreadcrumbList>
-                    <BreadcrumbItem>
-                      <BreadcrumbLink asChild>
+          <div className="h-full flex flex-col">
+            {/* Modern Header */}
+            <div className="px-4 pb-4 pt-1">
+              <div className="backdrop-blur-xl bg-card/80 border border-border/50 rounded-2xl shadow-2xl shadow-primary/5 px-6 py-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-5">
+                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center shadow-lg shadow-primary/30">
+                      <Database className="w-6 h-6 text-primary-foreground" />
+                    </div>
+                    <div>
+                      {/* Breadcrumb Navigation */}
+                      <div className="flex items-center gap-2 mb-1">
+                        <button
+                          onClick={() => setSelectedEntity(null)}
+                          className="text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <ArrowLeft className="w-4 h-4" />
+                        </button>
                         <button
                           onClick={() => {
                             setSelectedEntity(null);
                             setSelectedSubjectAreaId(null);
                           }}
-                          className="hover:text-foreground transition-colors"
+                          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                         >
                           {selectedEntity.subjectarea?.namespace?.name || 'Unknown'}
                         </button>
-                      </BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                      <BreadcrumbLink asChild>
+                        <span className="text-xs text-muted-foreground">•</span>
                         <button
                           onClick={() => {
                             setSelectedSubjectAreaId(selectedEntity.sa_id);
                             setSelectedEntity(null);
                           }}
-                          className="hover:text-foreground transition-colors"
+                          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                         >
                           {selectedEntity.subjectarea.name}
                         </button>
-                      </BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                      <BreadcrumbPage>{selectedEntity.name}</BreadcrumbPage>
-                    </BreadcrumbItem>
-                  </BreadcrumbList>
-                </Breadcrumb>
-                <div className="mb-3 flex items-center gap-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedEntity(null)}
-                    className="rounded-xl"
-                  >
-                    ← Back
-                  </Button>
-                  <div className="flex-1">
-                    <h2 className="text-xl font-semibold flex items-center gap-2">
-                      <Database className="h-5 w-5 text-primary" />
-                      {selectedEntity.name}
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedEntity.subjectarea?.namespace?.name || 'Unknown'}.{selectedEntity.subjectarea?.name || 'Unknown'}
-                    </p>
+                      </div>
+                      <h1 className="text-xl font-bold tracking-tight">{selectedEntity.name}</h1>
+                    </div>
                   </div>
-                  <Button
-                    onClick={handleDQDetailsClick}
-                    disabled={loadingDQ}
-                    className="rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg shadow-primary/20"
-                  >
-                    {loadingDQ ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Loading...
-                      </>
-                    ) : (
-                      <>
-                        <BarChart3 className="mr-2 h-4 w-4" />
-                        DQ Details
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </>
-            )}
 
-            {showDQDetails && dqExecutionId && entityContext ? (
-              <div className="flex-1">
-                <DQDetails
-                  executionId={dqExecutionId}
-                  entityContext={entityContext}
-                  onBack={() => setShowDQDetails(false)}
-                />
-              </div>
-            ) : data.rows.length === 0 ? (
-              <div className="flex items-center justify-center flex-1">
-                <div className="text-center space-y-3 max-w-md">
-                  <Database className="h-12 w-12 mx-auto text-muted-foreground opacity-50" />
-                  <div className="space-y-2">
-                    <p className="font-medium text-foreground">
-                      {tableNotFound ? 'No Data Loaded' : 'No Data Found'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {tableNotFound
-                        ? 'This entity exists but has no data loaded yet. Make sure to check "Load Data" when uploading the meta file to load data into the staging table.'
-                        : 'No data is available for this entity.'}
-                    </p>
-                  </div>
-                  {!tableNotFound && (
-                    <Button variant="outline" size="sm" onClick={fetchData} className="rounded-xl">
-                      Retry
+                  {/* Action Button */}
+                  {!showDQDetails && (
+                    <Button
+                      onClick={handleDQDetailsClick}
+                      disabled={loadingDQ}
+                      className="rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg shadow-primary/20"
+                    >
+                      {loadingDQ ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        <>
+                          <BarChart3 className="mr-2 h-4 w-4" />
+                          DQ Details
+                        </>
+                      )}
                     </Button>
                   )}
                 </div>
               </div>
-            ) : (
-              <div className="flex-1 relative bottom-[15px]">
-                <DataTable columns={columns} data={data.rows} onRefresh={fetchData} />
-              </div>
-            )}
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 px-4">
+              {showDQDetails && dqExecutionId && entityContext ? (
+                <div className="flex-1">
+                  <DQDetails
+                    executionId={dqExecutionId}
+                    entityContext={entityContext}
+                    onBack={() => setShowDQDetails(false)}
+                  />
+                </div>
+              ) : data.rows.length === 0 ? (
+                <div className="flex items-center justify-center flex-1">
+                  <div className="text-center space-y-3 max-w-md">
+                    <Database className="h-12 w-12 mx-auto text-muted-foreground opacity-50" />
+                    <div className="space-y-2">
+                      <p className="font-medium text-foreground">
+                        {tableNotFound ? 'No Data Loaded' : 'No Data Found'}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {tableNotFound
+                          ? 'This entity exists but has no data loaded yet. Make sure to check "Load Data" when uploading the meta file to load data into the staging table.'
+                          : 'No data is available for this entity.'}
+                      </p>
+                    </div>
+                    {!tableNotFound && (
+                      <Button variant="outline" size="sm" onClick={fetchData} className="rounded-xl">
+                        Retry
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 relative bottom-[15px]">
+                  <DataTable columns={columns} data={data.rows} onRefresh={fetchData} />
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

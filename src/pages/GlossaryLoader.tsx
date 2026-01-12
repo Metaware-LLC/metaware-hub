@@ -102,19 +102,18 @@ const GlossaryLoader = () => {
 
             const payload = {
                 publish_config_id: configId,
-                loader_runtime: {
+                connection_name: connectionName,
+                load_strategy: strategy,
+                materialize_as: materializeAs,
+                runtime_options: {
                     type: selectedConnection?.type || "db",
                     subtype: selectedConnection?.subtype || "DuckDB / MotherDuck",
-                    connection_name: connectionName
-                },
-                loader_options: {
-                    materialize_as: materializeAs,
-                    strategy: strategy,
                     ...(batchSize && { batch_size: parseInt(batchSize) }),
                     ...(parallelism && { parallelism: parseInt(parallelism) }),
-                    ...(commitInterval && { commit_interval: commitInterval }),
                     dry_run: dryRun
-                }
+                },
+                loader_config_name: `Glossary Loader - ${targetFqn}`,
+                loader_config_description: `Loading glossary publish configuration from ${glossaryEntity} to ${targetFqn}`
             };
 
             console.log("Load payload:", payload);
@@ -174,7 +173,7 @@ const GlossaryLoader = () => {
                     <div className="backdrop-blur-xl bg-card/80 border border-border/50 rounded-2xl shadow-2xl shadow-accent/5 px-6 py-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-5">
-                                <Button variant="ghost" size="icon" onClick={() => navigate("/build-artifacts")} className="rounded-xl h-10 w-10">
+                                <Button variant="ghost" size="icon" onClick={() => navigate("/build-models")} className="rounded-xl h-10 w-10">
                                     <ArrowLeft className="w-5 h-5" />
                                 </Button>
                                 <div className="relative">
@@ -230,8 +229,8 @@ const GlossaryLoader = () => {
                                                                 <label
                                                                     key={option}
                                                                     className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium cursor-pointer transition-all border ${materializeAs === option
-                                                                            ? "bg-primary/10 text-primary border-primary/30"
-                                                                            : "bg-muted/30 hover:bg-muted/50 text-muted-foreground border-transparent"
+                                                                        ? "bg-primary/10 text-primary border-primary/30"
+                                                                        : "bg-muted/30 hover:bg-muted/50 text-muted-foreground border-transparent"
                                                                         }`}
                                                                 >
                                                                     <div className="flex items-center gap-3">

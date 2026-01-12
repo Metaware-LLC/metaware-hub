@@ -32,7 +32,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Table as TableIcon } from "lucide-react";
+import { Button as UIButton } from "@/components/ui/button";
 
 
 
@@ -76,10 +78,11 @@ const entityColumns: Column[] = [
  */
 export default function Entity() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [editedData, setEditedData] = useState<TableData[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   /**
    * GraphQL queries to fetch entities, namespaces, and subject areas
    */
@@ -136,10 +139,10 @@ export default function Entity() {
       prev.map(row =>
         row.id === id
           ? {
-              ...row,
-              ...updates,
-              _status: row._status === 'draft' ? 'draft' : 'edited'
-            }
+            ...row,
+            ...updates,
+            _status: row._status === 'draft' ? 'draft' : 'edited'
+          }
           : row
       )
     );
@@ -188,7 +191,7 @@ export default function Entity() {
         }
       };
     }
-    
+
     if (col.key === 'subjectarea_display') {
       return {
         ...col,
@@ -196,7 +199,7 @@ export default function Entity() {
           if (isEditing) {
             // Filter subject areas by selected namespace
             const availableSubjectAreas = subjectAreas.filter(sa => sa.ns_id === row.ns_id);
-            
+
             return (
               <Select
                 value={row.sa_id || ''}
@@ -229,7 +232,7 @@ export default function Entity() {
         }
       };
     }
-    
+
     return col;
   });
 
@@ -310,7 +313,7 @@ export default function Entity() {
       const entitiesToSave = data
         .map(item => {
           const isNewRecord = item._status === 'draft';
-          
+
           if (isNewRecord) {
             // For new records, send all required fields
             return {
@@ -336,26 +339,26 @@ export default function Entity() {
             // For edited records, send all required fields plus changed fields
             const originalRow = tableData.find(row => row.id === item.id);
             let hasChanges = false;
-            
+
             if (originalRow) {
               if (item.name !== originalRow.name ||
-                  item.type !== originalRow.type ||
-                  item.subtype !== originalRow.subtype ||
-                  item.description !== originalRow.description ||
-                  item.is_delta_bool !== originalRow.is_delta_bool ||
-                  item.primary_grain !== originalRow.primary_grain ||
-                  item.secondary_grain !== originalRow.secondary_grain ||
-                  item.tertiary_grain !== originalRow.tertiary_grain ||
-                  item.runtime !== originalRow.runtime ||
-                  item.sa_id !== originalRow.sa_id ||
-                  item.ns_id !== originalRow.ns_id) {
+                item.type !== originalRow.type ||
+                item.subtype !== originalRow.subtype ||
+                item.description !== originalRow.description ||
+                item.is_delta_bool !== originalRow.is_delta_bool ||
+                item.primary_grain !== originalRow.primary_grain ||
+                item.secondary_grain !== originalRow.secondary_grain ||
+                item.tertiary_grain !== originalRow.tertiary_grain ||
+                item.runtime !== originalRow.runtime ||
+                item.sa_id !== originalRow.sa_id ||
+                item.ns_id !== originalRow.ns_id) {
                 hasChanges = true;
               }
             }
-            
+
             // Only return if there are actual changes
             if (!hasChanges) return null;
-            
+
             return {
               type: item.type || '',
               subtype: item.subtype || '',
@@ -443,29 +446,54 @@ export default function Entity() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Entity Management</h1>
-        <p className="text-muted-foreground">
-          Manage data structures and their metadata within subject areas
-        </p>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="px-4 pb-4">
+        <div>
+          <div className="backdrop-blur-xl bg-card/80 border border-border/50 rounded-2xl shadow-2xl shadow-primary/5 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-5">
+                <div className="relative">
+                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center shadow-lg shadow-primary/30">
+                    <TableIcon className="w-6 h-6 text-primary-foreground" />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-xl font-bold text-foreground tracking-tight">Entity Management</h1>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-muted-foreground">Manage data structures and their metadata within subject areas</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="h-5 text-[10px] px-2 font-medium">
+                  {tableData.length} entities
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Data Table with GraphQL Integration */}
-      <DataTable
-        columns={columnsWithRender}
-        data={tableData}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onSave={handleSave}
-        onRefresh={handleRefresh}
-        entityType="Entity"
-        externalEditedData={editedData}
-        onEditedDataChange={setEditedData}
-        isDeleting={isDeleting}
-        isSaving={isSaving}
-      />
+      {/* Main Content */}
+      <div className="pb-8 px-4">
+        <DataTable
+          columns={columnsWithRender}
+          data={tableData}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onSave={handleSave}
+          onRefresh={handleRefresh}
+          entityType="Entity"
+          externalEditedData={editedData}
+          onEditedDataChange={setEditedData}
+          isDeleting={isDeleting}
+          isSaving={isSaving}
+        />
+      </div>
     </div>
   );
 }

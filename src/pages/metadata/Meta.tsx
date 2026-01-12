@@ -18,7 +18,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from '@apollo/client/react/hooks';
-import { Upload } from "lucide-react";
+import { Upload, FileCode } from "lucide-react";
 import { DataTable, Column, TableData } from "@/components/table/DataTable";
 import {
   Select,
@@ -51,6 +51,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FileUploadModal } from "@/components/meta/FileUploadModal";
 import { GlossaryEntityDropdown } from "@/components/glossary/GlossaryEntityDropdown";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
 
 
@@ -329,137 +330,140 @@ export default function Meta() {
   };
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Breadcrumb */}
-      <Breadcrumb className="mb-2">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/model">Data Model</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Meta</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
-      {/* Page Header */}
-      <div className="mb-3 flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate("/model")}
-          className="rounded-xl"
-        >
-          ← Back
-        </Button>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="px-4 pb-4">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Meta Data Management</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Explore field-level metadata for entities within your data landscape
-          </p>
-        </div>
-      </div>
-
-      {/* Entity Selection with Cascading Dropdown - All Types */}
-      <div className="space-y-4">
-        <Label>Select Entity (All Types)</Label>
-        <GlossaryEntityDropdown
-          value={selectedEntityId}
-          onSelect={handleEntitySelect}
-          namespaceTypes={["staging", "glossary", "model", "reference"]} // Show all types
-          placeholder="Select entity from any namespace type..."
-        />
-      </div>
-
-      {/* File Upload Card - Shown when entity selected and no meta exists */}
-      {selectedEntityId && !hasExistingMeta && (
-        <Card className="rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 p-3 shadow-lg shadow-primary/30">
-                <Upload className="h-6 w-6 text-primary" />
+          <div className="backdrop-blur-xl bg-card/80 border border-border/50 rounded-2xl shadow-2xl shadow-primary/5 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-5">
+                <div className="relative">
+                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center shadow-lg shadow-primary/30">
+                    <FileCode className="w-6 h-6 text-primary-foreground" />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-xl font-bold text-foreground tracking-tight">Meta Data Management</h1>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-muted-foreground">Explore field-level metadata for entities within your data landscape</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex-1 space-y-2">
-                <h3 className="text-lg font-semibold">Quick Start: Upload CSV</h3>
-                <p className="text-sm text-muted-foreground">
-                  Upload a CSV file to automatically detect and create meta fields for {selectedEntityData?.name || 'this entity'}
-                </p>
-                <Button
-                  onClick={() => setUploadModalOpen(true)}
-                  className="mt-3 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg shadow-primary/20"
-                >
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload CSV File
-                </Button>
+
+              <div className="flex items-center gap-2">
+                {selectedEntityData && (
+                  <Badge variant="secondary" className="font-mono text-xs px-3 py-1 rounded-full">
+                    {selectedEntityData.name}
+                  </Badge>
+                )}
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* File Upload Modal */}
-      {selectedEntityData && (
-        <FileUploadModal
-          open={uploadModalOpen}
-          onOpenChange={setUploadModalOpen}
-          namespace={selectedEntityData.subjectarea?.namespace?.name || ''}
-          subjectArea={selectedEntityData.subjectarea?.name || ''}
-          entity={selectedEntityData.name}
-          entityDescription={selectedEntityData.description || ''}
-          namespaceType={selectedEntityData.subjectarea?.namespace?.type || 'unknown'}
-          primaryGrain={selectedEntityData.primary_grain || ''}
-          onSuccess={handleUploadSuccess}
-        />
-      )}
-
-      {/* Entity Meta Table */}
-      {selectedEntityId && (
-        <div className="mt-8 space-y-4">
-          <div className="border-t pt-6">
-            <h2 className="text-xl font-semibold">
-              Entity Metadata: {selectedEntityData?.name || ''}
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Field-level metadata and business rules for the selected entity
-            </p>
           </div>
+        </div>
+      </div>
 
-          {metaLoading ? (
-            <div className="flex-center py-12">
-              <div className="text-muted">Loading metadata...</div>
-            </div>
-          ) : metaError ? (
-            <div className="flex-center py-12">
-              <div className="text-destructive">
-                Error loading metadata: {metaError.message}
+      {/* Main Content */}
+      <div className="pb-8 px-4">
+        {/* Entity Selection with Cascading Dropdown - All Types */}
+        <div className="space-y-4">
+          <Label>Select Entity (All Types)</Label>
+          <GlossaryEntityDropdown
+            value={selectedEntityId}
+            onSelect={handleEntitySelect}
+            namespaceTypes={["staging", "glossary", "model", "reference"]} // Show all types
+            placeholder="Select entity from any namespace type..."
+          />
+        </div>
+
+        {/* File Upload Card - Shown when entity selected and no meta exists */}
+        {selectedEntityId && !hasExistingMeta && (
+          <Card className="rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5 mt-4">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 p-3 shadow-lg shadow-primary/30">
+                  <Upload className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <h3 className="text-lg font-semibold">Quick Start: Upload CSV</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Upload a CSV file to automatically detect and create meta fields for {selectedEntityData?.name || 'this entity'}
+                  </p>
+                  <Button
+                    onClick={() => setUploadModalOpen(true)}
+                    className="mt-3 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg shadow-primary/20"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload CSV File
+                  </Button>
+                </div>
               </div>
-            </div>
-          ) : (
-            <DataTable
-              columns={metaColumns}
-              data={existingMetaFields}
-              onDelete={handleDelete}
-              onSave={handleSaveDraftMeta}
-              onRefresh={handleRefresh}
-              entityType="Metadata"
-              externalEditedData={editedData}
-              onEditedDataChange={setEditedData}
-              isDeleting={isDeleting}
-              isSaving={isSaving}
-            />
-          )}
-        </div>
-      )}
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Helper Messages */}
-      {!selectedEntityId && (
-        <div className="flex items-center justify-center py-12">
-          <p className="text-sm text-muted-foreground">Please select an entity to view its metadata</p>
-        </div>
-      )}
+        {/* File Upload Modal */}
+        {selectedEntityData && (
+          <FileUploadModal
+            open={uploadModalOpen}
+            onOpenChange={setUploadModalOpen}
+            namespace={selectedEntityData.subjectarea?.namespace?.name || ''}
+            subjectArea={selectedEntityData.subjectarea?.name || ''}
+            entity={selectedEntityData.name}
+            entityDescription={selectedEntityData.description || ''}
+            namespaceType={selectedEntityData.subjectarea?.namespace?.type || 'unknown'}
+            primaryGrain={selectedEntityData.primary_grain || ''}
+            onSuccess={handleUploadSuccess}
+          />
+        )}
+
+        {/* Entity Meta Table */}
+        {selectedEntityId && (
+          <div className="mt-8 space-y-4">
+            <div className="border-t pt-6">
+              <h2 className="text-xl font-semibold">
+                Entity Metadata: {selectedEntityData?.name || ''}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Field-level metadata and business rules for the selected entity
+              </p>
+            </div>
+
+            {metaLoading ? (
+              <div className="flex-center py-12">
+                <div className="text-muted">Loading metadata...</div>
+              </div>
+            ) : metaError ? (
+              <div className="flex-center py-12">
+                <div className="text-destructive">
+                  Error loading metadata: {metaError.message}
+                </div>
+              </div>
+            ) : (
+              <DataTable
+                columns={metaColumns}
+                data={existingMetaFields}
+                onDelete={handleDelete}
+                onSave={handleSaveDraftMeta}
+                onRefresh={handleRefresh}
+                entityType="Metadata"
+                externalEditedData={editedData}
+                onEditedDataChange={setEditedData}
+                isDeleting={isDeleting}
+                isSaving={isSaving}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Helper Messages */}
+        {!selectedEntityId && (
+          <div className="flex items-center justify-center py-12">
+            <p className="text-sm text-muted-foreground">Please select an entity to view its metadata</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
