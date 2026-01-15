@@ -194,24 +194,9 @@ export const DQDetails: React.FC<DQDetailsProps> = ({
     }
 
     return (
-        <div className="h-full flex flex-col">
-            {/* Simplified Header */}
-            <div className="mb-4">
-                <Button variant="ghost" size="sm" onClick={onBack} className="mb-2">
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Table
-                </Button>
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-primary" />
-                    Data Quality Details
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                    {entityContext.ns}.{entityContext.sa}.{entityContext.en}
-                </p>
-            </div>
-
+        <div className="h-full flex flex-col overflow-hidden">
             {/* 3-Panel Layout */}
-            <div className="flex-1 grid grid-cols-12 gap-6 min-h-0">
+            <div className="flex-1 grid grid-cols-12 gap-6 min-h-0 p-4">
                 {/* Left Panel - Rules List */}
                 <div className="col-span-3">
                     <Card className="h-full flex flex-col">
